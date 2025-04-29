@@ -148,8 +148,8 @@ i_chs = find(contains(opm_cleaned.label,'bz'));
 chs = opm_cleaned.label(i_chs);
 ori = zeros(length(chs),3);
 for i = 1:length(chs)
-    i_chs_grad(i) = find(strcmp(empty_room_cleaned.grad.label,chs{i}));
-    ori(i,:) = empty_room_cleaned.grad.chanori(i_chs_grad(i),:);
+    i_chs_grad(i) = find(strcmp(opm_cleaned.grad.label,chs{i}));
+    ori(i,:) = opm_cleaned.grad.chanori(i_chs_grad(i),:);
 end
 opm_cleaned.grad.M = eye(size(ori,1)) - ori*pinv(ori);
 for i = 1:length(opm_cleaned.trial)
