@@ -57,8 +57,8 @@ for i_peak = 1:length(params.peaks)
     hold on
     for i_phalange = 1:length(params.trigger_code)
         dat = timelocked{i_phalange};
-        [~, peak_interval(1)] = min(abs(dat.time-params.peak{i_peak}.peak_latency(1))); % find closest time sample
-        [~, peak_interval(2)] = min(abs(dat.time-params.peak{i_peak}.peak_latency(2))); % find closest time sample
+        [~, peak_interval(1)] = min(abs(dat.time-params.peak{i_peak}.latency(1))); % find closest time sample
+        [~, peak_interval(2)] = min(abs(dat.time-params.peak{i_peak}.latency(2))); % find closest time sample
         [~, peak_interval(3)] = min(abs(dat.time-0)); % find closest time sample
         tmp = [];
     

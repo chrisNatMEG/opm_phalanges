@@ -149,6 +149,10 @@ for i_file = 1:length(hpi_files)
         end
     end
     
+    if isempty(hpi_chs)
+        hpi{i_file}.dip_gof(coil) = 0;
+    end
+    
     %%
     % Adjust order
     ft_hastoolbox('mne',1);

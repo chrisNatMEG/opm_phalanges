@@ -71,14 +71,14 @@ squid_cleaned = ft_rejectartifact(cfg,squid_cleaned);
 
 % Reject noisy trials
 cfg = [];
-cfg.channel = 'squidmag';
+cfg.channel = 'megmag';
 cfg.metric = 'std';
 cfg.threshold = params.squidmag_std_threshold;
 [cfg,badtrl_squidmag_std] = ft_badsegment(cfg, squid_cleaned);
 squid_cleaned = ft_rejectartifact(cfg,squid_cleaned);
 
 cfg = [];
-cfg.channel = 'squidgrad';
+cfg.channel = 'megplanar';
 cfg.metric = 'std';
 cfg.threshold = params.squidgrad_std_threshold;
 [cfg,badtrl_squidgrad_std] = ft_badsegment(cfg, squid_cleaned);
@@ -209,5 +209,14 @@ save(fullfile(save_path, [params.sub '_squideeg_badtrls']), ...
 
 %save(fullfile(save_path, [params.sub '_squid_cleaned']), 'squid_cleaned',"-v7.3");
 %save(fullfile(save_path, [params.sub '_squideeg_cleaned']), 'squideeg_cleaned',"-v7.3"); disp('done');
+
+%% Remove padding
+cfg = [];
+cfg.latency = [-params.pre params.post];
+squid_cleaned = ft_selectdata(cfg, squid_cleaned); 
+
+cfg = [];
+cfg.latency = [-params.pre params.post];
+squideeg_cleaned = ft_selectdata(cfg, squideeg_cleaned); 
 
 end

@@ -12,10 +12,11 @@ if length(peak.peak_latency) == 2
                 sourcedistribution.avg.mom{i} = vecnorm(sourcedistribution.avg.mom{i},1);
             end
         end
+        sourcedistribution.avg.mom = cell2mat(sourcedistribution.avg.mom);
     end
     
     dat = sourcedistribution.avg.pow(:,i1:i2);
-    [~,i_latency] = max(max(dat,[],1)); % max of max across sources
+    [~,i_latency] = max(max(abs(dat),[],1)); % max of maxabs across sources
     i_latency = i1-1+i_latency;
     latency = sourcedistribution.time(i_latency);
 else
@@ -52,15 +53,15 @@ peak_activation.fahm = fahm;
 peak_activation.halfmax_distribution = halfmax_distribution;
 
 h = figure;
-plot(sourcedistribution.time*1e3,sourcedistribution.avg.pow)
+plot(sourcedistribution.time*1e3,abs(sourcedistribution.avg.pow))
 hold on
 ylimits = ylim;
 plot([1e3*latency 1e3*latency],ylimits,'k--')
 hold off
 xlabel('t [msec]')
-ylabel('Field power')
+ylabel('Abs field power')
 xlim([-params.pre params.post]*1e3);
 title([params.modality ' - ' params.phalange_labels{params.i_phalange}])
 saveas(h, fullfile(save_path, 'figs', [params.sub '_' params.modality '_' peak.label '_mne_sourcepow_ph-' params.phalange_labels{params.i_phalange} '.jpg']))
-close all
+
 end

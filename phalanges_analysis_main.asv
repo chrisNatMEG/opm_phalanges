@@ -29,11 +29,11 @@ ft_default.showcallinfo = 'no';
 
 %% Overwrite
 overwrite = [];
-overwrite.preproc = false;
-overwrite.coreg = false;
+overwrite.preproc = true;
+overwrite.coreg = true;
 overwrite.mri = false;
 overwrite.dip = true;
-overwrite.empty_room = false;
+overwrite.empty_room = true;
 overwrite.mne = true;
 
 overwrite.sens_group = false;
@@ -68,14 +68,8 @@ params.ica_coh = 0.95; % cutoff for EOG/ECG coherence
 
 params.hpi_freq = 33;
 params.hpi_gof = 0.9;
-
-params.peaks = {};%cell(2,1);
-params.peaks{1} = [];
-params.peaks{1}.label = 'M60';
-params.peaks{1}.peak_latency = [0.04 0.08];
-params.peaks{2} = [];
-params.peaks{2}.label = 'M100';
-params.peaks{2}.peak_latency = [0.08 0.12];
+params.M60 = [0.04 0.08];
+params.M100 = [0.08 0.12];
 
 params.trigger_code = [2 4 8 16 32];
 params.phalange_labels = {'I3' 'I2' 'I1' 'T1' 'I2b'};
@@ -432,16 +426,21 @@ for i_sub = subs_to_run
         opm_timelockedT = load(fullfile(save_path, [params.sub '_opm_timelockedT.mat'])).opm_timelockedT;
         squidmag_timelocked = load(fullfile(save_path, [params.sub '_squidmag_timelocked.mat'])).timelocked;
         squidgrad_timelocked = load(fullfile(save_path, [params.sub '_squidgrad_timelocked.mat'])).timelocked;
+        clear M60_opm M60_squidmag M60_squidgrad
+        M60_opm = load(fullfile(save_path, [params.sub '_opm_M60'])).M60; 
+        M60_squidmag = load(fullfile(save_path, [params.sub '_squidmag_M60'])).M60; 
+        M60_squidgrad = load(fullfile(save_path, [params.sub '_squidgrad_M60'])).M60; 
+        params.peak = 'M60';
+        fit_dipoles(save_path, squidmag_timelocked, squidgrad_timelocked, opm_timelockedT, headmodels, mri_resliced, M60_squidmag, M60_squidgrad, M60_opm, params);
+        clear M60_opm M60_squidmag M60_squidgrad 
         
-        for i_peak = 1:length(params.peaks)
-            clear peak_opm peak_squidmag peak_squidgrad
-            peak_opm = load(fullfile(save_path, [params.sub '_opm_' params.peaks{i_peak}.label])).peak; 
-            peak_squidmag = load(fullfile(save_path, [params.sub '_squidmag_' params.peaks{i_peak}.label])).peak; 
-            peak_squidgrad = load(fullfile(save_path, [params.sub '_squidgrad_' params.peaks{i_peak}.label])).peak; 
-            fit_dipoles(save_path, squidmag_timelocked, squidgrad_timelocked, opm_timelockedT, headmodels, mri_resliced, peak_squidmag, peak_squidgrad, peak_opm, params);
-            clear peak_opm peak_squidmag peak_squidgrad
-        end
-        clear squimdag_timelocked squidgrad_timelocked opm_timelockedT
+        clear M100_opm M100_squidmag M100_squidgrad
+        M100_opm = load(fullfile(save_path, [params.sub '_opm_M100'])).M100; 
+        M100_squidmag = load(fullfile(save_path, [params.sub '_squidmag_M100'])).M100; 
+        M100_squidgrad = load(fullfile(save_path, [params.sub '_squidgrad_M100'])).M100; 
+        params.peak = 'M100';
+        fit_dipoles(save_path, squidmag_timelocked, squidgrad_timelocked, opm_timelockedT, headmodels, mri_resliced, M100_squidmag, M100_squidgrad, M100_opm, params);
+        clear M100_opm M100_squidmag M100_squidgrad squimdag_timelocked squidgrad_timelocked opm_timelockedT
     end
 end
 
@@ -525,13 +524,13 @@ for i_sub = subs_to_run
             if exist(fullfile(save_path, [params.sub '_ER_squid.mat']),'file')
                 clear tmp
                 tmp = load(fullfile(save_path, [params.sub '_ER_opm.mat'])).opm_ER_tlk;
-                opm_timelockedT{i}.cov_ER = tmp.cov;
+                opm_timelockedT{i}.cov_RS = tmp.cov;
                 clear tmp
                 tmp = load(fullfile(save_path, [params.sub '_ER_squid.mat'])).squidmag_ER_tlk;
-                squidmag_timelocked{i}.cov_ER = tmp.cov;
+                squidmag_timelocked{i}.cov_RS = tmp.cov;
                 clear tmp
                 tmp = load(fullfile(save_path, [params.sub '_ER_squid.mat'])).squidgrad_ER_tlk;
-                squidgrad_timelocked{i}.cov_ER = tmp.cov;
+                squidgrad_timelocked{i}.cov_RS = tmp.cov;
                 clear tmp
             end
         end

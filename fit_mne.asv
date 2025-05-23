@@ -27,7 +27,7 @@ squidmag_mne_peak = cell(length(params.trigger_code),length(params.peaks));
 squidgrad_mne_peak = cell(length(params.trigger_code),length(params.peaks));
 opm_mne_peak = cell(length(params.trigger_code),length(params.peaks));
 
-for i_phalange = 1:length(params.trigger_code)
+for i_phalange = 4%1:length(params.trigger_code)
     params.i_phalange = i_phalange;
 
     if isfield(params,'use_cov') && strcmp(params.use_cov,'all')
