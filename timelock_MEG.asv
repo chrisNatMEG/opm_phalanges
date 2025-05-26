@@ -4,9 +4,12 @@ function timelock_MEG(data, save_path, params)
     
 timelocked = cell(length(params.trigger_code),1);
 
-h = figure; 
-hold on
-leg = [];
+% Downsample
+if params.ds_freq~=1000
+    cfg = [];
+    cfg.resamplefs = params.ds_freq;
+    data = ft_resampledata(cfg, data);
+end
 
 % Remove padding
 cfg = [];
@@ -52,13 +55,11 @@ save(fullfile(save_path, [params.sub '_' params.modality '_timelocked']), 'timel
 
 %% Find peaks
 for i_peak = 1:length(params.peaks)
-    peak = cell{length(params.trigger_code),1};
-    h = figure;
-    hold on
+    peak = cell(length(params.trigger_code),1);
     for i_phalange = 1:length(params.trigger_code)
         dat = timelocked{i_phalange};
-        [~, peak_interval(1)] = min(abs(dat.time-params.peak{i_peak}.latency(1))); % find closest time sample
-        [~, peak_interval(2)] = min(abs(dat.time-params.peak{i_peak}.latency(2))); % find closest time sample
+        [~, peak_interval(1)] = min(abs(dat.time-params.peaks{i_peak}.peak_latency(1))); % find closest time sample
+        [~, peak_interval(2)] = min(abs(dat.time-params.peaks{i_peak}.peak_latency(2))); % find closest time sample
         [~, peak_interval(3)] = min(abs(dat.time-0)); % find closest time sample
         tmp = [];
     
@@ -88,9 +89,6 @@ for i_peak = 1:length(params.peaks)
         
         tmp.label = params.peaks{i_peak}.label;
         peak{i_phalange} = tmp;
-        
-        plot(dat.time*1e3, dat.avg(tmp.i_peakch,:)*params.amp_scaler)
-        leg = [leg; [num2str(i_phalange) ': ' strrep(tmp.peak_channel,'_','-')]];
 
         %% Plot max channel with variation and peak time
         h = figure;
@@ -112,7 +110,7 @@ for i_peak = 1:length(params.peaks)
 
         %% Plot topography
         cfg = [];
-        cfg.xlim = [peak{i_phalange}.peak_latency-0.01 peak{i_phalange}.peak_latency+0.01];
+        cfg.xlim = [peak{i_phalange}.peak_latency-0.005 peak{i_phalange}.peak_latency+0.005];
         cfg.layout = params.layout; 
         cfg.parameter = 'avg';
         h = figure;
@@ -138,14 +136,6 @@ for i_peak = 1:length(params.peaks)
         close all
 
     end
-    hold off
-    title([params.modality ': ' params.peaks{i_peak}.label ' - Max channel'])
-    ylabel(params.amp_label)
-    xlabel('time [ms]')
-    xlim([-params.pre params.post]*1e3);
-    legend(leg)
-    saveas(h, fullfile(save_path, 'figs', [params.sub '_' params.modality '_' params.peaks{i_peak}.label '_evoked_maxchannels.jpg']))
-    save(fullfile(save_path, [params.sub '_' params.modality '_' params.peaks{i_peak}.label]), 'peak', '-v7.3'); 
 end
 
 end

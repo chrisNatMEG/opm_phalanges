@@ -30,10 +30,10 @@ ft_default.showcallinfo = 'no';
 %% Overwrite
 overwrite = [];
 overwrite.preproc = false;
-overwrite.coreg = false;
+overwrite.coreg = true;
 overwrite.mri = false;
 overwrite.dip = true;
-overwrite.empty_room = false;
+overwrite.empty_room = true;
 overwrite.mne = true;
 
 overwrite.sens_group = false;
@@ -48,7 +48,7 @@ params.pad = 0.2; %sec
 
 params.filter = [];
 params.filter.hp_freq = 1;
-params.filter.lp_freq = 100;
+params.filter.lp_freq = 70;
 params.filter.bp_freq = [];
 params.filter.notch = [50 60 100 120 150]; %[50 60 100 120 150];
 params.do_hfc = false;
@@ -65,6 +65,8 @@ params.squidgrad_std_threshold = 5e-11;
 params.n_comp = 40;
 params.ica_cor = 0.8; % cutoff for EOG/ECG coherence
 params.ica_coh = 0.95; % cutoff for EOG/ECG coherence
+
+params.ds_freq = 500; % downsample frequency (timelock)
 
 params.hpi_freq = 33;
 params.hpi_gof = 0.9;

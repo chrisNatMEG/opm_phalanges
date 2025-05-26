@@ -86,6 +86,13 @@ cfg.channel = 'meg';
 squid_RS_ica = ft_selectdata(cfg,squid_RS_ica);
 
 %% Timelock
+% Downsample
+if params.ds_freq~=1000
+    cfg = [];
+    cfg.resamplefs = params.ds_freq;
+    squid_RS_ica = ft_resampledata(cfg, squid_RS_ica);
+end
+
 % Remove padding
 cfg = [];
 cfg.channel = params.chs;

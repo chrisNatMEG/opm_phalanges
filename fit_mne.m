@@ -86,7 +86,7 @@ for i_phalange = 1:length(params.trigger_code)
         ft_sourceplot(cfg, tmp)
         lighting gouraud
         material dull
-        title(['SQUID-MAG (FAHM=' num2str(squidmag_mne_peak{i_phalange}.fahm,3) 'cm^2; t=' num2str(round(squidmag_mne_peak{i_phalange}.latency*1e3)) 'ms)'])
+        title(['SQUID-MAG (FAHM=' num2str(squidmag_mne_peak{i_phalange,i_peak}.fahm,3) 'cm^2; t=' num2str(round(squidmag_mne_peak{i_phalange,i_peak}.latency*1e3)) 'ms)'])
         saveas(h, fullfile(save_path,'figs', [params.sub '_squidmag_' squidmag_mne_peak{i_phalange,i_peak}.label '_mne_ph' params.phalange_labels{i_phalange} '.jpg']))
         close all
     end
@@ -132,7 +132,7 @@ for i_phalange = 1:length(params.trigger_code)
         ft_sourceplot(cfg, tmp)
         lighting gouraud
         material dull
-        title(['SQUID-GRAD (FAHM=' num2str(squidgrad_mne_peak{i_phalange}.fahm,3) 'cm^2; t=' num2str(round(squidgrad_mne_peak{i_phalange}.latency*1e3)) 'ms)'])
+        title(['SQUID-GRAD (FAHM=' num2str(squidgrad_mne_peak{i_phalange,i_peak}.fahm,3) 'cm^2; t=' num2str(round(squidgrad_mne_peak{i_phalange,i_peak}.latency*1e3)) 'ms)'])
         saveas(h, fullfile(save_path,'figs', [params.sub '_squidgrad_' squidgrad_mne_peak{i_phalange,i_peak}.label '_mne_ph' params.phalange_labels{i_phalange} '.jpg']))
         close all
     end
@@ -178,7 +178,7 @@ for i_phalange = 1:length(params.trigger_code)
         ft_sourceplot(cfg, tmp)
         lighting gouraud
         material dull
-        title(['OPM (FAHM=' num2str(opm_mne_peak{i_phalange}.fahm,3) 'cm^2; t=' num2str(round(opm_mne_peak{i_phalange}.latency*1e3)) 'ms)'])
+        title(['OPM (FAHM=' num2str(opm_mne_peak{i_phalange,i_peak}.fahm,3) 'cm^2; t=' num2str(round(opm_mne_peak{i_phalange,i_peak}.latency*1e3)) 'ms)'])
         saveas(h, fullfile(save_path,'figs', [params.sub '_opm_' opm_mne_peak{i_phalange,i_peak}.label '_mne_ph' params.phalange_labels{i_phalange} '.jpg']))
         close all
     end

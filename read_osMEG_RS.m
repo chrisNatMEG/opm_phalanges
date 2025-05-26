@@ -209,6 +209,13 @@ cfg.channel = '*bz';
 opm_RS_ica = ft_selectdata(cfg,opm_RS_ica);
 
 %% Timelock
+% Downsample
+if params.ds_freq~=1000
+    cfg = [];
+    cfg.resamplefs = params.ds_freq;
+    opm_RS_ica = ft_resampledata(cfg, opm_RS_ica);
+end
+
 % Remove padding
 cfg = [];
 cfg.channel = params.chs;

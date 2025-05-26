@@ -121,6 +121,13 @@ if isfield(params,'flip_sign') && params.flip_sign
 end
 
 %% Timelock
+% Downsample
+if params.ds_freq~=1000
+    cfg = [];
+    cfg.resamplefs = params.ds_freq;
+    opm_ER_cleaned = ft_resampledata(cfg, opm_ER_cleaned);
+end
+
 % Remove padding
 cfg = [];
 cfg.channel = params.chs;
@@ -217,6 +224,13 @@ save(fullfile(save_path, [params.sub '_squid_badtrls']), ...
     'badtrl_squid_std',"-v7.3"); 
 
 %% Timelock
+% Downsample
+if params.ds_freq~=1000
+    cfg = [];
+    cfg.resamplefs = params.ds_freq;
+    squid_ER_cleaned = ft_resampledata(cfg, squid_ER_cleaned);
+end
+
 % Remove padding
 cfg = [];
 cfg.channel = params.chs;

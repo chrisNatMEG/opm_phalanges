@@ -4,9 +4,12 @@ function timelock_MEG(data, save_path, params)
     
 timelocked = cell(length(params.trigger_code),1);
 
-h = figure; 
-hold on
-leg = [];
+% Downsample
+if params.ds_freq~=1000
+    cfg = [];
+    cfg.resamplefs = params.ds_freq;
+    data = ft_resampledata(cfg, data);
+end
 
 % Remove padding
 cfg = [];
@@ -52,24 +55,21 @@ save(fullfile(save_path, [params.sub '_' params.modality '_timelocked']), 'timel
 
 %% Find peaks
 for i_peak = 1:length(params.peaks)
-    peak = cell{length(params.trigger_code),1};
-    h = figure;
-    hold on
+    peak = cell(length(params.trigger_code),1);
     for i_phalange = 1:length(params.trigger_code)
         dat = timelocked{i_phalange};
-        [~, peak_interval(1)] = min(abs(dat.time-params.peak{i_peak}.peak_latency(1))); % find closest time sample
-        [~, peak_interval(2)] = min(abs(dat.time-params.peak{i_peak}.peak_latency(2))); % find closest time sample
+        [~, peak_interval(1)] = min(abs(dat.time-params.peaks{i_peak}.peak_latency(1))); % find closest time sample
+        [~, peak_interval(2)] = min(abs(dat.time-params.peaks{i_peak}.peak_latency(2))); % find closest time sample
         [~, peak_interval(3)] = min(abs(dat.time-0)); % find closest time sample
         tmp = [];
-    
-        [~, i_peak_latency] = findpeaks(std(dat.avg(:,(peak_interval(1):peak_interval(2))),1),'SortStr','descend');
+        t_int = peak_interval(1):peak_interval(2);
+        [~, i_peak_latency] = findpeaks(max(dat.avg(:,t_int),[],1)-min(dat.avg(:,t_int),[],1),'SortStr','descend');
         if isempty(i_peak_latency)
             i_peak_latency = round((peak_interval(2)-peak_interval(1))/2);
             tmp.nopeak = true;
         end
         i_peak_latency = peak_interval(1)-1+i_peak_latency(1); % adjust for interval and pick first (=strongest) peak
         tmp.peak_latency = dat.time(i_peak_latency);
-        disp(tmp.peak_latency);
         [tmp.max_amplitude, i_maxch] = max(dat.avg(:,i_peak_latency));
         [tmp.min_amplitude, i_minch] = min(dat.avg(:,i_peak_latency));
         tmp.max_channel = dat.label{i_maxch};
@@ -88,9 +88,6 @@ for i_peak = 1:length(params.peaks)
         
         tmp.label = params.peaks{i_peak}.label;
         peak{i_phalange} = tmp;
-        
-        plot(dat.time*1e3, dat.avg(tmp.i_peakch,:)*params.amp_scaler)
-        leg = [leg; [num2str(i_phalange) ': ' strrep(tmp.peak_channel,'_','-')]];
 
         %% Plot max channel with variation and peak time
         h = figure;
@@ -112,7 +109,7 @@ for i_peak = 1:length(params.peaks)
 
         %% Plot topography
         cfg = [];
-        cfg.xlim = [peak{i_phalange}.peak_latency-0.01 peak{i_phalange}.peak_latency+0.01];
+        cfg.xlim = [peak{i_phalange}.peak_latency-0.005 peak{i_phalange}.peak_latency+0.005];
         cfg.layout = params.layout; 
         cfg.parameter = 'avg';
         h = figure;
@@ -137,15 +134,9 @@ for i_peak = 1:length(params.peaks)
         saveas(h, fullfile(save_path, 'figs', [params.sub '_' params.modality '_' params.peaks{i_peak}.label '_butterfly_ph-' params.phalange_labels{i_phalange} '.jpg']))
         close all
 
+        %% Save 
+        save(fullfile(save_path, [params.sub '_' params.modality '_' params.peaks{i_peak}.label]), 'peak', '-v7.3'); 
     end
-    hold off
-    title([params.modality ': ' params.peaks{i_peak}.label ' - Max channel'])
-    ylabel(params.amp_label)
-    xlabel('time [ms]')
-    xlim([-params.pre params.post]*1e3);
-    legend(leg)
-    saveas(h, fullfile(save_path, 'figs', [params.sub '_' params.modality '_' params.peaks{i_peak}.label '_evoked_maxchannels.jpg']))
-    save(fullfile(save_path, [params.sub '_' params.modality '_' params.peaks{i_peak}.label]), 'peak', '-v7.3'); 
 end
 
 end
