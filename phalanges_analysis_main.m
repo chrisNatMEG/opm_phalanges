@@ -10,12 +10,14 @@ if contains(pwd,'/home/chrpfe')
     base_save_path = '/home/chrpfe/Documents/21099_opm/Phalanges';
     base_matlab_path = '/home/chrpfe/Documents/MATLAB/';
     project_scripts_path = '/home/chrpfe/Documents/MATLAB/21099_opm/phalanges';
+    on_server = true;
 else
     % Laptop:
     base_data_path = '/Volumes/dataarchvie/21099_opm';
     base_save_path = '/Users/christophpfeiffer/data_local/Benchmarking_phalanges';
     base_matlab_path = '/Users/christophpfeiffer/Dropbox/Mac/Documents/MATLAB';
     project_scripts_path = '/Users/christophpfeiffer/opm_phalanges';
+    on_server = false;
 end
 
 %% Set up fieldtrip
@@ -29,7 +31,7 @@ ft_default.showcallinfo = 'no';
 
 %% Overwrite
 overwrite = [];
-overwrite.preproc = false;
+overwrite.preproc = true;
 overwrite.coreg = true;
 overwrite.mri = false;
 overwrite.dip = true;
@@ -102,7 +104,11 @@ mri_files = {'00000001.dcm'
     '/mri/sub-15931_T1w.nii.gz'  
     '/nifti/anat/sub-15985_T1w.nii.gz'};
 
-subs_to_run = 4; %1:size(subses,1)
+if on_server
+    subs_to_run = 1:size(subses,1);
+else
+    subs_to_run = 4; %1:size(subses,1)
+end
 
 %% Loop over subjects
 for i_sub = subs_to_run
@@ -501,6 +507,8 @@ for i_sub = subs_to_run
     %% MNE fit
     if exist(fullfile(save_path, 'mne_fits.mat'),'file') && overwrite.mne==false
         disp(['Not overwriting MNE source reconstruction for ' params.sub]);
+    elseif i_sub == 1
+        disp('SKIPPING SUBJECT - NO CO-REGISTRATION')
     else
         clear headmodels sourcemodel sourcemodel_inflated
         sourcemodel = load(fullfile(save_path, [params.sub '_sourcemodel'])).sourcemodel;
