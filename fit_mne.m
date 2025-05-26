@@ -29,15 +29,17 @@ opm_mne_peak = cell(length(params.trigger_code),length(params.peaks));
 
 for i_phalange = 1:length(params.trigger_code)
     params.i_phalange = i_phalange;
-
+    cov = '';
     if isfield(params,'use_cov') && strcmp(params.use_cov,'all')
         squidmag_timelocked{i_phalange}.cov = squidmag_timelocked{i_phalange}.cov_all;
         squidgrad_timelocked{i_phalange}.cov = squidgrad_timelocked{i_phalange}.cov_all;
         opm_timelocked{i_phalange}.cov = opm_timelocked{i_phalange}.cov_all;
+        cov = '_covAll';
     elseif isfield(params,'use_cov') && strcmp(params.use_cov,'resting_state')
         squidmag_timelocked{i_phalange}.cov = squidmag_timelocked{i_phalange}.cov_RS;
         squidgrad_timelocked{i_phalange}.cov = squidgrad_timelocked{i_phalange}.cov_RS;
         opm_timelocked{i_phalange}.cov = opm_timelocked{i_phalange}.cov_RS;
+        cov = '_covRS';
     elseif isfield(params,'use_cov') && strcmp(params.use_cov,'empty_room')
         if ~isfield(squidmag_timelocked{i_phalange},'cov_ER')
             continue % skip if no empty room covariance available
@@ -45,6 +47,7 @@ for i_phalange = 1:length(params.trigger_code)
         squidmag_timelocked{i_phalange}.cov = squidmag_timelocked{i_phalange}.cov_ER;
         squidgrad_timelocked{i_phalange}.cov = squidgrad_timelocked{i_phalange}.cov_ER;
         opm_timelocked{i_phalange}.cov = opm_timelocked{i_phalange}.cov_ER;
+        cov = '_covER';
     end
 
     %% MEG-MAG
@@ -87,7 +90,7 @@ for i_phalange = 1:length(params.trigger_code)
         lighting gouraud
         material dull
         title(['SQUID-MAG (FAHM=' num2str(squidmag_mne_peak{i_phalange,i_peak}.fahm,3) 'cm^2; t=' num2str(round(squidmag_mne_peak{i_phalange,i_peak}.latency*1e3)) 'ms)'])
-        saveas(h, fullfile(save_path,'figs', [params.sub '_squidmag_' squidmag_mne_peak{i_phalange,i_peak}.label '_mne_ph' params.phalange_labels{i_phalange} '.jpg']))
+        saveas(h, fullfile(save_path,'figs', [params.sub '_squidmag_' squidmag_mne_peak{i_phalange,i_peak}.label '_mne_ph' params.phalange_labels{i_phalange} cov '.jpg']))
         close all
     end
 
@@ -133,7 +136,7 @@ for i_phalange = 1:length(params.trigger_code)
         lighting gouraud
         material dull
         title(['SQUID-GRAD (FAHM=' num2str(squidgrad_mne_peak{i_phalange,i_peak}.fahm,3) 'cm^2; t=' num2str(round(squidgrad_mne_peak{i_phalange,i_peak}.latency*1e3)) 'ms)'])
-        saveas(h, fullfile(save_path,'figs', [params.sub '_squidgrad_' squidgrad_mne_peak{i_phalange,i_peak}.label '_mne_ph' params.phalange_labels{i_phalange} '.jpg']))
+        saveas(h, fullfile(save_path,'figs', [params.sub '_squidgrad_' squidgrad_mne_peak{i_phalange,i_peak}.label '_mne_ph' params.phalange_labels{i_phalange} cov '.jpg']))
         close all
     end
 
@@ -179,7 +182,7 @@ for i_phalange = 1:length(params.trigger_code)
         lighting gouraud
         material dull
         title(['OPM (FAHM=' num2str(opm_mne_peak{i_phalange,i_peak}.fahm,3) 'cm^2; t=' num2str(round(opm_mne_peak{i_phalange,i_peak}.latency*1e3)) 'ms)'])
-        saveas(h, fullfile(save_path,'figs', [params.sub '_opm_' opm_mne_peak{i_phalange,i_peak}.label '_mne_ph' params.phalange_labels{i_phalange} '.jpg']))
+        saveas(h, fullfile(save_path,'figs', [params.sub '_opm_' opm_mne_peak{i_phalange,i_peak}.label '_mne_ph' params.phalange_labels{i_phalange} cov '.jpg']))
         close all
     end
 
@@ -207,8 +210,8 @@ for i_phalange = 1:length(params.trigger_code)
     end
 
 end
-save(fullfile(save_path, 'squidmag_mne_peaks'), 'squidmag_mne_peak'); 
-save(fullfile(save_path, 'squidgrad_mne_peaks'), 'squidgrad_mne_peak'); 
-save(fullfile(save_path, 'opm_mne_peaks'), 'opm_mne_peak'); 
+save(fullfile(save_path, ['squidmag_mne_peaks' cov]), 'squidmag_mne_peak'); 
+save(fullfile(save_path, ['squidgrad_mne_peaks' cov]), 'squidgrad_mne_peak'); 
+save(fullfile(save_path, ['opm_mne_peaks' cov]), 'opm_mne_peak'); 
 
 end
