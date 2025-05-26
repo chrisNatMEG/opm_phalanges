@@ -62,14 +62,15 @@ for i_peak = 1:length(params.peaks)
         [~, peak_interval(2)] = min(abs(dat.time-params.peaks{i_peak}.peak_latency(2))); % find closest time sample
         [~, peak_interval(3)] = min(abs(dat.time-0)); % find closest time sample
         tmp = [];
-        t_int = peak_interval(1):peak_interval(2);
-        [~, i_peak_latency] = findpeaks(max(dat.avg(:,t_int),[],1)-min(dat.avg(:,t_int),[],1),'SortStr','descend');
+    
+        [~, i_peak_latency] = findpeaks(std(dat.avg(:,(peak_interval(1):peak_interval(2))),1),'SortStr','descend');
         if isempty(i_peak_latency)
             i_peak_latency = round((peak_interval(2)-peak_interval(1))/2);
             tmp.nopeak = true;
         end
         i_peak_latency = peak_interval(1)-1+i_peak_latency(1); % adjust for interval and pick first (=strongest) peak
         tmp.peak_latency = dat.time(i_peak_latency);
+        disp(tmp.peak_latency);
         [tmp.max_amplitude, i_maxch] = max(dat.avg(:,i_peak_latency));
         [tmp.min_amplitude, i_minch] = min(dat.avg(:,i_peak_latency));
         tmp.max_channel = dat.label{i_maxch};
@@ -134,8 +135,6 @@ for i_peak = 1:length(params.peaks)
         saveas(h, fullfile(save_path, 'figs', [params.sub '_' params.modality '_' params.peaks{i_peak}.label '_butterfly_ph-' params.phalange_labels{i_phalange} '.jpg']))
         close all
 
-        %% Save 
-        save(fullfile(save_path, [params.sub '_' params.modality '_' params.peaks{i_peak}.label]), 'peak', '-v7.3'); 
     end
 end
 

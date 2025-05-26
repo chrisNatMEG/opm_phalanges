@@ -43,45 +43,48 @@ data_epo = ft_redefinetrial(cfg,data_epo);
 cfg = [];
 cfg.dftfilter    = 'yes';        
 cfg.dftfreq      = params.filter.notch;
-cfg.demean          = 'yes';
-cfg.baselinewindow  = [-params.pre 0];
 data_epo = ft_preprocessing(cfg,data_epo);
 
 % Resample 
 cfg                 = [];
 cfg.method          = 'resample';
 cfg.resamplefs      = 1000;
-empty_room_cleaned = ft_resampledata(cfg, data_epo);
-empty_room_cleaned.sampleinfo = round(trl(:,1:2)/5);
+data_epo = ft_resampledata(cfg, data_epo);
+data_epo.sampleinfo = round(trl(:,1:2)/5);
 
+%% Reject bad channels
 cfg = [];
-cfg.trl = trl;
+cfg.trl = trl_opm;
 cfg.z_threshold = params.z_threshold;
 cfg.corr_threshold = params.corr_threshold;
-[~, ~, ~, ~, ~, ~, badtrl_zmax] = opm_badchannels(cfg, data_raw);
+[~, ~, ~, ~, ~, ~, badtrl_opm_zmax] = opm_badchannels(cfg, data_raw);
+
 cfg = [];
-cfg.trials  = setdiff(1:length(empty_room_cleaned.trial),badtrl_zmax); % remove bad trials
-empty_room_cleaned = ft_selectdata(cfg, empty_room_cleaned);
-empty_room_cleaned.sampleinfo = round(trl(:,1:2)/5);
-empty_room_cleaned.sampleinfo(:,2) = empty_room_cleaned.sampleinfo(:,2)-1;
-clear trl;
+cfg.trials  = setdiff(1:length(data_epo.trial),badtrl_opm_zmax); % remove bad trials
+data_epo = ft_selectdata(cfg, data_epo);
 
-% HFC
-i_chs = find(contains(empty_room_cleaned.label,'bz'));
-chs = empty_room_cleaned.label(i_chs);
-ori = zeros(length(chs),3);
-for i = 1:length(chs)
-    i_chs_grad(i) = find(strcmp(empty_room_cleaned.grad.label,chs{i}));
-    ori(i,:) = empty_room_cleaned.grad.chanori(i_chs_grad(i),:);
-end
-empty_room_cleaned.grad.M = eye(size(ori,1)) - ori*pinv(ori);
-for i = 1:length(empty_room_cleaned.trial)
-    empty_room_cleaned.trial{i}(i_chs,:) = params.sign * empty_room_cleaned.grad.M*empty_room_cleaned.trial{i}(i_chs,:);
-end
-% update grad
-empty_room_cleaned.grad.tra(i_chs_grad,i_chs_grad) = empty_room_cleaned.grad.M * empty_room_cleaned.grad.tra(i_chs_grad,i_chs_grad); 
+cfg = []; % separate ExG channels
+cfg.channel = {'EOG*', 'ECG*'};
+ExG = ft_selectdata(cfg,data_epo);
 
-% Reject jump trials
+%% Spatiotemporal filtering
+if params.do_hfc
+    cfg = [];
+    cfg.channel = '*bz';
+    cfg.order = params.hfc_order;
+    cfg.residualcheck = 'no';
+    opm_ER_cleaned = ft_denoise_hfc(cfg, data_epo);
+elseif params.do_amm
+    cfg = [];
+    cfg.channel = '*bz';
+    cfg.updatesens = 'yes';
+    cfg.residualcheck = 'no';
+    opm_ER_cleaned = ft_denoise_amm(cfg, data_epo);
+else
+    opm_ER_cleaned = data_epo;
+end
+
+%% Reject jump trials
 cfg = [];
 cfg.channel = {'*bz'};
 cfg.metric = 'maxzvalue';
@@ -89,37 +92,62 @@ cfg.preproc.medianfilter  = 'yes';
 cfg.preproc.medianfiltord  = 9;
 cfg.preproc.absdiff       = 'yes';
 cfg.threshold = params.z_threshold;
-[cfg,badtrl_jump] = ft_badsegment(cfg, empty_room_cleaned);
-empty_room_cleaned = ft_rejectartifact(cfg,empty_room_cleaned);
+[cfg,badtrl_jump] = ft_badsegment(cfg, opm_ER_cleaned);
+opm_ER_cleaned = ft_rejectartifact(cfg,opm_ER_cleaned);
 
-% Reject noisy trials
+%% Reject noisy trials
 cfg = [];
 cfg.channel = {'*bz'};
 cfg.metric = 'std';
 cfg.threshold = params.opm_std_threshold;
-[cfg,badtrl_std] = ft_badsegment(cfg, empty_room_cleaned);
-empty_room_cleaned = ft_rejectartifact(cfg,empty_room_cleaned);
+[cfg,badtrl_std] = ft_badsegment(cfg, opm_ER_cleaned);
+opm_ER_cleaned = ft_rejectartifact(cfg,opm_ER_cleaned);
 
-[~,idx]=ismember(empty_room_cleaned.sampleinfo,badtrl_jump,'rows');
+[~,idx]=ismember(opm_ER_cleaned.sampleinfo,badtrl_jump,'rows');
 badtrl_jump = find(idx);
-[~,idx]=ismember(empty_room_cleaned.sampleinfo,badtrl_std,'rows');
+[~,idx]=ismember(opm_ER_cleaned.sampleinfo,badtrl_std,'rows');
 badtrl_std = find(idx);
 save(fullfile(save_path, [params.sub '_opm_badtrls']), ...
     'badtrl_jump', ...
     'badtrl_std', ...
     'badtrl_zmax' ,"-v7.3"); 
 
-% Flip? 
-if params.flip
-    for i = 1:length(empty_room_cleaned.trial)
-        empty_room_cleaned.trial{i}(i_chs,:) = -empty_room_cleaned.trial{i}(i_chs,:);
+% Flip?
+chs = find(contains(opm_ER_cleaned.label,'bz'));
+if isfield(params,'flip_sign') && params.flip_sign
+    for i = 1:length(opm_ER_cleaned.trial)
+        opm_ER_cleaned.trial{i}(chs,:) = -opm_ER_cleaned.trial{i}(chs,:);
     end
 end
 
-% Save
-save(fullfile(save_path, [params.sub '_opm_empty_room_cleaned']), 'empty_room_cleaned',"-v7.3");
+%% Timelock
+% Downsample
+if params.ds_freq~=1000
+    cfg = [];
+    cfg.resamplefs = params.ds_freq;
+    opm_ER_cleaned = ft_resampledata(cfg, opm_ER_cleaned);
+end
 
-clear empty_room_cleaned data_raw data_epo
+% Remove padding
+cfg = [];
+cfg.channel = params.chs;
+cfg.latency = [-params.pre params.post];
+opm_ER_cleaned = ft_selectdata(cfg, opm_ER_cleaned);
+
+% Demean
+cfg = [];
+cfg.demean = 'yes'; %% demean entire trial for whole trial cov
+opm_ER_cleaned = ft_preprocessing(cfg, opm_ER_cleaned);
+
+% Average
+cfg = [];
+cfg.covariance          = 'yes';
+cfg.covariancewindow    = 'all';
+opm_ER_tlk = ft_timelockanalysis(cfg, opm_ER_cleaned);
+
+%% Save
+save(fullfile(save_path, [params.sub '_ER_opm']), 'opm_ER_cleaned', 'opm_ER_tlk',"-v7.3");
+clear data_epo data_raw data_epo
 
 %% SQUID
 ft_hastoolbox('mne', 1);
@@ -157,8 +185,6 @@ clear trl
 cfg = [];
 cfg.dftfilter    = 'yes';        
 cfg.dftfreq      = params.filter.notch;
-cfg.demean          = 'yes';
-cfg.baselinewindow  = [-params.pre 0];
 data_epo = ft_preprocessing(cfg,data_epo);
 
 % Reject jump trials
@@ -170,35 +196,64 @@ cfg.preproc.medianfiltord  = 9;
 cfg.preproc.absdiff       = 'yes';
 cfg.threshold = params.z_threshold;
 [cfg,badtrl_squid_jump] = ft_badsegment(cfg, data_epo);
-empty_room_cleaned = ft_rejectartifact(cfg,data_epo);
+squid_ER_cleaned = ft_rejectartifact(cfg,data_epo);
 
 % Reject noisy trials
 cfg = [];
-cfg.channel = 'squidmag';
+cfg.channel = 'megmag';
 cfg.metric = 'std';
 cfg.threshold = params.squidmag_std_threshold;
-[cfg,badtrl_squidmag_std] = ft_badsegment(cfg, empty_room_cleaned);
-empty_room_cleaned = ft_rejectartifact(cfg,empty_room_cleaned);
+[cfg,badtrl_squidmag_std] = ft_badsegment(cfg, squid_ER_cleaned);
+squid_ER_cleaned = ft_rejectartifact(cfg,squid_ER_cleaned);
 
 cfg = [];
-cfg.channel = 'squidgrad';
+cfg.channel = 'megplanar';
 cfg.metric = 'std';
 cfg.threshold = params.squidgrad_std_threshold;
-[cfg,badtrl_squidgrad_std] = ft_badsegment(cfg, empty_room_cleaned);
-empty_room_cleaned = ft_rejectartifact(cfg,empty_room_cleaned);
+[cfg,badtrl_squidgrad_std] = ft_badsegment(cfg, squid_ER_cleaned);
+squid_ER_cleaned = ft_rejectartifact(cfg,squid_ER_cleaned);
 
-[~,idx]=ismember(empty_room_cleaned.sampleinfo,badtrl_squid_jump,'rows');
+[~,idx]=ismember(squid_ER_cleaned.sampleinfo,badtrl_squid_jump,'rows');
 badtrl_squid_jump = find(idx);
-[~,idx]=ismember(empty_room_cleaned.sampleinfo,badtrl_squidmag_std,'rows');
+[~,idx]=ismember(squid_ER_cleaned.sampleinfo,badtrl_squidmag_std,'rows');
 badtrl_squid_std = find(idx);
-[~,idx]=ismember(empty_room_cleaned.sampleinfo,badtrl_squidgrad_std,'rows');
+[~,idx]=ismember(squid_ER_cleaned.sampleinfo,badtrl_squidgrad_std,'rows');
 badtrl_squid_std = unique([badtrl_squid_std; find(idx)]);
 save(fullfile(save_path, [params.sub '_squid_badtrls']), ...
     'badtrl_squid_jump', ...
     'badtrl_squid_std',"-v7.3"); 
 
-% Save
-save(fullfile(save_path, [params.sub '_squid_empty_room_cleaned']), 'empty_room_cleaned',"-v7.3");
+%% Timelock
+% Downsample
+if params.ds_freq~=1000
+    cfg = [];
+    cfg.resamplefs = params.ds_freq;
+    squid_ER_cleaned = ft_resampledata(cfg, squid_ER_cleaned);
+end
 
-clear empty_room_cleaned data_raw data_epo
+% Remove padding
+cfg = [];
+cfg.channel = params.chs;
+cfg.latency = [-params.pre params.post];
+squid_ER_cleaned = ft_selectdata(cfg, squid_ER_cleaned);
+
+% Demean
+cfg = [];
+cfg.demean = 'yes'; %% demean entire trial for whole trial cov
+squid_ER_cleaned = ft_preprocessing(cfg, squid_ER_cleaned);
+
+% Average
+cfg = [];
+cfg.covariance          = 'yes';
+cfg.covariancewindow    = 'all';
+squidmag_ER_tlk = ft_timelockanalysis(cfg, squid_ER_cleaned);
+cfg = [];
+cfg.covariance          = 'yes';
+cfg.covariancewindow    = 'all';
+squidgrad_ER_tlk = ft_timelockanalysis(cfg, squid_ER_cleaned);
+
+%% Save
+save(fullfile(save_path, [params.sub '_ER_squid']), 'squid_ER_cleaned', 'squidmag_ER_tlk', 'squidgrad_ER_tlk', "-v7.3");
+
+clear data_epo data_raw data_epo
 end

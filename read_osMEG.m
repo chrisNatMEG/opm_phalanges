@@ -51,15 +51,11 @@ end
 
 %% AUX data filter & epoch
 cfg = [];
-%cfg.datafile        = aux_file;
-%cfg.trl             = trl_aux;
 cfg.lpfilter        = 'yes';         
 cfg.lpfreq          = params.filter.lp_freq;
 cfg.hpfilter        = 'yes'; 
 cfg.hpfreq          = params.filter.hp_freq;
 cfg.hpinstabilityfix  = 'reduce';
-%cfg.padding         = params.pre + params.post + 1;
-%cfg.paddingtype     = 'data';
 aux_epo = ft_preprocessing(cfg,aux_raw);
 
 cfg = [];
@@ -69,8 +65,6 @@ aux_epo = ft_redefinetrial(cfg,aux_epo);
 cfg = [];
 cfg.dftfilter       = 'yes';        
 cfg.dftfreq         = params.filter.notch;
-cfg.demean          = 'yes';
-cfg.baselinewindow  = [-params.pre 0];
 aux_epo = ft_preprocessing(cfg,aux_epo);
 
 % Find bad channels
@@ -83,17 +77,12 @@ clear aux_raw
 
 %% OPM data filter & epoch
 cfg = [];
-%cfg.datafile        = opm_file;
-%cfg.coordsys        = 'dewar';
-%cfg.coilaccuracy    = 0;
-%cfg.trl             = trl_opm;
+
 cfg.lpfilter        = 'yes';         
 cfg.lpfreq          = params.filter.lp_freq;
 cfg.hpfilter        = 'yes';         
 cfg.hpfreq          = params.filter.hp_freq;
 cfg.hpinstabilityfix  = 'reduce';
-%cfg.padding         = params.pre + params.post + 3;
-%cfg.paddingtype     = 'data';
 opm_epo = ft_preprocessing(cfg, opm_raw);
 
 cfg = [];
@@ -103,8 +92,6 @@ opm_epo = ft_redefinetrial(cfg,opm_epo);
 cfg = [];
 cfg.dftfilter       = 'yes';        
 cfg.dftfreq         = params.filter.notch;
-cfg.demean          = 'yes';
-cfg.baselinewindow  = [-params.pre 0];
 opm_epo = ft_preprocessing(cfg, opm_epo);
 
 % Find bad opm channels
@@ -119,7 +106,7 @@ clear opm_raw
 cfg            = [];
 cfg.time = aux_epo.time;
 cfg.detrend    = 'no';
-opm_epo_ds = ft_resampledata(cfg, opm_epo);
+opm_epo = ft_resampledata(cfg, opm_epo);
 
 %% Combine data
 EOG_channels = find(contains(aux_epo.label,'EOG'));
@@ -129,59 +116,144 @@ MISC_channels = find(contains(aux_epo.label,'MISC'));
 TRIG_channels = find(contains(aux_epo.label,'STI101'));
 include_channels = [EOG_channels; ECG_channels; EEG_channels; MISC_channels; TRIG_channels];
 
-comb = opm_epo_ds; 
+comb = opm_epo; 
 comb.elec = aux_epo.elec;
 comb.time = aux_epo.time;
-comb.label = [comb.label; aux_epo.label(include_channels)];
+comb.label = [opm_epo.label; aux_epo.label(include_channels)];
+comb.hdr = aux_epo.hdr;
 comb.hdr.label = comb.label;
-comb.hdr.nChans = comb.hdr.nChans + length(include_channels);
-comb.hdr.chantype = [comb.hdr.chantype; aux_epo.hdr.chantype(include_channels)];
-comb.hdr.chanunit = [comb.hdr.chanunit; aux_epo.hdr.chanunit(include_channels)];
+comb.hdr.nChans = length(comb.label);
+comb.hdr.chantype = [opm_epo.hdr.chantype; aux_epo.hdr.chantype(include_channels)];
+comb.hdr.chanunit = [opm_epo.hdr.chanunit; aux_epo.hdr.chanunit(include_channels)];
 comb.sampleinfo = aux_epo.sampleinfo;
+comb.trialinfo = aux_epo.trialinfo;
 n_smpl = size(aux_epo.trial{1},2);
 for i = 1:length(comb.trial)
     comb.trial{i} = [comb.trial{i}(:,1:n_smpl); aux_epo.trial{i}(include_channels,:)]; 
 end
 
+%% Flip? 
+chs = find(contains(comb.label,'bz'));
+if isfield(params,'flip_sign') && params.flip_sign
+    for i = 1:length(comb.trial)
+        comb.trial{i}(chs,:) = -comb.trial{i}(chs,:);
+    end
+end
+
 %% OPM 
 cfg = [];
-cfg.channel = comb.label(find(~contains(comb.label,'eeg')));
-opm_cleaned = ft_selectdata(cfg, comb);
+cfg.channel = setdiff(comb.label,badchs_opm);
+cfg.trials  = setdiff(1:length(comb.trial),badtrl_opm_zmax); % remove bad trials
+comb = ft_selectdata(cfg, comb);
 
+tmp = comb;
 cfg = [];
-cfg.channel = setdiff(opm_cleaned.label,badchs_opm);
-cfg.trials  = setdiff(1:length(opm_cleaned.trial),badtrl_opm_zmax); % remove bad trials
-opm_cleaned = ft_selectdata(cfg, opm_cleaned);
-
+cfg.demean          = 'yes';
+cfg.baselinewindow  = [-params.pre 0];
+tmp = ft_preprocessing(cfg,tmp);
 cfg = [];
 cfg.channel = '*bz';
 cfg.output = 'pow';
 cfg.method = 'mtmfft';
 cfg.taper = 'hanning';
 cfg.foilim = [1 100];
-freq = ft_freqanalysis(cfg, opm_cleaned);
+freq = ft_freqanalysis(cfg, tmp);
+clear tmp
 h = figure;
 semilogy(freq.freq,freq.powspctrm)
 xlabel('Frequency (Hz)')
 ylabel('Power (T^2)')
-title('OPM spectrum - preHFC')
-saveas(h, fullfile(save_path, 'figs', [params.sub '_opm_spectrum0.jpg']))
+title('OPM spectrum - pre')
+saveas(h, fullfile(save_path, 'figs', [params.sub '_opm_spectrum_filt.jpg']))
 close all
 
 % HFC
-i_chs = find(contains(opm_cleaned.label,'bz'));
-chs = opm_cleaned.label(i_chs);
-ori = zeros(length(chs),3);
-for i = 1:length(chs)
-    ori(i,:) = opm_cleaned.grad.chanori(find(strcmp(opm_cleaned.grad.label,chs{i})),:);
-    i_chs_grad(i) = find(strcmp(opm_cleaned.grad.label,chs{i}));
+% i_chs = find(contains(op_cleaned.label,'bz'));
+% chs = opm_cleaned.label(i_chs);
+% ori = zeros(length(chs),3);
+% for i = 1:length(chs)
+%     ori(i,:) = opm_cleaned.grad.chanori(find(strcmp(opm_cleaned.grad.label,chs{i})),:);
+%     i_chs_grad(i) = find(strcmp(opm_cleaned.grad.label,chs{i}));
+% end
+% opm_cleaned.grad.M = eye(size(ori,1)) - ori*pinv(ori);
+% for i = 1:length(opm_cleaned.trial)
+%     opm_cleaned.trial{i}(i_chs,:) = params.sign * opm_cleaned.grad.M*opm_cleaned.trial{i}(i_chs,:);
+% end
+% opm_cleaned.grad.tra(i_chs_grad,i_chs_grad) = opm_cleaned.grad.M * opm_cleaned.grad.tra(i_chs_grad,i_chs_grad); % update grad
+cfg = []; % separate ExG channels
+cfg.channel = {'EOG*', 'ECG*'};
+ExG = ft_selectdata(cfg,comb);
+
+%% Spatiotemporal filtering
+if params.do_hfc
+    cfg = [];
+    cfg.channel = '*bz';
+    cfg.order = params.hfc_order;
+    cfg.residualcheck = 'no';
+    opm_cleaned = ft_denoise_hfc(cfg, comb);
+    
+    tmp = opm_cleaned;
+    cfg = [];
+    cfg.demean          = 'yes';
+    cfg.baselinewindow  = [-params.pre 0];
+    tmp = ft_preprocessing(cfg,tmp);
+    cfg = [];
+    cfg.channel = '*bz';
+    cfg.output = 'pow';
+    cfg.method = 'mtmfft';
+    cfg.taper = 'hanning';
+    cfg.foilim = [1 100];
+    freq = ft_freqanalysis(cfg, tmp);
+    clear tmp
+    h = figure;
+    semilogy(freq.freq,freq.powspctrm)
+    xlabel('Frequency (Hz)')
+    ylabel('Power (T^2)')
+    title('OPM spectrum - postHFC')
+    saveas(h, fullfile(save_path, 'figs', [params.sub '_opm_spectrum_HFC.jpg']))
+    close all
+
+elseif params.do_amm
+    cfg = [];
+    cfg.channel = '*bz';
+    cfg.updatesens = 'yes';
+    cfg.residualcheck = 'no';
+    opm_cleaned = ft_denoise_amm(cfg, comb);
+    
+    tmp = opm_cleaned;
+    cfg = [];
+    cfg.demean          = 'yes';
+    cfg.baselinewindow  = [-params.pre 0];
+    tmp = ft_preprocessing(cfg,tmp);
+    cfg = [];
+    cfg.channel = '*bz';
+    cfg.output = 'pow';
+    cfg.method = 'mtmfft';
+    cfg.taper = 'hanning';
+    cfg.foilim = [1 100];
+    freq = ft_freqanalysis(cfg, tmp);
+    clear tmp
+    h = figure;
+    semilogy(freq.freq,freq.powspctrm)
+    xlabel('Frequency (Hz)')
+    ylabel('Power (T^2)')
+    title('OPM spectrum - postAMM')
+    saveas(h, fullfile(save_path, 'figs', [params.sub '_opm_spectrum_AMM.jpg']))
+    close all
+else
+    opm_cleaned = comb;
 end
-opm_cleaned.grad.M = eye(size(ori,1)) - ori*pinv(ori);
+
+%% Recombine with ExG channels
+opm_cleaned.label = vertcat(opm_cleaned.label,ExG.label);
+opm_cleaned.hdr = comb.hdr;
+incl = ismember(comb.hdr.label,opm_cleaned.label);
+opm_cleaned.hdr.label = comb.hdr.label(incl);
+opm_cleaned.hdr.chantype = comb.hdr.chantype(incl);
+opm_cleaned.hdr.chanunit = comb.hdr.chanunit (incl);
 for i = 1:length(opm_cleaned.trial)
-    opm_cleaned.trial{i}(i_chs,:) = params.sign * opm_cleaned.grad.M*opm_cleaned.trial{i}(i_chs,:);
+    opm_cleaned.trial{i} = vertcat(opm_cleaned.trial{i}, ExG.trial{i}); 
 end
-i_chs = find(contains(opm_cleaned.grad.label,'bz'));
-opm_cleaned.grad.tra(i_chs_grad,i_chs_grad) = opm_cleaned.grad.M * opm_cleaned.grad.tra(i_chs_grad,i_chs_grad); % update grad
 
 % Reject jump trials
 cfg = [];
@@ -202,14 +274,13 @@ cfg.threshold = params.opm_std_threshold;
 [cfg,badtrl_opm_std] = ft_badsegment(cfg, opm_cleaned);
 opm_cleaned = ft_rejectartifact(cfg,opm_cleaned);
 
+% Convert grad unit to cm to match TRIUX grad
+opm_cleaned.grad = ft_convert_units(opm_cleaned.grad,'cm');
+
 %% EEG
 cfg = [];
-cfg.channel = comb.label(find(~contains(comb.label,'bz')));
+cfg.channel = 'EEG';
 opmeeg_cleaned = ft_selectdata(cfg, comb);
-
-cfg = [];
-cfg.channel = {'EOG', 'ECG'};
-exg = ft_selectdata(cfg, opmeeg_cleaned);
 
 % Interpolate bad chs
 cfg = [];
@@ -232,12 +303,10 @@ cfg.reffchannel = 'all';
 opmeeg_cleaned = ft_preprocessing(cfg,opmeeg_cleaned);
 
 % Append ECG/EOG channels
-cfg = [];
-opmeeg_cleaned = ft_appenddata(cfg,opmeeg_cleaned,exg);
-
-%cfg = [];
-%cfg.channel = setdiff(opmeeg_cleaned.label,badchs_opmeeg);
-%opmeeg_cleaned = ft_selectdata(cfg, opmeeg_cleaned);
+opmeeg_cleaned.label = vertcat(opmeeg_cleaned.label,ExG.label);
+for i = 1:length(opmeeg_cleaned.trial)
+    opmeeg_cleaned.trial{i} = vertcat(opmeeg_cleaned.trial{i}, ExG.trial{i}); 
+end
 
 % Reject jump trials
 cfg = [];
@@ -271,7 +340,7 @@ semilogy(freq.freq,freq.powspctrm)
 xlabel('Frequency (Hz)')
 ylabel('Power (T^2)')
 title('OPM-EEG spectrum - preICA')
-saveas(h, fullfile(save_path, 'figs', [params.sub '_opmeeg_spectrum1.jpg']))
+saveas(h, fullfile(save_path, 'figs', [params.sub '_opmeeg_spectrum_preICA.jpg']))
 close all
 
 cfg = [];
@@ -286,7 +355,7 @@ semilogy(freq.freq,freq.powspctrm)
 xlabel('Frequency (Hz)')
 ylabel('Power (T^2)')
 title('OPM spectrum - preICA')
-saveas(h, fullfile(save_path, 'figs', [params.sub '_opm_spectrum1.jpg']))
+saveas(h, fullfile(save_path, 'figs', [params.sub '_opm_spectrum_preICA.jpg']))
 close all
 
 %% Save 

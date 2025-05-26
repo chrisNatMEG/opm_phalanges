@@ -151,158 +151,158 @@ for subNumber = subs
     end
     add(rpt, chapter);
 
-    %% Butterfly plots chapter
-    chapter = Chapter('Timelocked');
-    chapter.Numbered = false; % Remove chapter numbering
-       
-    for i_phalange = 1:length(params.phalange_labels)
-        % Add rows and cells to the table and insert the images
-        section = Section(['Phalange: ' params.phalange_labels(i_phalange)]);
-        section.Numbered = false; % Remove section numbering
-        
-        tbl = Table();
-        tbl.Style = {Border('solid'), Width('100%'), RowSep('solid'), ColSep('solid')};
-        for i = 1:2
-            row = TableRow();
-            for j = 1:2
-                imgIndex = (j-1)*2 + i;
-                img = Image(fullfile(subjectFolderPath,'figs',['sub_' subStr '_' sections2{imgIndex} '_butterfly_ph-' params.phalange_labels{i_phalange} '.jpg']));
-                img.Style = {Width('8cm'), ScaleToFit};
-                entry = TableEntry();
-                append(entry, img);
-                append(row, entry);
+    for i_peak = 1:length(params.peaks)
+        %% chapter
+        peak_label = params.peaks{i_peak}.label;
+        chapter = Chapter(peak_label);
+        chapter.Numbered = false; % Remove chapter numbering
+        for i_section = 1:length(sections)
+            section = Section(sections(i_section));
+            section.Numbered = false; % Remove section numbering
+    
+            if contains(sections(i_section),'eeg')
+                fieldMultiplier = 1e9;
+                fieldUnit = '[nV]';
+            else
+                fieldMultiplier = 1e15;
+                fieldUnit = '[fT]';
             end
-            append(tbl, row);
+    
+            % Load the .mat file
+            data = load(fullfile(subjectFolderPath,['sub_' subStr '_' sections2{i_section} '_' peak_label '.mat']));
+            peak = data.peak;
+            
+            % Create the table with the required data
+            num_phalanges = length(params.phalange_labels);
+            T = table('Size', [8, num_phalanges], 'VariableTypes', repmat({'double'}, 1, num_phalanges), 'VariableNames', params.phalange_labels);
+            T.Properties.RowNames = {['peak_amplitude ' fieldUnit], ['max_amplitude ' fieldUnit], ['min_amplitude ' fieldUnit], 'peak_latency [ms]', 'SNR_prestim', 'SNR_stderr', ['std_prestim ' fieldUnit], ['stderr ' fieldUnit]};
+            
+            for i_phalange = 1:num_phalanges
+                phalange_data = peak{i_phalange};
+                T{['peak_amplitude ' fieldUnit], params.phalange_labels{i_phalange}} = fieldMultiplier*phalange_data.peak_amplitude;
+                T{['max_amplitude ' fieldUnit], params.phalange_labels{i_phalange}} = fieldMultiplier*phalange_data.max_amplitude;
+                T{['min_amplitude ' fieldUnit], params.phalange_labels{i_phalange}} = fieldMultiplier*phalange_data.min_amplitude;
+                T{'peak_latency [ms]', params.phalange_labels{i_phalange}} = 1e3*phalange_data.peak_latency;
+                T{'SNR_prestim', params.phalange_labels{i_phalange}} = phalange_data.peak_amplitude / phalange_data.prestim_std;
+                T{'SNR_stderr', params.phalange_labels{i_phalange}} = phalange_data.peak_amplitude / phalange_data.std_error;
+                T{['std_prestim ' fieldUnit], params.phalange_labels{i_phalange}} = fieldMultiplier*phalange_data.prestim_std;
+                T{['stderr ' fieldUnit], params.phalange_labels{i_phalange}} = fieldMultiplier*phalange_data.std_error;
+            end
+            
+            % Convert the MATLAB table to a DOM table
+            domTable = Table();
+            domTable.Style = {Border('solid'), Width('100%'), RowSep('solid'), ColSep('solid')};
+            
+            % Add header row
+            headerRow = TableRow();
+            append(headerRow, TableEntry(' '));
+            for i_phalange = 1:num_phalanges
+                headerEntry = TableEntry(params.phalange_labels{i_phalange});
+                headerEntry.Style = {HAlign('center'), Bold()};
+                append(headerRow, headerEntry);
+            end
+            append(domTable, headerRow);
+            
+            formatString = {'%.1f','%.1f','%.1f','%.f','%.1f','%.2f','%.1f','%.1f'};
+    
+            % Add data rows
+            for i_row = 1:height(T)
+                row = TableRow();
+                rowNameEntry = TableEntry(T.Properties.RowNames{i_row});
+                rowNameEntry.Style = {Bold()};
+                append(row, rowNameEntry);
+                for j = 1:num_phalanges
+                    entry = TableEntry(num2str(T{i_row, j},formatString{i_row}));
+                    entry.Style = {HAlign('right')}; 
+                    append(row, entry);
+                end
+                append(domTable, row);
+            end
+            add(section,domTable);
+            add(chapter,section)
         end
     
-        add(section, tbl);
-        add(chapter, section);
-        add(chapter, PageBreak());
-    end
-    add(rpt, chapter);
-
-    %% M60 chapter
-    chapter = Chapter('M60');
-    chapter.Numbered = false; % Remove chapter numbering
-    for i_section = 1:length(sections)
-        section = Section(sections(i_section));
-        section.Numbered = false; % Remove section numbering
-
-        if contains(sections(i_section),'eeg')
-            fieldMultiplier = 1e9;
-            fieldUnit = '[nV]';
-        else
-            fieldMultiplier = 1e15;
-            fieldUnit = '[fT]';
-        end
-
-        % Load the .mat file
-        data = load(fullfile(subjectFolderPath,['sub_' subStr '_' sections2{i_section} '_M60.mat']));
-        M60 = data.M60;
-        
-        % Create the table with the required data
-        num_phalanges = length(params.phalange_labels);
-        T = table('Size', [8, num_phalanges], 'VariableTypes', repmat({'double'}, 1, num_phalanges), 'VariableNames', params.phalange_labels);
-        T.Properties.RowNames = {['peak_amplitude ' fieldUnit], ['max_amplitude ' fieldUnit], ['min_amplitude ' fieldUnit], 'peak_latency [ms]', 'SNR_prestim', 'SNR_stderr', ['std_prestim ' fieldUnit], ['stderr ' fieldUnit]};
-        
-        for i_phalange = 1:num_phalanges
-            phalange_data = M60{i_phalange};
-            T{['peak_amplitude ' fieldUnit], params.phalange_labels{i_phalange}} = fieldMultiplier*phalange_data.peak_amplitude;
-            T{['max_amplitude ' fieldUnit], params.phalange_labels{i_phalange}} = fieldMultiplier*phalange_data.max_amplitude;
-            T{['min_amplitude ' fieldUnit], params.phalange_labels{i_phalange}} = fieldMultiplier*phalange_data.min_amplitude;
-            T{'peak_latency [ms]', params.phalange_labels{i_phalange}} = 1e3*phalange_data.peak_latency;
-            T{'SNR_prestim', params.phalange_labels{i_phalange}} = phalange_data.peak_amplitude / phalange_data.prestim_std;
-            T{'SNR_stderr', params.phalange_labels{i_phalange}} = phalange_data.peak_amplitude / phalange_data.std_error;
-            T{['std_prestim ' fieldUnit], params.phalange_labels{i_phalange}} = fieldMultiplier*phalange_data.prestim_std;
-            T{['stderr ' fieldUnit], params.phalange_labels{i_phalange}} = fieldMultiplier*phalange_data.std_error;
-        end
-        
-        % Convert the MATLAB table to a DOM table
-        domTable = Table();
-        domTable.Style = {Border('solid'), Width('100%'), RowSep('solid'), ColSep('solid')};
-        
-        % Add header row
-        headerRow = TableRow();
-        append(headerRow, TableEntry(' '));
-        for i_phalange = 1:num_phalanges
-            headerEntry = TableEntry(params.phalange_labels{i_phalange});
-            headerEntry.Style = {HAlign('center'), Bold()};
-            append(headerRow, headerEntry);
-        end
-        append(domTable, headerRow);
-        
-        formatString = {'%.1f','%.1f','%.1f','%.f','%.1f','%.2f','%.1f','%.1f'};
-
-        % Add data rows
-        for i_row = 1:height(T)
-            row = TableRow();
-            rowNameEntry = TableEntry(T.Properties.RowNames{i_row});
-            rowNameEntry.Style = {Bold()};
-            append(row, rowNameEntry);
-            for j = 1:num_phalanges
-                entry = TableEntry(num2str(T{i_row, j},formatString{i_row}));
-                entry.Style = {HAlign('right')}; 
-                append(row, entry);
+        %% Butterflies
+        for i_phalange = 1:length(params.phalange_labels)
+            % Add rows and cells to the table and insert the images
+            section = Section(['Butterfly - phalange: ' params.phalange_labels(i_phalange)]);
+            section.Numbered = false; % Remove section numbering
+            
+            tbl = Table();
+            tbl.Style = {Border('solid'), Width('100%'), RowSep('solid'), ColSep('solid')};
+            for i = 1:2
+                row = TableRow();
+                for j = 1:2
+                    imgIndex = (j-1)*2 + i;
+                    img = Image(fullfile(subjectFolderPath,'figs',['sub_' subStr '_' sections2{imgIndex} '_' peak_label '_butterfly_ph-' params.phalange_labels{i_phalange} '.jpg']));
+                    img.Style = {Width('8cm'), ScaleToFit};
+                    entry = TableEntry();
+                    append(entry, img);
+                    append(row, entry);
+                end
+                append(tbl, row);
             end
-            append(domTable, row);
-        end
-        add(section,domTable);
-        add(chapter,section)
-    end
-
-    %% Max channel plots
-    for i_phalange = 1:length(params.phalange_labels)
-        % Add rows and cells to the table and insert the images
-        section = Section(['Phalange: ' params.phalange_labels(i_phalange)]);
-        section.Numbered = false; % Remove section numbering
         
-        tbl = Table();
-        tbl.Style = {Border('solid'), Width('100%'), RowSep('solid'), ColSep('solid')};
-        for i = 1:2
-            row = TableRow();
-            for j = 1:2
-                imgIndex = (j-1)*2 + i;
-                img = Image(fullfile(subjectFolderPath,'figs',['sub_' subStr '_' sections2{imgIndex} '_evoked_peakchannel_ph-' params.phalange_labels{i_phalange} '.jpg']));
-                img.Style = {Width('8cm'), ScaleToFit};
-                entry = TableEntry();
-                append(entry, img);
-                append(row, entry);
+            add(section, tbl);
+            add(chapter, section);
+            add(chapter, PageBreak());
+        end
+        
+        
+        %% Max channel plots
+        for i_phalange = 1:length(params.phalange_labels)
+            % Add rows and cells to the table and insert the images
+            section = Section(['Peak channel - phalange: ' params.phalange_labels(i_phalange)]);
+            section.Numbered = false; % Remove section numbering
+            
+            tbl = Table();
+            tbl.Style = {Border('solid'), Width('100%'), RowSep('solid'), ColSep('solid')};
+            for i = 1:2
+                row = TableRow();
+                for j = 1:2
+                    imgIndex = (j-1)*2 + i;
+                    img = Image(fullfile(subjectFolderPath,'figs',['sub_' subStr '_' sections2{imgIndex} '_' peak_label '_evoked_peakchannel_ph-' params.phalange_labels{i_phalange} '.jpg']));
+                    img.Style = {Width('8cm'), ScaleToFit};
+                    entry = TableEntry();
+                    append(entry, img);
+                    append(row, entry);
+                end
+                append(tbl, row);
             end
-            append(tbl, row);
+        
+            add(section, tbl);
+            add(chapter, section);
+            add(chapter, PageBreak());
         end
     
-        add(section, tbl);
-        add(chapter, section);
-        add(chapter, PageBreak());
-    end
-
-    %% Topo plots
-    for i_phalange = 1:length(params.phalange_labels)
-        % Add rows and cells to the table and insert the images
-        section = Section(['Phalange: ' params.phalange_labels(i_phalange)]);
-        section.Numbered = false; % Remove section numbering
-        
-        tbl = Table();
-        tbl.Style = {Border('solid'), Width('100%'), RowSep('solid'), ColSep('solid')};
-        for i = 1:2
-            row = TableRow();
-            for j = 1:2
-                imgIndex = (j-1)*2 + i;
-                img = Image(fullfile(subjectFolderPath,'figs',['sub_' subStr '_' sections2{imgIndex} '_M60_topo_ph-' params.phalange_labels{i_phalange} '.jpg']));
-                img.Style = {Width('8cm'), ScaleToFit};
-                entry = TableEntry();
-                append(entry, img);
-                append(row, entry);
+        %% Topo plots
+        for i_phalange = 1:length(params.phalange_labels)
+            % Add rows and cells to the table and insert the images
+            section = Section(['Topoplot - phalange: ' params.phalange_labels(i_phalange)]);
+            section.Numbered = false; % Remove section numbering
+            
+            tbl = Table();
+            tbl.Style = {Border('solid'), Width('100%'), RowSep('solid'), ColSep('solid')};
+            for i = 1:2
+                row = TableRow();
+                for j = 1:2
+                    imgIndex = (j-1)*2 + i;
+                    img = Image(fullfile(subjectFolderPath,'figs',['sub_' subStr '_' sections2{imgIndex} '_' peak_label '_topo_ph-' params.phalange_labels{i_phalange} '.jpg']));
+                    img.Style = {Width('8cm'), ScaleToFit};
+                    entry = TableEntry();
+                    append(entry, img);
+                    append(row, entry);
+                end
+                append(tbl, row);
             end
-            append(tbl, row);
+        
+            add(section, tbl);
+            add(chapter, section);
+            add(chapter, PageBreak());
         end
     
-        add(section, tbl);
-        add(chapter, section);
-        add(chapter, PageBreak());
+        add(rpt, chapter);
     end
-
-    add(rpt, chapter);
 
     %% Close the report
     close(rpt);
@@ -330,6 +330,11 @@ function processStruct(s, parentName, chapter)
         elseif isempty(fieldValue)
             % Otherwise, convert the value to a string and append it
             append(chapter, Paragraph([fullName, ': []']));
+        elseif iscell(fieldValue) && ismatrix(fieldValue)
+            for i_cell = 1:length(fieldValue)
+                tmp = fieldValue{i_cell};
+                processStruct(tmp,'tmp',chapter)
+            end
         else
             % Otherwise, convert the value to a string and append it
             if size(fieldValue,1) > size(fieldValue,2)

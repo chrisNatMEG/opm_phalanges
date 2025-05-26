@@ -1,4 +1,4 @@
-function [data_ica] = ica_MEG(data,save_path,params,save_results)
+function [data_ica] = ica_MEG(data, save_path, params, save_results)
 %prprocess_osMEG Preprocessing on-scalp MEG data for benchmarking
 % recordings. Requires arguments:
 % Path: containing save_path and meg_file
@@ -20,8 +20,13 @@ cfg             = [];
 cfg.channel  = params.chs;
 cfg.trials     = 1;
 tmp = ft_selectdata(cfg,data);
-n_comp  = rank(tmp.trial{1}*tmp.trial{1}');
+data_rank  = rank(tmp.trial{1}*tmp.trial{1}');
 clear tmp
+if isfield(params,'n_comp') && params.n_comp < data_rank % if n_comp was provided chose the smaller of data_rank and n_comp
+   n_comp = params.n_comp;
+else
+   n_comp = data_rank;
+end
 
 cfg            = [];
 cfg.method     = 'runica';
@@ -30,7 +35,7 @@ cfg.channel    = params.chs;
 comp           = ft_componentanalysis(cfg, data_ds);
 
 %% Plot
-if n_comp>16
+if params.n_comp>16
     for i = 1:floor(n_comp/16)
         cfg           = [];
         cfg.component = (((i-1)*16)+1):(i*16);       
@@ -41,7 +46,7 @@ if n_comp>16
         saveas(h,fullfile(save_path, 'figs', [params.sub '_' params.modality '_ica_comps' num2str(i) '.jpg'])) 
     end
 
-    if mod(n_comp,16)~=0
+    if mod(params.n_comp,16)~=0
         cfg           = [];
         cfg.component = ((i*16)+1):n_comp;       
         cfg.layout    = params.layout; 
@@ -71,7 +76,7 @@ cfg.artfctdef.ecg.cutoff  = 3;
 cfg.artfctdef.ecg.feedback = 'no';
 cfg.channel               = 'ECG';
 cfg.artfctdef.ecg.inspect = 'ECG';
-[cfg, ecg_artifact]       = ft_artifact_ecg(cfg,data);
+[cfg, ecg_artifact]       = ft_artifact_ecg(cfg,data); % if ft_fetch_data creates errors add "'allowoverlap', true" to the function call.
 
 %% Create ECG-locked
 cfg = [];
@@ -169,7 +174,7 @@ end
 cfg = [];
 cfg.continuous            = 'no';
 cfg.channel               = 'EOG';
-[~, eog_artifact] = ft_artifact_eog(cfg, data);
+[~, eog_artifact] = ft_artifact_eog(cfg, data); % if ft_fetch_data creates errors add "'allowoverlap', true" to the function call.
 
 % Make artifact epochs
 cfg = [];
@@ -383,7 +388,7 @@ if save_results
         saveas(h,fullfile(save_path, 'figs', [params.sub '_' params.modality '_ica_rejected_comps' num2str(i) '.jpg'])) 
     end
 
-    % Downsample for MVPA
+    %% Downsample for MVPA
     cfg = [];
     cfg.latency = [-0.05 0.3];
     data_ica_ds = ft_selectdata(cfg, data_ica);
@@ -392,7 +397,7 @@ if save_results
     cfg.baselinewindow = [-0.05 0];
     data_ica_ds = ft_preprocessing(cfg,data_ica_ds);
     cfg = [];
-    cfg.resamplefs = 500;
+    cfg.resamplefs = 200;
     data_ica_ds = ft_resampledata(cfg, data_ica_ds);
     save(fullfile(save_path, [params.sub '_' params.modality '_ica_ds']), 'data_ica_ds',"-v7.3"); disp('done');
     clear data_ica_ds

@@ -61,7 +61,7 @@ for i_trl = 1:length(data_lp.trial)
         end
     end 
 end
-badchs_neighbors = find(max(mean(neighborscorr,3),[],2)<corr_threshold,2); % bad if no neighbors exceed correlation threshold
+badchs_neighbors = find(max(mean(neighborscorr,3),[],2)<corr_threshold); % bad if no neighbors exceed correlation threshold
 
 %% Epoch
 cfg = [];
@@ -70,7 +70,7 @@ data_epo = ft_redefinetrial(cfg,data);
 cfg = [];
 cfg.demean = 'yes';
 cfg.dftfilter       = 'yes';        
-cfg.dftfreq         = [40 50 60 80 100 ];
+cfg.dftfreq         = [50 60 100];
 data_epo = ft_preprocessing(cfg,data_epo);
 
 n_trls = length(data_epo.trial);
@@ -107,7 +107,7 @@ freq.powspctrm = sqrt(freq.powspctrm);
 threshold = mean(freq.powspctrm(goodchs,:),1)+3*std(freq.powspctrm(goodchs,:),0,1);
 badchs_outlier = find(mean(freq.powspctrm>repmat(threshold,[size(freq.powspctrm,1) 1]),2)>0.5); % more than half the frequencies above threshold
 
-badchs = [badchs_flat; badchs_std; badchs_neighbors; badchs_zmax; badchs_outlier];
+badchs = unique([badchs_flat; badchs_std; badchs_neighbors; badchs_zmax; badchs_outlier]);
 goodchs = setdiff(chs,badchs);
 
 % Bad trials (jumps)
