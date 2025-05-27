@@ -6,15 +6,7 @@ if length(peak.peak_latency) == 2
     [~,i1] = min(abs(sourcedistribution.time-peak.peak_latency(1)));
     [~,i2] = min(abs(sourcedistribution.time-peak.peak_latency(2)));
     
-    if iscell(sourcedistribution.avg.mom)
-        if size(sourcedistribution.avg.mom{1},1)>1
-            for i = 1:length(sourcedistribution.avg.mom)
-                sourcedistribution.avg.mom{i} = vecnorm(sourcedistribution.avg.mom{i},1);
-            end
-        end
-    end
-    
-    dat = sourcedistribution.avg.pow(:,i1:i2);
+    dat = sourcedistribution.avg.mom(:,i1:i2).^2;
     [~,i_latency] = max(max(dat,[],1)); % max of max across sources
     i_latency = i1-1+i_latency;
     latency = sourcedistribution.time(i_latency);
@@ -23,15 +15,11 @@ else
     latency = sourcedistribution.time(i_latency);
 end
 
-if iscell(sourcedistribution.avg.mom)
-    sourcedistribution.avg.mom = cell2mat(sourcedistribution.avg.mom);
-end
-
 % Half max level
 [peak_mom, i_maxsource] = max(abs(sourcedistribution.avg.mom(:,i_latency)));
 half_max = peak_mom/2;
 peak_loc = sourcemodel.pos(i_maxsource,:);
-peak_pow = sourcedistribution.avg.pow(i_maxsource,i_latency); % power at max latency and source
+peak_pow = sourcedistribution.avg.mom(i_maxsource,i_latency).^2; % power at max latency and source
 
 % Find triangles that have at least one point with amplitude >= half max
 i_halfmax_vertices = find(abs(sourcedistribution.avg.mom(:,i_latency))>=half_max);
@@ -50,17 +38,4 @@ peak_activation.pow = peak_pow;
 peak_activation.mom = peak_mom;
 peak_activation.fahm = fahm;
 peak_activation.halfmax_distribution = halfmax_distribution;
-
-h = figure;
-plot(sourcedistribution.time*1e3,sourcedistribution.avg.pow)
-hold on
-ylimits = ylim;
-plot([1e3*latency 1e3*latency],ylimits,'k--')
-hold off
-xlabel('t [msec]')
-ylabel('Field power')
-xlim([-params.pre params.post]*1e3);
-title([params.modality ' - ' params.phalange_labels{params.i_phalange}])
-saveas(h, fullfile(save_path, 'figs', [params.sub '_' params.modality '_' peak.label '_mne_sourcepow_ph-' params.phalange_labels{params.i_phalange} '.jpg']))
-close all
 end

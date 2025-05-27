@@ -1,4 +1,4 @@
-function fit_mne(save_path, squidmag_timelocked, squidgrad_timelocked, opm_timelocked, headmodels, sourcemodel, sourcemodel_inflated, params)
+function fit_eloreta(save_path, squidmag_timelocked, squidgrad_timelocked, opm_timelocked, headmodels, sourcemodel, sourcemodel_inflated, params)
 %UNTITLED3 Summary of this function goes here
 %   Detailed explanation goes here
 
@@ -8,11 +8,10 @@ end
 
 %% Prepare leadfields
 headmodel = headmodels.headmodel_meg;
-headmodel = ft_convert_units(headmodel,'cm');
-sourcemodel = ft_convert_units(sourcemodel,'cm');
 sourcemodel.mom = surface_normals(sourcemodel.pos, sourcemodel.tri, 'vertex')';
+sourcemodel.unit = 'cm';
 
-%% MNE invserse
+%% invserse
 squidmag_peak = cell(length(params.trigger_code),length(params.peaks));
 squidgrad_peak = cell(length(params.trigger_code),length(params.peaks));
 opm_peak = cell(length(params.trigger_code),length(params.peaks));
@@ -20,7 +19,6 @@ opm_peak = cell(length(params.trigger_code),length(params.peaks));
 %% Leadfields
 cfg = [];
 cfg.grad             = squidmag_timelocked{1}.grad; % sensor positions
-cfg.channel          = 'megmag';
 cfg.senstype         = 'meg';            % sensor type
 cfg.sourcemodel      = sourcemodel;           % source points
 cfg.headmodel        = headmodel;          % volume conduction model
@@ -29,7 +27,6 @@ leadfield_squidmag = ft_prepare_leadfield(cfg,squidmag_timelocked{1});
 
 cfg = [];
 cfg.grad             = squidgrad_timelocked{1}.grad; % sensor positions
-cfg.channel          = 'megplanar';
 cfg.senstype         = 'meg';            % sensor type
 cfg.sourcemodel      = sourcemodel;           % source points
 cfg.headmodel        = headmodel;          % volume conduction model
@@ -69,15 +66,14 @@ for i_phalange = 1:length(params.trigger_code)
 
     %% MEG-MAG
     cfg = [];
-    cfg.method              = 'mne';
-    cfg.mne.prewhiten       = 'yes';
-    cfg.mne.lambda          = 3;
-    cfg.mne.scalesourcecov  = 'yes';
+    cfg.method              = 'eloreta';
+    cfg.eloreta.prewhiten       = 'yes';
+    cfg.eloreta.lambda          = 3;
+    cfg.eloreta.scalesourcecov  = 'yes';
     cfg.headmodel           = headmodel;    % supply the headmodel
     cfg.sourcemodel         = leadfield_squidmag;
     cfg.senstype            = 'meg';            % sensor type
     cfg.keepfilter          = 'yes';
-    cfg.channel             = 'megmag';
     tmp = ft_sourceanalysis(cfg, squidmag_timelocked{i_phalange});
     tmp.tri = sourcemodel.tri;
 
@@ -123,7 +119,7 @@ for i_phalange = 1:length(params.trigger_code)
         lighting gouraud
         material dull
         title(['SQUID-MAG (FAHM=' num2str(squidmag_peak{i_phalange,i_peak}.fahm,3) 'cm^2; t=' num2str(round(squidmag_peak{i_phalange,i_peak}.latency*1e3)) 'ms)'])
-        saveas(h, fullfile(save_path,'figs', [params.sub '_squidmag_' squidmag_peak{i_phalange,i_peak}.label '_mne_ph' params.phalange_labels{i_phalange} cov '.jpg']))
+        saveas(h, fullfile(save_path,'figs', [params.sub '_squidmag_' squidmag_peak{i_phalange,i_peak}.label '_eloreta_ph' params.phalange_labels{i_phalange} cov '.jpg']))
         close all
     end
 
@@ -131,15 +127,14 @@ for i_phalange = 1:length(params.trigger_code)
 
     %% MEG-GRAD
     cfg = [];
-    cfg.method              = 'mne';
-    cfg.mne.prewhiten       = 'yes';
-    cfg.mne.lambda          = 3;
-    cfg.mne.scalesourcecov  = 'yes';
+    cfg.method              = 'eloreta';
+    cfg.eloreta.prewhiten       = 'yes';
+    cfg.eloreta.lambda          = 3;
+    cfg.eloreta.scalesourcecov  = 'yes';
     cfg.headmodel           = headmodel;    % supply the headmodel
     cfg.senstype            = 'meg';
     cfg.sourcemodel         = leadfield_squidgrad;
     cfg.keepfilter          = 'yes';
-    cfg.channel             = 'megplanar';
     tmp = ft_sourceanalysis(cfg, squidgrad_timelocked{i_phalange});
     tmp.tri = sourcemodel.tri;
 
@@ -185,7 +180,7 @@ for i_phalange = 1:length(params.trigger_code)
         lighting gouraud
         material dull
         title(['SQUID-GRAD (FAHM=' num2str(squidgrad_peak{i_phalange,i_peak}.fahm,3) 'cm^2; t=' num2str(round(squidgrad_peak{i_phalange,i_peak}.latency*1e3)) 'ms)'])
-        saveas(h, fullfile(save_path,'figs', [params.sub '_squidgrad_' squidgrad_peak{i_phalange,i_peak}.label '_mne_ph' params.phalange_labels{i_phalange} cov '.jpg']))
+        saveas(h, fullfile(save_path,'figs', [params.sub '_squidgrad_' squidgrad_peak{i_phalange,i_peak}.label '_eloreta_ph' params.phalange_labels{i_phalange} cov '.jpg']))
         close all
     end
 
@@ -193,15 +188,14 @@ for i_phalange = 1:length(params.trigger_code)
 
     %% OPM
     cfg = [];
-    cfg.method              = 'mne';
-    cfg.mne.prewhiten       = 'yes';
-    cfg.mne.lambda          = 3;
-    cfg.mne.scalesourcecov  = 'yes';
+    cfg.method              = 'eloreta';
+    cfg.eloreta.prewhiten       = 'yes';
+    cfg.eloreta.lambda          = 3;
+    cfg.eloreta.scalesourcecov  = 'yes';
     cfg.headmodel           = headmodel;    % supply the headmodel
     cfg.sourcemodel         = leadfield_opm;
     cfg.senstype            = 'meg';            % sensor type
     cfg.keepfilter          = 'yes';
-    cfg.channel             = '*bz';
     tmp = ft_sourceanalysis(cfg, opm_timelocked{i_phalange});
     tmp.tri = sourcemodel.tri;
 
@@ -234,7 +228,7 @@ for i_phalange = 1:length(params.trigger_code)
         tmp.pos = sourcemodel_inflated.pos;
         tmp.tri = sourcemodel_inflated.tri;
     end
-    for i_peak = 1:length(params.peaks)  
+    for i_peak = 1:length(params.peaks)
         cfg = [];
         cfg.method          = 'surface';
         cfg.funparameter    = 'pow';
@@ -247,7 +241,7 @@ for i_phalange = 1:length(params.trigger_code)
         lighting gouraud
         material dull
         title(['OPM (FAHM=' num2str(opm_peak{i_phalange,i_peak}.fahm,3) 'cm^2; t=' num2str(round(opm_peak{i_phalange,i_peak}.latency*1e3)) 'ms)'])
-        saveas(h, fullfile(save_path,'figs', [params.sub '_opm_' opm_peak{i_phalange,i_peak}.label '_mne_ph' params.phalange_labels{i_phalange} cov '.jpg']))
+        saveas(h, fullfile(save_path,'figs', [params.sub '_opm_' opm_peak{i_phalange,i_peak}.label '_eloreta_ph' params.phalange_labels{i_phalange} cov '.jpg']))
         close all
     end
 
@@ -275,8 +269,8 @@ for i_phalange = 1:length(params.trigger_code)
     end
 
 end
-save(fullfile(save_path, ['squidmag_mne_peaks' cov]), 'squidmag_peak'); 
-save(fullfile(save_path, ['squidgrad_mne_peaks' cov]), 'squidgrad_peak'); 
-save(fullfile(save_path, ['opm_mne_peaks' cov]), 'opm_peak'); 
+save(fullfile(save_path, ['squidmag_eloreta_peaks' cov]), 'squidmag_peak'); 
+save(fullfile(save_path, ['squidgrad_eloreta_peaks' cov]), 'squidgrad_peak'); 
+save(fullfile(save_path, ['opm_eloreta_peaks' cov]), 'opm_peak'); 
 
 end

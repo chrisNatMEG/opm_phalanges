@@ -13,9 +13,8 @@ end
 
 % Remove padding
 cfg = [];
-cfg.channel = params.chs;
-cfg.latency = [-params.pre params.post];
-data = ft_selectdata(cfg, data);
+cfg.toilim = [-params.pre params.post];
+data = ft_redefinetrial(cfg, data);
 
 % Demean
 cfg = [];
@@ -49,7 +48,6 @@ for i_phalange = 1:length(params.trigger_code)
     tmp = ft_timelockanalysis(cfg, data);
     timelocked{i_phalange}.sourcecov = tmp.cov;
     clear tmp
-
 end
 save(fullfile(save_path, [params.sub '_' params.modality '_timelocked']), 'timelocked', '-v7.3'); 
 
@@ -57,7 +55,9 @@ save(fullfile(save_path, [params.sub '_' params.modality '_timelocked']), 'timel
 for i_peak = 1:length(params.peaks)
     peak = cell(length(params.trigger_code),1);
     for i_phalange = 1:length(params.trigger_code)
-        dat = timelocked{i_phalange};
+        cfg = [];
+        cfg.channel = params.chs;
+        dat = ft_selectdata(cfg,timelocked{i_phalange});
         [~, peak_interval(1)] = min(abs(dat.time-params.peaks{i_peak}.peak_latency(1))); % find closest time sample
         [~, peak_interval(2)] = min(abs(dat.time-params.peaks{i_peak}.peak_latency(2))); % find closest time sample
         [~, peak_interval(3)] = min(abs(dat.time-0)); % find closest time sample
@@ -95,7 +95,7 @@ for i_peak = 1:length(params.peaks)
         for i_trl = find(data.trialinfo==params.trigger_code(i_phalange))'
             plot(data.time{i_trl}*1e3, data.trial{i_trl}(peak{i_phalange}.i_peakch,:)*params.amp_scaler,'Color',[211 211 211]/255)
         end
-        plot(timelocked{i_phalange}.time*1e3, timelocked{i_phalange}.avg(peak{i_phalange}.i_peakch,:)*params.amp_scaler,'Color',[0 0 0]/255)
+        plot(dat.time*1e3, dat.avg(peak{i_phalange}.i_peakch,:)*params.amp_scaler,'Color',[0 0 0]/255)
         ylimits = ylim;
         lat = 1e3*peak{i_phalange}.peak_latency;
         plot([lat lat],ylimits,'r--')
@@ -112,6 +112,7 @@ for i_peak = 1:length(params.peaks)
         cfg.xlim = [peak{i_phalange}.peak_latency-0.005 peak{i_phalange}.peak_latency+0.005];
         cfg.layout = params.layout; 
         cfg.parameter = 'avg';
+        cfg.channel = params.chs;
         h = figure;
         ft_topoplotER(cfg, timelocked{i_phalange});
         axis on
@@ -121,7 +122,7 @@ for i_peak = 1:length(params.peaks)
 
         %% Plot butterfly
         h = figure;
-        plot(timelocked{i_phalange}.time*1e3,timelocked{i_phalange}.avg*params.amp_scaler)
+        plot(dat.time*1e3,dat.avg*params.amp_scaler)
         hold on
         ylimits = ylim;
         lat = 1e3*peak{i_phalange}.peak_latency;
@@ -136,6 +137,8 @@ for i_peak = 1:length(params.peaks)
 
         %% Save 
         save(fullfile(save_path, [params.sub '_' params.modality '_' params.peaks{i_peak}.label]), 'peak', '-v7.3'); 
+
+        clear dat
     end
 end
 

@@ -95,28 +95,26 @@ end
 
 % Remove padding
 cfg = [];
-cfg.channel = params.chs;
 cfg.latency = [-params.pre params.post];
 squid_RS_ica = ft_selectdata(cfg, squid_RS_ica);
 
 % Demean
 cfg = [];
 cfg.demean = 'yes'; %% demean entire trial for whole trial cov
+cfg.baselinewindow = 'all';
 squid_RS_ica = ft_preprocessing(cfg,squid_RS_ica);
 
 % Average
 cfg = [];
-cfg.channel = 'megmag';
 cfg.covariance          = 'yes';
 cfg.covariancewindow    = 'all';
-squidmag_RS_tlk = ft_timelockanalysis(cfg, squid_RS_ica);
+squidmag_RS_cov = ft_timelockanalysis(cfg, squid_RS_ica).cov;
 cfg = [];
-cfg.channel = 'megplanar';
 cfg.covariance          = 'yes';
 cfg.covariancewindow    = 'all';
-squidgrad_RS_tlk = ft_timelockanalysis(cfg, squid_RS_ica);
+squidgrad_RS_cov = ft_timelockanalysis(cfg, squid_RS_ica).cov;
 
 %% Save 
-save(fullfile(save_path, [params.sub '_resting_state_squid']), 'squid_RS_ica', 'squidmag_RS_tlk', 'squidgrad_RS_tlk',"-v7.3");
+save(fullfile(save_path, [params.sub '_resting_state_squid']), 'squid_RS_ica', 'squidmag_RS_cov', 'squidgrad_RS_cov',"-v7.3");
 
 end

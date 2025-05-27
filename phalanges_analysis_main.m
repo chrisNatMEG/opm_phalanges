@@ -34,7 +34,7 @@ overwrite = [];
 overwrite.preproc = true;
 overwrite.coreg = true;
 overwrite.mri = false;
-overwrite.dip = true;
+overwrite.dip = false;
 overwrite.empty_room = true;
 overwrite.mne = true;
 
@@ -84,7 +84,7 @@ params.peaks{2}.peak_latency = [0.08 0.12];
 params.trigger_code = [2 4 8 16 32];
 params.phalange_labels = {'I3' 'I2' 'I1' 'T1' 'I2b'};
 
-params.use_cov = 'resting_state'; % noise cov to use; default=prestim, alt: 'resting_state', 'all', 'empty_room'
+params.use_cov = [];%'resting_state'; % noise cov to use; default=prestim, alt: 'resting_state', 'all', 'empty_room'
 
 %% Subjects + dates
 subses = {'0005' '240208';
@@ -498,13 +498,12 @@ for i_sub = subs_to_run
     end
 end
 
-%% MNE
+%% Distributed source models
 for i_sub = subs_to_run
     ft_hastoolbox('mne',1);
     params.sub = ['sub_' num2str(i_sub,'%02d')];
     save_path = fullfile(base_save_path,params.sub);
 
-    %% MNE fit
     if exist(fullfile(save_path, 'mne_fits.mat'),'file') && overwrite.mne==false
         disp(['Not overwriting MNE source reconstruction for ' params.sub]);
     elseif i_sub == 1
@@ -514,39 +513,32 @@ for i_sub = subs_to_run
         sourcemodel = load(fullfile(save_path, [params.sub '_sourcemodel'])).sourcemodel;
         sourcemodel_inflated = load(fullfile(save_path, [params.sub '_sourcemodel_inflated'])).sourcemodel_inflated;
         headmodels = load(fullfile(save_path,'headmodels.mat')).headmodels;
-        
+
+        %% Load data and cov
         clear squimdag_timelocked squidgrad_timelocked opm_timelockedT
         opm_timelockedT = load(fullfile(save_path, [params.sub '_opm_timelockedT.mat'])).opm_timelockedT;
         squidmag_timelocked = load(fullfile(save_path, [params.sub '_squidmag_timelocked.mat'])).timelocked;
         squidgrad_timelocked = load(fullfile(save_path, [params.sub '_squidgrad_timelocked.mat'])).timelocked;
 
         for i = 1:length(opm_timelockedT)
-            clear tmp
-            tmp = load(fullfile(save_path, [params.sub '_resting_state_opm.mat'])).opm_RS_tlk;
-            opm_timelockedT{i}.cov_RS = tmp.cov;
-            clear tmp
-            tmp = load(fullfile(save_path, [params.sub '_resting_state_squid.mat'])).squidmag_RS_tlk;
-            squidmag_timelocked{i}.cov_RS = tmp.cov;
-            clear tmp
-            tmp = load(fullfile(save_path, [params.sub '_resting_state_squid.mat'])).squidgrad_RS_tlk;
-            squidgrad_timelocked{i}.cov_RS = tmp.cov;
-            clear tmp
-    
+            opm_timelockedT{i}.cov_RS = load(fullfile(save_path, [params.sub '_resting_state_opm.mat'])).opm_RS_cov;
+            squidmag_timelocked{i}.cov_RS = load(fullfile(save_path, [params.sub '_resting_state_squid.mat'])).squidmag_RS_cov;
+            squidgrad_timelocked{i}.cov_RS = load(fullfile(save_path, [params.sub '_resting_state_squid.mat'])).squidgrad_RS_cov;   
             if exist(fullfile(save_path, [params.sub '_ER_squid.mat']),'file')
-                clear tmp
-                tmp = load(fullfile(save_path, [params.sub '_ER_opm.mat'])).opm_ER_tlk;
-                opm_timelockedT{i}.cov_ER = tmp.cov;
-                clear tmp
-                tmp = load(fullfile(save_path, [params.sub '_ER_squid.mat'])).squidmag_ER_tlk;
-                squidmag_timelocked{i}.cov_ER = tmp.cov;
-                clear tmp
-                tmp = load(fullfile(save_path, [params.sub '_ER_squid.mat'])).squidgrad_ER_tlk;
-                squidgrad_timelocked{i}.cov_ER = tmp.cov;
-                clear tmp
+                opm_timelockedT{i}.cov_ER = load(fullfile(save_path, [params.sub '_ER_opm.mat'])).opm_ER_cov;
+                squidmag_timelocked{i}.cov_ER = load(fullfile(save_path, [params.sub '_ER_squid.mat'])).squidmag_ER_cov;
+                squidgrad_timelocked{i}.cov_ER = load(fullfile(save_path, [params.sub '_ER_squid.mat'])).squidgrad_ER_cov;
             end
         end
-
+        
+        %% MNE fit
+        params.inv_method = 'mne';
         fit_mne(save_path, squidmag_timelocked, squidgrad_timelocked, opm_timelockedT, headmodels, sourcemodel, sourcemodel_inflated, params);
+
+        %% ELORETA fit
+        %params.inv_method = 'eloreta';
+        %fit_eloreta(save_path, squidmag_timelocked, squidgrad_timelocked, opm_timelockedT, headmodels, sourcemodel, sourcemodel_inflated, params);
+
         clear squimdag_timelocked squidgrad_timelocked opm_timelockedT headmodels sourcemodel sourcemodel_inflated
     end
 end

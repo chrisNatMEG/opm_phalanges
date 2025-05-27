@@ -141,19 +141,6 @@ cfg.corr_threshold = params.corr_threshold;
 [~, ~, ~, ~, ~, ~, badtrl_opm_zmax] = opm_badchannels(cfg, opm_raw);
 
 cfg = [];
-<<<<<<< HEAD
-%cfg.channel = setdiff(opm_cleaned.label,badchs_opm); % No channels excluded since we already selected
-cfg.trials  = setdiff(1:length(opm_cleaned.trial),badtrl_opm_zmax); % remove bad trials
-opm_cleaned = ft_selectdata(cfg, opm_cleaned);
-
-% HFC
-i_chs = find(contains(opm_cleaned.label,'bz'));
-chs = opm_cleaned.label(i_chs);
-ori = zeros(length(chs),3);
-for i = 1:length(chs)
-    i_chs_grad(i) = find(strcmp(opm_cleaned.grad.label,chs{i}));
-    ori(i,:) = opm_cleaned.grad.chanori(i_chs_grad(i),:);
-=======
 cfg.trials  = setdiff(1:length(comb.trial),badtrl_opm_zmax); % remove bad trials
 comb = ft_selectdata(cfg, comb);
 
@@ -176,7 +163,6 @@ elseif params.do_amm
     opm_cleaned = ft_denoise_amm(cfg, comb);
 else
     opm_cleaned = comb;
->>>>>>> 113a113acdaacee2286a810b14765b4ad94ace41
 end
 
 %% Recombine with ExG channels
@@ -245,9 +231,9 @@ opm_RS_ica = ft_preprocessing(cfg,opm_RS_ica);
 cfg = [];
 cfg.covariance          = 'yes';
 cfg.covariancewindow    = 'all';
-opm_RS_tlk = ft_timelockanalysis(cfg, opm_RS_ica);
+opm_RS_cov = ft_timelockanalysis(cfg, opm_RS_ica).cov;
 
 %% Save
-save(fullfile(save_path, [params.sub '_resting_state_opm']), 'opm_RS_ica', 'opm_RS_tlk',"-v7.3");
+save(fullfile(save_path, [params.sub '_resting_state_opm']), 'opm_RS_ica', 'opm_RS_cov',"-v7.3");
 
 end

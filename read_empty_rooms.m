@@ -233,7 +233,6 @@ end
 
 % Remove padding
 cfg = [];
-cfg.channel = params.chs;
 cfg.latency = [-params.pre params.post];
 squid_ER_cleaned = ft_selectdata(cfg, squid_ER_cleaned);
 
@@ -246,14 +245,14 @@ squid_ER_cleaned = ft_preprocessing(cfg, squid_ER_cleaned);
 cfg = [];
 cfg.covariance          = 'yes';
 cfg.covariancewindow    = 'all';
-squidmag_ER_tlk = ft_timelockanalysis(cfg, squid_ER_cleaned);
+squidmag_ER_cov = ft_timelockanalysis(cfg, squid_ER_cleaned).cov;
 cfg = [];
 cfg.covariance          = 'yes';
 cfg.covariancewindow    = 'all';
-squidgrad_ER_tlk = ft_timelockanalysis(cfg, squid_ER_cleaned);
+squidgrad_ER_cov = ft_timelockanalysis(cfg, squid_ER_cleaned).cov;
 
 %% Save
-save(fullfile(save_path, [params.sub '_ER_squid']), 'squid_ER_cleaned', 'squidmag_ER_tlk', 'squidgrad_ER_tlk', "-v7.3");
+save(fullfile(save_path, [params.sub '_ER_squid']), 'squid_ER_cleaned', 'squidmag_ER_cov', 'squidgrad_ER_cov', "-v7.3");
 
 clear data_epo data_raw data_epo
 end
