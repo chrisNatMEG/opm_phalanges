@@ -31,11 +31,11 @@ ft_default.showcallinfo = 'no';
 
 %% Overwrite
 overwrite = [];
-overwrite.preproc = true;
+overwrite.preproc = false;
 overwrite.coreg = true;
-overwrite.mri = false;
+overwrite.mri = true;
 overwrite.dip = false;
-overwrite.empty_room = true;
+overwrite.empty_room = false;
 overwrite.mne = true;
 
 overwrite.sens_group = false;
@@ -84,7 +84,7 @@ params.peaks{2}.peak_latency = [0.08 0.12];
 params.trigger_code = [2 4 8 16 32];
 params.phalange_labels = {'I3' 'I2' 'I1' 'T1' 'I2b'};
 
-params.use_cov = [];%'resting_state'; % noise cov to use; default=prestim, alt: 'resting_state', 'all', 'empty_room'
+params.use_cov = 'resting_state'; % noise cov to use; default=prestim, alt: 'resting_state', 'all', 'empty_room'
 
 %% Subjects + dates
 subses = {'0005' '240208';
@@ -104,6 +104,7 @@ mri_files = {'00000001.dcm'
     '/mri/sub-15931_T1w.nii.gz'  
     '/nifti/anat/sub-15985_T1w.nii.gz'};
 
+excl_subs = [];
 if on_server
     subs_to_run = 1:size(subses,1);
 else
@@ -111,7 +112,7 @@ else
 end
 
 %% Loop over subjects
-for i_sub = subs_to_run
+for i_sub = setdiff(subs_to_run,excl_subs)
     params.sub = ['sub_' num2str(i_sub,'%02d')];
 
     %% Paths
@@ -255,8 +256,11 @@ if overwrite.sens_group
     close all
 end
 
+%% Exclude subs with missing co-reg
+excl_subs = 1;
+
 %% Prepare MRIs
-for i_sub = subs_to_run
+for i_sub = setdiff(subs_to_run,excl_subs)
     ft_hastoolbox('mne',1);
     params.sub = ['sub_' num2str(i_sub,'%02d')];
     raw_path = fullfile(base_data_path,'MEG',['NatMEG_' subses{i_sub,1}], subses{i_sub,2});
@@ -276,7 +280,7 @@ for i_sub = subs_to_run
 end
 
 %% HPI localization
-for i_sub = subs_to_run
+for i_sub = setdiff(subs_to_run,excl_subs)
     ft_hastoolbox('mne',1);
     params.sub = ['sub_' num2str(i_sub,'%02d')];
     raw_path = fullfile(base_data_path,'MEG',['NatMEG_' subses{i_sub,1}], subses{i_sub,2});
@@ -299,7 +303,7 @@ for i_sub = subs_to_run
 end
 
 %% Transform for OPM data
-for i_sub = subs_to_run
+for i_sub = setdiff(subs_to_run,excl_subs)
     ft_hastoolbox('mne',1);
     params.sub = ['sub_' num2str(i_sub,'%02d')];
     raw_path = fullfile(base_data_path,'MEG',['NatMEG_' subses{i_sub,1}], subses{i_sub,2});
@@ -423,7 +427,7 @@ for i_sub = subs_to_run
 end
 
 %% Dipole fits
-for i_sub = subs_to_run
+for i_sub = setdiff(subs_to_run,excl_subs)
     ft_hastoolbox('mne',1);
     params.sub = ['sub_' num2str(i_sub,'%02d')];
     raw_path = fullfile(base_data_path,'MEG',['NatMEG_' subses{i_sub,1}], subses{i_sub,2});
@@ -455,12 +459,12 @@ end
 
 %% Dipole group analysis
 if overwrite.dip_group
-    subs = [2:13];
+    subs = setdiff(subs_to_run,excl_subs);
     dipole_results_goup(base_save_path,subs, params)
 end
 
 %% Empty room & resting state for noise covariances
-for i_sub = subs_to_run
+for i_sub = setdiff(subs_to_run,excl_subs)
     params.sub = ['sub_' num2str(i_sub,'%02d')];
     save_path = fullfile(base_save_path,params.sub);
     if i_sub <=3 % Flip amplitudes in old recordings
@@ -499,7 +503,7 @@ for i_sub = subs_to_run
 end
 
 %% Distributed source models
-for i_sub = subs_to_run
+for i_sub = setdiff(subs_to_run,excl_subs)
     ft_hastoolbox('mne',1);
     params.sub = ['sub_' num2str(i_sub,'%02d')];
     save_path = fullfile(base_save_path,params.sub);
@@ -536,8 +540,8 @@ for i_sub = subs_to_run
         fit_mne(save_path, squidmag_timelocked, squidgrad_timelocked, opm_timelockedT, headmodels, sourcemodel, sourcemodel_inflated, params);
 
         %% ELORETA fit
-        %params.inv_method = 'eloreta';
-        %fit_eloreta(save_path, squidmag_timelocked, squidgrad_timelocked, opm_timelockedT, headmodels, sourcemodel, sourcemodel_inflated, params);
+        params.inv_method = 'eloreta';
+        fit_eloreta(save_path, squidmag_timelocked, squidgrad_timelocked, opm_timelockedT, headmodels, sourcemodel, sourcemodel_inflated, params);
 
         clear squimdag_timelocked squidgrad_timelocked opm_timelockedT headmodels sourcemodel sourcemodel_inflated
     end
@@ -546,7 +550,7 @@ close all
 
 %% MNE group analysis
 if overwrite.mne_group
-    subs = [2:13];
+    subs = setdiff(subs_to_run,excl_subs);
     mne_results_goup(base_save_path, subs, params);
 end
 
