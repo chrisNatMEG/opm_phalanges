@@ -318,7 +318,6 @@ saveas(h, fullfile(base_save_path, 'figs', 'SNR_prestim.jpg'))
 
 close all
 
-%% Grand average
 for i_sub = subs
     params.sub = ['sub_' num2str(i_sub,'%02d')];
     ft_hastoolbox('mne', 1);
@@ -328,42 +327,10 @@ for i_sub = subs
     squidgrad_timelocked = load(fullfile(save_path, [params.sub '_squidgrad_timelocked'])).timelocked; 
     opm_timelocked = load(fullfile(save_path, [params.sub '_opm_timelocked'])).timelocked; 
 
+
     for i_ph = 1:length(params.phalange_labels)
         squidmag{i_ph}{i_sub} = squidmag_timelocked{i_ph};
-        squidgrad{i_ph}{i_sub} = squidgrad_timelocked{i_ph};
-        opm{i_ph}{i_sub} = opm_timelocked{i_ph};
+        
     end
-    clear squidmag_timelocked squidgrad_timelocked opm_timelocked
-end
-for i_ph = 1:length(params.phalange_labels)
-    % OPM
-    cfg = [];
-    cfg.channel = '*bz';
-    grandavg_opm{i_ph} = ft_timelockgrandaverage(cfg,opm{i_ph}{:});
-    cfg = [];
-    cfg.xlim = [0.08 0.12];
-    %cfg.zlim = [0 6e-14];
-    cfg.layout = 'fieldlinebeta2bz_helmet.mat';
-    h = figure; ft_topoplotER(cfg,grandavg_opm{i_ph}); colorbar; title(['GRAND AVG OPM - ' params.phalange_labels{i_ph}])
-
-    % SQUID-GRAD
-    cfg = [];
-    cfg.channel = 'megplanar';
-    grandavg_squidgrad{i_ph} = ft_timelockgrandaverage(cfg,squidgrad{i_ph}{:});
-    cfg = [];
-    cfg.xlim = [0.08 0.12];
-    %cfg.zlim = [0 6e-14];
-    cfg.layout = 'neuromag306planar.lay';
-    h = figure; ft_topoplotER(cfg,grandavg_squidgrad{i_ph}); colorbar; title(['GRAND AVG SQUID-GRAD - ' params.phalange_labels{i_ph}])
-
-    % SQUID-MAG
-    cfg = [];
-    cfg.channel = 'megmag';
-    grandavg_squidmag{i_ph} = ft_timelockgrandaverage(cfg,squidmag{i_ph}{:});
-    cfg = [];
-    cfg.xlim = [0.08 0.12];
-    %cfg.zlim = [0 6e-14];
-    cfg.layout = 'neuromag306mag.lay';
-    h = figure; ft_topoplotER(cfg,grandavg_squidmag{i_ph}); colorbar; title(['GRAND AVG SQUID-MAG - ' params.phalange_labels{i_ph}])
 end
 end
