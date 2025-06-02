@@ -32,15 +32,15 @@ ft_default.showcallinfo = 'no';
 %% Overwrite
 overwrite = [];
 overwrite.preproc = false;
-overwrite.coreg = true;
-overwrite.mri = true;
+overwrite.coreg = false;
+overwrite.mri = false;
 overwrite.dip = false;
 overwrite.empty_room = false;
-overwrite.mne = true;
+overwrite.mne = false;
 
-overwrite.sens_group = false;
-overwrite.dip_group = false;
-overwrite.mne_group = false;
+overwrite.sens_group = true;
+overwrite.dip_group = true;
+overwrite.mne_group = true;
 
 %% Params
 params = [];

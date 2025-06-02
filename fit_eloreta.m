@@ -82,6 +82,7 @@ for i_phalange = 1:length(params.trigger_code)
     cfg.sourcemodel         = leadfield_squidmag;
     cfg.senstype            = 'meg';            % sensor type
     cfg.keepfilter          = 'yes';
+    cfg.channel             = 'megmag';
     tmp = ft_sourceanalysis(cfg, squidmag_timelocked{i_phalange});
     tmp.tri = sourcemodel.tri;
 
@@ -143,6 +144,7 @@ for i_phalange = 1:length(params.trigger_code)
     cfg.senstype            = 'meg';
     cfg.sourcemodel         = leadfield_squidgrad;
     cfg.keepfilter          = 'yes';
+    cfg.channel             = 'megplanar';
     tmp = ft_sourceanalysis(cfg, squidgrad_timelocked{i_phalange});
     tmp.tri = sourcemodel.tri;
 
@@ -204,6 +206,7 @@ for i_phalange = 1:length(params.trigger_code)
     cfg.sourcemodel         = leadfield_opm;
     cfg.senstype            = 'meg';            % sensor type
     cfg.keepfilter          = 'yes';
+    cfg.channel             = '*bz';
     tmp = ft_sourceanalysis(cfg, opm_timelocked{i_phalange});
     tmp.tri = sourcemodel.tri;
 
