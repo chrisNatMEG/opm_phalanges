@@ -11,11 +11,11 @@ for i_sub = subs
     save_path = fullfile(base_save_path,params.sub);
     clear M60_opm M60_opmeeg
     clear M60_squidmag M60_squidgrad M60_squideeg
-    M60_opm = load(fullfile(save_path, [params.sub '_opm_M60.mat'])).M60; 
-    M60_opmeeg = load(fullfile(save_path, [params.sub '_opmeeg_M60.mat'])).M60; 
-    M60_squidmag = load(fullfile(save_path, [params.sub '_squidmag_M60.mat'])).M60; 
-    M60_squidgrad = load(fullfile(save_path, [params.sub '_squidgrad_M60.mat'])).M60; 
-    M60_squideeg = load(fullfile(save_path, [params.sub '_squideeg_M60.mat'])).M60;
+    M60_opm = load(fullfile(save_path, [params.sub '_opm_M60.mat'])).peak; 
+    M60_opmeeg = load(fullfile(save_path, [params.sub '_opmeeg_M60.mat'])).peak; 
+    M60_squidmag = load(fullfile(save_path, [params.sub '_squidmag_M60.mat'])).peak; 
+    M60_squidgrad = load(fullfile(save_path, [params.sub '_squidgrad_M60.mat'])).peak; 
+    M60_squideeg = load(fullfile(save_path, [params.sub '_squideeg_M60.mat'])).peak;
 
     clear squidmag_timelocked opm_timelocked
     squidmag_timelocked = load(fullfile(save_path, [params.sub '_squidmag_timelocked'])).timelocked; 

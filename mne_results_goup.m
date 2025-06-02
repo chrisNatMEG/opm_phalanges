@@ -34,25 +34,25 @@ for i_sub = subs
     % - over phalanges: average distance from mean location within distance
     
     for i_phalange = 1:n_ph
-        pos_squidmag(i_phalange,:) = mne_squidmag{i_sub}{i_phalange}.peak_loc;
-        pos_squidgrad(i_phalange,:) = mne_squidgrad{i_sub}{i_phalange}.peak_loc;
-        pos_opm(i_phalange,:) = mne_opm{i_sub}{i_phalange}.peak_loc;
+        pos_squidmag(i_phalange,:) = mne_squidmag{i_sub}{i_phalange}.loc;
+        pos_squidgrad(i_phalange,:) = mne_squidgrad{i_sub}{i_phalange}.loc;
+        pos_opm(i_phalange,:) = mne_opm{i_sub}{i_phalange}.loc;
 
         dist_sqmag_opm(i_sub,i_phalange) = 1e1*norm(pos_squidmag(i_phalange,:)-pos_opm(i_phalange,:));
         dist_sqgrad_opm(i_sub,i_phalange) = 1e1*norm(pos_squidgrad(i_phalange,:)-pos_opm(i_phalange,:));
         dist_sqmag_sqgrad(i_sub,i_phalange) = 1e1*norm(pos_squidmag(i_phalange,:)-pos_squidgrad(i_phalange,:));
 
-        pow_squidmag(i_sub,i_phalange) = mne_squidmag{i_sub}{i_phalange}.peak_pow;
-        pow_squidgrad(i_sub,i_phalange) = mne_squidgrad{i_sub}{i_phalange}.peak_pow;
-        pow_opm(i_sub,i_phalange) = mne_opm{i_sub}{i_phalange}.peak_pow;
+        pow_squidmag(i_sub,i_phalange) = mne_squidmag{i_sub}{i_phalange}.pow;
+        pow_squidgrad(i_sub,i_phalange) = mne_squidgrad{i_sub}{i_phalange}.pow;
+        pow_opm(i_sub,i_phalange) = mne_opm{i_sub}{i_phalange}.pow;
 
-        mom_squidmag(i_sub,i_phalange) = mne_squidmag{i_sub}{i_phalange}.peak_mom;
-        mom_squidgrad(i_sub,i_phalange) = mne_squidgrad{i_sub}{i_phalange}.peak_mom;
-        mom_opm(i_sub,i_phalange) = mne_opm{i_sub}{i_phalange}.peak_mom;
+        mom_squidmag(i_sub,i_phalange) = mne_squidmag{i_sub}{i_phalange}.mom;
+        mom_squidgrad(i_sub,i_phalange) = mne_squidgrad{i_sub}{i_phalange}.mom;
+        mom_opm(i_sub,i_phalange) = mne_opm{i_sub}{i_phalange}.mom;
 
-        lat_squidmag(i_sub,i_phalange) = mne_squidmag{i_sub}{i_phalange}.peak_latency;
-        lat_squidgrad(i_sub,i_phalange) = mne_squidgrad{i_sub}{i_phalange}.peak_latency;
-        lat_opm(i_sub,i_phalange) = mne_opm{i_sub}{i_phalange}.peak_latency;
+        lat_squidmag(i_sub,i_phalange) = mne_squidmag{i_sub}{i_phalange}.latency;
+        lat_squidgrad(i_sub,i_phalange) = mne_squidgrad{i_sub}{i_phalange}.latency;
+        lat_opm(i_sub,i_phalange) = mne_opm{i_sub}{i_phalange}.latency;
 
         fahm_opm(i_sub,i_phalange) = mne_opm{i_sub}{i_phalange}.fahm; % mean distance from center of phalanges
         fahm_squidmag(i_sub,i_phalange) = mne_squidmag{i_sub}{i_phalange}.fahm; % mean distance from center of phalanges

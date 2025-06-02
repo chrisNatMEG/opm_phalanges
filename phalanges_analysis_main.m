@@ -32,15 +32,15 @@ ft_default.showcallinfo = 'no';
 %% Overwrite
 overwrite = [];
 overwrite.preproc = false;
-overwrite.coreg = true;
-overwrite.mri = true;
+overwrite.coreg = false;
+overwrite.mri = false;
 overwrite.dip = false;
 overwrite.empty_room = false;
-overwrite.mne = true;
+overwrite.mne = false;
 
-overwrite.sens_group = false;
-overwrite.dip_group = false;
-overwrite.mne_group = false;
+overwrite.sens_group = true;
+overwrite.dip_group = true;
+overwrite.mne_group = true;
 
 %% Params
 params = [];
@@ -508,7 +508,7 @@ for i_sub = setdiff(subs_to_run,excl_subs)
     params.sub = ['sub_' num2str(i_sub,'%02d')];
     save_path = fullfile(base_save_path,params.sub);
 
-    if exist(fullfile(save_path, 'mne_fits.mat'),'file') && overwrite.mne==false
+    if exist(fullfile(save_path, 'opm_mne_peaks.mat'),'file') && overwrite.mne==false
         disp(['Not overwriting MNE source reconstruction for ' params.sub]);
     elseif i_sub == 1
         disp('SKIPPING SUBJECT - NO CO-REGISTRATION')
