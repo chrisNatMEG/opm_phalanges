@@ -22,48 +22,46 @@ for i_sub = subs
     params.sub = ['sub_' num2str(i_sub,'%02d')];
     ft_hastoolbox('mne', 1);
     save_path = fullfile(base_save_path,params.sub);
-    load(fullfile(save_path, 'squidmag_mne_M60')); 
-    mne_squidmag{i_sub} = squidmag_mne_M60;
-    load(fullfile(save_path, 'squidgrad_mne_M60'));
-    mne_squidgrad{i_sub} = squidgrad_mne_M60;
-    opm_mne_M60 = load(fullfile(save_path, 'opm_mne_M60')).opm_mne_M60;
-    mne_opm{i_sub} = opm_mne_M60;
+    mne_squidmag{i_sub} = load(fullfile(save_path, 'squidmag_mne_peaks.mat')).squidmag_peak; 
+    mne_squidgrad{i_sub} = load(fullfile(save_path, 'squidgrad_mne_peaks.mat')).squidgrad_peak;
+    mne_opm{i_sub} = load(fullfile(save_path, 'opm_mne_peaks.mat')).opm_peak;
   
     % Metrics: 
     % - distance between mnes for same phalange different systems
     % - over phalanges: average distance from mean location within distance
-    
+    i_peak = 1;
+
     for i_phalange = 1:n_ph
-        pos_squidmag(i_phalange,:) = mne_squidmag{i_sub}{i_phalange}.loc;
-        pos_squidgrad(i_phalange,:) = mne_squidgrad{i_sub}{i_phalange}.loc;
-        pos_opm(i_phalange,:) = mne_opm{i_sub}{i_phalange}.loc;
+        pos_squidmag(i_phalange,:) = mne_squidmag{i_sub}{i_phalange,i_peak}.loc;
+        pos_squidgrad(i_phalange,:) = mne_squidgrad{i_sub}{i_phalange,i_peak}.loc;
+        pos_opm(i_phalange,:) = mne_opm{i_sub}{i_phalange,i_peak}.loc;
 
         dist_sqmag_opm(i_sub,i_phalange) = 1e1*norm(pos_squidmag(i_phalange,:)-pos_opm(i_phalange,:));
         dist_sqgrad_opm(i_sub,i_phalange) = 1e1*norm(pos_squidgrad(i_phalange,:)-pos_opm(i_phalange,:));
         dist_sqmag_sqgrad(i_sub,i_phalange) = 1e1*norm(pos_squidmag(i_phalange,:)-pos_squidgrad(i_phalange,:));
 
-        pow_squidmag(i_sub,i_phalange) = mne_squidmag{i_sub}{i_phalange}.pow;
-        pow_squidgrad(i_sub,i_phalange) = mne_squidgrad{i_sub}{i_phalange}.pow;
-        pow_opm(i_sub,i_phalange) = mne_opm{i_sub}{i_phalange}.pow;
+        pow_squidmag(i_sub,i_phalange) = mne_squidmag{i_sub}{i_phalange,i_peak}.pow;
+        pow_squidgrad(i_sub,i_phalange) = mne_squidgrad{i_sub}{i_phalange,i_peak}.pow;
+        pow_opm(i_sub,i_phalange) = mne_opm{i_sub}{i_phalange,i_peak}.pow;
 
-        mom_squidmag(i_sub,i_phalange) = mne_squidmag{i_sub}{i_phalange}.mom;
-        mom_squidgrad(i_sub,i_phalange) = mne_squidgrad{i_sub}{i_phalange}.mom;
-        mom_opm(i_sub,i_phalange) = mne_opm{i_sub}{i_phalange}.mom;
+        mom_squidmag(i_sub,i_phalange) = mne_squidmag{i_sub}{i_phalange,i_peak}.mom;
+        mom_squidgrad(i_sub,i_phalange) = mne_squidgrad{i_sub}{i_phalange,i_peak}.mom;
+        mom_opm(i_sub,i_phalange) = mne_opm{i_sub}{i_phalange,i_peak}.mom;
 
-        lat_squidmag(i_sub,i_phalange) = mne_squidmag{i_sub}{i_phalange}.latency;
-        lat_squidgrad(i_sub,i_phalange) = mne_squidgrad{i_sub}{i_phalange}.latency;
-        lat_opm(i_sub,i_phalange) = mne_opm{i_sub}{i_phalange}.latency;
+        lat_squidmag(i_sub,i_phalange) = mne_squidmag{i_sub}{i_phalange,i_peak}.latency;
+        lat_squidgrad(i_sub,i_phalange) = mne_squidgrad{i_sub}{i_phalange,i_peak}.latency;
+        lat_opm(i_sub,i_phalange) = mne_opm{i_sub}{i_phalange,i_peak}.latency;
 
-        fahm_opm(i_sub,i_phalange) = mne_opm{i_sub}{i_phalange}.fahm; % mean distance from center of phalanges
-        fahm_squidmag(i_sub,i_phalange) = mne_squidmag{i_sub}{i_phalange}.fahm; % mean distance from center of phalanges
-        fahm_squidgrad(i_sub,i_phalange) = mne_squidgrad{i_sub}{i_phalange}.fahm; % mean distance from center of phalanges
+        fahm_opm(i_sub,i_phalange) = mne_opm{i_sub}{i_phalange,i_peak}.fahm; % mean distance from center of phalanges
+        fahm_squidmag(i_sub,i_phalange) = mne_squidmag{i_sub}{i_phalange,i_peak}.fahm; % mean distance from center of phalanges
+        fahm_squidgrad(i_sub,i_phalange) = mne_squidgrad{i_sub}{i_phalange,i_peak}.fahm; % mean distance from center of phalanges
 
-        overlap_opm_squidmag(i_sub,i_phalange) = opm_mne_M60{i_phalange}.overlap_squidmag/opm_mne_M60{i_phalange}.fahm;
-        overlap_opm_squidgrad(i_sub,i_phalange) = opm_mne_M60{i_phalange}.overlap_squidgrad/opm_mne_M60{i_phalange}.fahm;
-        overlap_squidmag_squidgrad(i_sub,i_phalange) = squidmag_mne_M60{i_phalange}.overlap_squidgrad/mne_squidmag{i_sub}{i_phalange}.fahm;
-        overlap_squidmag_opm(i_sub,i_phalange) = squidmag_mne_M60{i_phalange}.overlap_opm/mne_squidmag{i_sub}{i_phalange}.fahm;
-        overlap_squidgrad_squidmag(i_sub,i_phalange) = squidgrad_mne_M60{i_phalange}.overlap_squidmag/mne_squidgrad{i_sub}{i_phalange}.fahm;
-        overlap_squidgrad_opm(i_sub,i_phalange) = squidgrad_mne_M60{i_phalange}.overlap_opm/mne_squidgrad{i_sub}{i_phalange}.fahm;
+        overlap_opm_squidmag(i_sub,i_phalange) = mne_opm{i_sub}{i_phalange,i_peak}.overlap_squidmag/mne_opm{i_sub}{i_phalange,i_peak}.fahm;
+        overlap_opm_squidgrad(i_sub,i_phalange) = mne_opm{i_sub}{i_phalange,i_peak}.overlap_squidgrad/mne_opm{i_sub}{i_phalange,i_peak}.fahm;
+        overlap_squidmag_squidgrad(i_sub,i_phalange) = mne_squidmag{i_sub}{i_phalange,i_peak}.overlap_squidgrad/mne_squidmag{i_sub}{i_phalange,i_peak}.fahm;
+        overlap_squidmag_opm(i_sub,i_phalange) = mne_squidmag{i_sub}{i_phalange,i_peak}.overlap_opm/mne_squidmag{i_sub}{i_phalange,i_peak}.fahm;
+        overlap_squidgrad_squidmag(i_sub,i_phalange) = mne_squidgrad{i_sub}{i_phalange,i_peak}.overlap_squidmag/mne_squidgrad{i_sub}{i_phalange,i_peak}.fahm;
+        overlap_squidgrad_opm(i_sub,i_phalange) = mne_squidgrad{i_sub}{i_phalange,i_peak}.overlap_opm/mne_squidgrad{i_sub}{i_phalange,i_peak}.fahm;
     end
 end
 
