@@ -53,25 +53,29 @@ for i_phalange = 1:length(params.trigger_code)
         opm_timelocked{i_phalange}.cov = opm_timelocked{i_phalange}.cov_all;
         cov = '_covAll';
     elseif isfield(params,'use_cov') && strcmp(params.use_cov,'resting_state')
-        if size(opm_timelocked{i_phalange}.cov_RS) == size(opm_timelocked{i_phalange}.cov)
+        cov = '_covRS';
+        if size(opm_timelocked{i_phalange}.cov_RS,1) >= size(opm_timelocked{i_phalange}.cov,1)
             squidmag_timelocked{i_phalange}.cov = squidmag_timelocked{i_phalange}.cov_RS;
             squidgrad_timelocked{i_phalange}.cov = squidgrad_timelocked{i_phalange}.cov_RS;
             opm_timelocked{i_phalange}.cov = opm_timelocked{i_phalange}.cov_RS;
-            cov = '_covRS';
+        else
+            disp([params.sub '_' params.phalange_labels{params.i_phalange} ': ' num2str(size(opm_timelocked{i_phalange}.cov_RS,1)) ' vs ' num2str(size(opm_timelocked{i_phalange}.cov,1))])
+            continue
         end
     elseif isfield(params,'use_cov') && strcmp(params.use_cov,'empty_room')
+        cov = '_covER';
         if ~isfield(squidmag_timelocked{i_phalange},'cov_ER')
             continue % skip if no empty room covariance available
         end
         squidmag_timelocked{i_phalange}.cov = squidmag_timelocked{i_phalange}.cov_ER;
         squidgrad_timelocked{i_phalange}.cov = squidgrad_timelocked{i_phalange}.cov_ER;
         opm_timelocked{i_phalange}.cov = opm_timelocked{i_phalange}.cov_ER;
-        cov = '_covER';
         if size(opm_timelocked{i_phalange}.cov_ER) == size(opm_timelocked{i_phalange}.cov)
             squidmag_timelocked{i_phalange}.cov = squidmag_timelocked{i_phalange}.cov_ER;
             squidgrad_timelocked{i_phalange}.cov = squidgrad_timelocked{i_phalange}.cov_ER;
             opm_timelocked{i_phalange}.cov = opm_timelocked{i_phalange}.cov_ER;
-            cov = '_covER';
+        else
+            continue
         end
     end
 

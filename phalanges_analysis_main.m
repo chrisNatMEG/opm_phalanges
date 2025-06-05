@@ -36,10 +36,10 @@ overwrite.coreg = false;
 overwrite.mri = false;
 overwrite.dip = false;
 overwrite.empty_room = false;
-overwrite.mne = false;
+overwrite.mne = true;
 
-overwrite.sens_group = true;
-overwrite.dip_group = true;
+overwrite.sens_group = false;
+overwrite.dip_group = false;
 overwrite.mne_group = true;
 
 %% Params

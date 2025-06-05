@@ -55,6 +55,8 @@ for i_phalange = 1:length(params.trigger_code)
             squidgrad_timelocked{i_phalange}.cov = squidgrad_timelocked{i_phalange}.cov_RS;
             opm_timelocked{i_phalange}.cov = opm_timelocked{i_phalange}.cov_RS;
             cov = '_covRS';
+        else
+            continue
         end
     elseif isfield(params,'use_cov') && strcmp(params.use_cov,'empty_room')
         if ~isfield(squidmag_timelocked{i_phalange},'cov_ER')
@@ -69,6 +71,8 @@ for i_phalange = 1:length(params.trigger_code)
             squidgrad_timelocked{i_phalange}.cov = squidgrad_timelocked{i_phalange}.cov_ER;
             opm_timelocked{i_phalange}.cov = opm_timelocked{i_phalange}.cov_ER;
             cov = '_covER';
+        else 
+            continue
         end
     end
 
