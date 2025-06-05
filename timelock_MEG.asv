@@ -22,19 +22,13 @@ cfg.demean = 'yes';
 cfg.baselinewindow = [-params.pre 0];
 data = ft_preprocessing(cfg,data);
 
-if contains(params.chs,'meg')
-    cfg = [];
-    cfg.channel = 'meg';
-    data = ft_selectdata(cfg,data);
-else
-    cfg = [];
-    cfg.channel = params.chs;
-    data = ft_selectdata(cfg,data);
-end
-
 cfg = [];
 cfg.demean = 'yes'; %% demean entire trial for whole trial cov
 data2 = ft_preprocessing(cfg,data);
+
+cfg = [];
+        cfg.channel = params.chs;
+        dat = ft_selectdata(cfg,timelocked{i_phalange});
 
 for i_phalange = 1:length(params.trigger_code)
     cfg = [];
