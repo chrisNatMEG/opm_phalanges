@@ -60,6 +60,7 @@ for i_phalange = 1:length(params.trigger_code)
             opm_timelocked{i_phalange}.cov = opm_timelocked{i_phalange}.cov_RS;
         else
             disp([params.sub '_' params.phalange_labels{params.i_phalange} ': ' num2str(size(opm_timelocked{i_phalange}.cov_RS,1)) ' vs ' num2str(size(opm_timelocked{i_phalange}.cov,1))])
+            opm_peak{i_phalange,1} = [params.sub '_' params.phalange_labels{params.i_phalange} ': ' num2str(size(opm_timelocked{i_phalange}.cov_RS,1)) ' vs ' num2str(size(opm_timelocked{i_phalange}.cov,1))];
             continue
         end
     elseif isfield(params,'use_cov') && strcmp(params.use_cov,'empty_room')
@@ -75,6 +76,7 @@ for i_phalange = 1:length(params.trigger_code)
             squidgrad_timelocked{i_phalange}.cov = squidgrad_timelocked{i_phalange}.cov_ER;
             opm_timelocked{i_phalange}.cov = opm_timelocked{i_phalange}.cov_ER;
         else
+            opm_peak{i_phalange,1} = [params.sub '_' params.phalange_labels{params.i_phalange} ': ' num2str(size(opm_timelocked{i_phalange}.cov_ER,1)) ' vs ' num2str(size(opm_timelocked{i_phalange}.cov,1))];
             continue
         end
     end

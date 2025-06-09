@@ -32,8 +32,8 @@ ft_default.showcallinfo = 'no';
 %% Overwrite
 overwrite = [];
 if on_server
-    overwrite.preproc = false;
-    overwrite.coreg = false;
+    overwrite.preproc = true;
+    overwrite.coreg = true;
     overwrite.mri = false;
     overwrite.dip = false;
     overwrite.empty_room = true;
@@ -477,9 +477,10 @@ if overwrite.dip_group
 end
 
 %% Empty room & resting state for noise covariances
-for i_sub = 4%setdiff(subs_to_run,excl_subs)
+for i_sub = setdiff(subs_to_run,excl_subs)
     params.sub = ['sub_' num2str(i_sub,'%02d')];
     save_path = fullfile(base_save_path,params.sub);
+    raw_path = fullfile(base_data_path,'MEG',['NatMEG_' subses{i_sub,1}], subses{i_sub,2});
     if i_sub <=3 % Flip amplitudes in old recordings
         params.flip_sign  = true;
     else
@@ -488,6 +489,7 @@ for i_sub = 4%setdiff(subs_to_run,excl_subs)
     if exist(fullfile(save_path, [params.sub '_resting_state_squid.mat']),'file') && overwrite.empty_room == false
         disp(['Not overwriting MNE source reconstruction for ' params.sub]);
     else
+        clear data_ica
         data_ica = load(fullfile(save_path, [params.sub '_opm_timelockedT.mat'])).opm_timelockedT{1};
         opm_chs = data_ica.label(contains(data_ica.label,'bz'));
         clear data_ica

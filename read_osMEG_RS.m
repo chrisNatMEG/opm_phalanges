@@ -205,7 +205,7 @@ params.chs = '*bz';
 opm_RS_ica = ica_MEG(opm_cleaned, save_path, params, 0);
 
 cfg = [];
-cfg.channel = '*bz';
+cfg.channel = params.chs;
 opm_RS_ica = ft_selectdata(cfg,opm_RS_ica);
 
 %% Timelock
@@ -218,7 +218,6 @@ end
 
 % Remove padding
 cfg = [];
-cfg.channel = params.chs;
 cfg.latency = [-params.pre params.post];
 opm_RS_ica = ft_selectdata(cfg, opm_RS_ica);
 
