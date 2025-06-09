@@ -54,13 +54,13 @@ data_epo.sampleinfo = round(trl(:,1:2)/5);
 
 %% Reject bad channels
 cfg = [];
-cfg.trl = trl_opm;
+cfg.trl = trl;
 cfg.z_threshold = params.z_threshold;
 cfg.corr_threshold = params.corr_threshold;
-[~, ~, ~, ~, ~, ~, badtrl_opm_zmax] = opm_badchannels(cfg, data_raw);
+[~, ~, ~, ~, ~, ~, badtrl_zmax] = opm_badchannels(cfg, data_raw);
 
 cfg = [];
-cfg.trials  = setdiff(1:length(data_epo.trial),badtrl_opm_zmax); % remove bad trials
+cfg.trials  = setdiff(1:length(data_epo.trial),badtrl_zmax); % remove bad trials
 data_epo = ft_selectdata(cfg, data_epo);
 
 cfg = []; % separate ExG channels
@@ -130,7 +130,7 @@ end
 
 % Remove padding
 cfg = [];
-cfg.channel = params.chs;
+cfg.channel = '*bz';
 cfg.latency = [-params.pre params.post];
 opm_ER_cleaned = ft_selectdata(cfg, opm_ER_cleaned);
 
@@ -156,6 +156,7 @@ ft_hastoolbox('mne', 1);
 cfg             = [];
 cfg.datafile    = squid_file;
 cfg.channel         = squid_chs;
+cfg.checkmaxfilter = 'no';
 data_raw         = ft_preprocessing(cfg);
 n_smpl = round((params.pre+params.post)*data_raw.fsample);
 n_trl = floor(data_raw.sampleinfo(2)/n_smpl -2);
@@ -233,6 +234,7 @@ end
 
 % Remove padding
 cfg = [];
+cfg.channel = 'meg';
 cfg.latency = [-params.pre params.post];
 squid_ER_cleaned = ft_selectdata(cfg, squid_ER_cleaned);
 
@@ -246,10 +248,7 @@ cfg = [];
 cfg.covariance          = 'yes';
 cfg.covariancewindow    = 'all';
 squidmag_ER_cov = ft_timelockanalysis(cfg, squid_ER_cleaned).cov;
-cfg = [];
-cfg.covariance          = 'yes';
-cfg.covariancewindow    = 'all';
-squidgrad_ER_cov = ft_timelockanalysis(cfg, squid_ER_cleaned).cov;
+squidgrad_ER_cov = squidmag_ER_cov;
 
 %% Save
 save(fullfile(save_path, [params.sub '_ER_squid']), 'squid_ER_cleaned', 'squidmag_ER_cov', 'squidgrad_ER_cov', "-v7.3");

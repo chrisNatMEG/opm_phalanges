@@ -32,15 +32,15 @@ ft_default.showcallinfo = 'no';
 %% Overwrite
 overwrite = [];
 if on_server
-    overwrite.preproc = true;
-    overwrite.coreg = true;
+    overwrite.preproc = false;
+    overwrite.coreg = false;
     overwrite.mri = false;
-    overwrite.dip = true;
+    overwrite.dip = false;
     overwrite.empty_room = true;
     overwrite.mne = true;
 
-    overwrite.sens_group = true;
-    overwrite.dip_group = true;
+    overwrite.sens_group = false;
+    overwrite.dip_group = false;
     overwrite.mne_group = true;
 else
     overwrite.preproc = false;
@@ -97,7 +97,7 @@ params.peaks{2}.peak_latency = [0.08 0.12];
 params.trigger_code = [2 4 8 16 32];
 params.phalange_labels = {'I3' 'I2' 'I1' 'T1' 'I2b'};
 
-params.use_cov = 'resting_state'; % noise cov to use; default=prestim, alt: 'resting_state', 'all', 'empty_room'
+params.use_cov = 'empty_room'; % noise cov to use; default=prestim, alt: 'resting_state', 'all', 'empty_room'
 
 %% Subjects + dates
 subses = {'0005' '240208';
@@ -477,7 +477,7 @@ if overwrite.dip_group
 end
 
 %% Empty room & resting state for noise covariances
-for i_sub = setdiff(subs_to_run,excl_subs)
+for i_sub = 4%setdiff(subs_to_run,excl_subs)
     params.sub = ['sub_' num2str(i_sub,'%02d')];
     save_path = fullfile(base_save_path,params.sub);
     if i_sub <=3 % Flip amplitudes in old recordings
@@ -501,7 +501,7 @@ for i_sub = setdiff(subs_to_run,excl_subs)
     
         % Empty room
         opm_file = fullfile(raw_path, 'osmeg', 'EmptyRoomOPM_raw.fif');
-        squid_file = fullfile(raw_path, 'meg', 'EmptyRoomMEG_proc-tsss+corr98+mc+avgHead_meg.fif');
+        squid_file = fullfile(raw_path, 'meg', 'EmptyRoomMEG.fif');
         if exist(opm_file,'file') && exist(squid_file,'file')
             read_empty_rooms(opm_file, squid_file, opm_chs, squid_chs, save_path, params);
         end
