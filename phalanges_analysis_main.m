@@ -69,7 +69,7 @@ params.filter.notch = [50 60 100 120 150]; %[50 60 100 120 150];
 params.do_hfc = false;
 params.hfc_order = 1;
 params.do_amm = true;
-params.amm_in = 10;
+params.amm_in = 11;
 params.amm_out = 2;
 params.amm_thr = 1;
 
