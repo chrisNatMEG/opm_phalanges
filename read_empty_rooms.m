@@ -1,4 +1,4 @@
-function read_empty_rooms(opm_file, squid_file, opm_chs, squid_chs, save_path, params)
+function read_empty_rooms(opm_file, squid_file, opm_chs, squid_chs, opm_grad, save_path, params)
 %prprocess_osMEG Read on-scalp MEG data for benchmarking
 % recordings and combine with auxiliary TRIUX data/EEG. 
 % Requires the following arguments:
@@ -63,11 +63,13 @@ cfg = [];
 cfg.trials  = setdiff(1:length(data_epo.trial),badtrl_zmax); % remove bad trials
 data_epo = ft_selectdata(cfg, data_epo);
 
-cfg = []; % separate ExG channels
-cfg.channel = {'EOG*', 'ECG*'};
-ExG = ft_selectdata(cfg,data_epo);
-
 %% Spatiotemporal filtering
+if anynan(data_epo.grad.chanpos) && isempty(setdiff(opm_chs,data_epo.grad.label))
+    opm_grad.balance = data_epo.grad.balance;
+    opm_grad.tra = eye(size(opm_grad.tra,1));
+    data_epo.grad = opm_grad;
+end
+
 if params.do_hfc
     cfg = [];
     cfg.channel = '*bz';
@@ -79,6 +81,10 @@ elseif params.do_amm
     cfg.channel = '*bz';
     cfg.updatesens = 'yes';
     cfg.residualcheck = 'no';
+    cfg.amm = [];
+    cfg.amm.order_in = params.amm_in;
+    cfg.amm.order_out = params.amm_out;
+    cfg.amm.thr = params.amm_thr;
     opm_ER_cleaned = ft_denoise_amm(cfg, data_epo);
 else
     opm_ER_cleaned = data_epo;

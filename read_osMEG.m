@@ -218,6 +218,10 @@ elseif params.do_amm
     cfg.channel = '*bz';
     cfg.updatesens = 'yes';
     cfg.residualcheck = 'no';
+    cfg.amm = [];
+    cfg.amm.order_in = params.amm_in;
+    cfg.amm.order_out = params.amm_out;
+    cfg.amm.thr = params.amm_thr;
     opm_cleaned = ft_denoise_amm(cfg, comb);
     
     tmp = opm_cleaned;

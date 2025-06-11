@@ -149,6 +149,12 @@ cfg.channel = {'EOG*', 'ECG*'};
 ExG = ft_selectdata(cfg,comb);
 
 %% Spatiotemporal filtering
+if anynan(comb.grad.chanpos) && isempty(setdiff(opm_chs,comb.grad.label))
+    opm_grad.balance = comb.grad.balance;
+    opm_grad.tra = eye(size(opm_grad.tra,1));
+    comb.grad = opm_grad;
+end
+
 if params.do_hfc
     cfg = [];
     cfg.channel = '*bz';
@@ -160,6 +166,10 @@ elseif params.do_amm
     cfg.channel = '*bz';
     cfg.updatesens = 'yes';
     cfg.residualcheck = 'no';
+    cfg.amm = [];
+    cfg.amm.order_in = params.amm_in;
+    cfg.amm.order_out = params.amm_out;
+    cfg.amm.thr = params.amm_thr;
     opm_cleaned = ft_denoise_amm(cfg, comb);
 else
     opm_cleaned = comb;

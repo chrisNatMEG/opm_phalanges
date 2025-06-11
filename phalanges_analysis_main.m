@@ -69,6 +69,9 @@ params.filter.notch = [50 60 100 120 150]; %[50 60 100 120 150];
 params.do_hfc = false;
 params.hfc_order = 1;
 params.do_amm = true;
+params.amm_in = 10;
+params.amm_out = 2;
+params.amm_thr = 1;
 
 params.z_threshold = 20;
 params.corr_threshold = 0.6; % correlation threshold for badchannel neighbors
@@ -492,6 +495,7 @@ for i_sub = setdiff(subs_to_run,excl_subs)
         clear data_ica
         data_ica = load(fullfile(save_path, [params.sub '_opm_timelockedT.mat'])).opm_timelockedT{1};
         opm_chs = data_ica.label(contains(data_ica.label,'bz'));
+        opm_grad = data_ica.grad;
         clear data_ica
         data_ica = load(fullfile(save_path, [params.sub '_squidmag_timelocked.mat'])).timelocked{1};
         squidmag_chs = data_ica.label(contains(data_ica.label,'MEG'));
@@ -499,13 +503,13 @@ for i_sub = setdiff(subs_to_run,excl_subs)
         data_ica = load(fullfile(save_path, [params.sub '_squidgrad_timelocked.mat'])).timelocked{1};
         squidgrad_chs = data_ica.label(contains(data_ica.label,'MEG'));
         clear data_ica
-        squid_chs = [squidmag_chs; squidgrad_chs];
-    
+        squid_chs = squidmag_chs;
+        clear data_ica
         % Empty room
         opm_file = fullfile(raw_path, 'osmeg', 'EmptyRoomOPM_raw.fif');
         squid_file = fullfile(raw_path, 'meg', 'EmptyRoomMEG.fif');
         if exist(opm_file,'file') && exist(squid_file,'file')
-            read_empty_rooms(opm_file, squid_file, opm_chs, squid_chs, save_path, params);
+            read_empty_rooms(opm_file, squid_file, opm_chs, squid_chs, opm_grad, save_path, params);
         end
     
         % RESO
