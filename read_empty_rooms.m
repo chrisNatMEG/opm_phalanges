@@ -253,11 +253,10 @@ squid_ER_cleaned = ft_preprocessing(cfg, squid_ER_cleaned);
 cfg = [];
 cfg.covariance          = 'yes';
 cfg.covariancewindow    = 'all';
-squidmag_ER_cov = ft_timelockanalysis(cfg, squid_ER_cleaned).cov;
-squidgrad_ER_cov = squidmag_ER_cov;
+squid_ER_cov = ft_timelockanalysis(cfg, squid_ER_cleaned).cov;
 
 %% Save
-save(fullfile(save_path, [params.sub '_ER_squid']), 'squid_ER_cleaned', 'squidmag_ER_cov', 'squidgrad_ER_cov', "-v7.3");
+save(fullfile(save_path, [params.sub '_ER_squid']), 'squid_ER_cleaned', 'squid_ER_cov', "-v7.3");
 
 clear data_epo data_raw data_epo
 end

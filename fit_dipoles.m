@@ -1,4 +1,4 @@
-function [squidmag_dipole, squidgrad_dipole, opm_dipole] = fit_dipoles(save_path,squidmag_timelocked,squidgrad_timelocked,opm_timelocked,headmodels,mri,peak_squidmag, peak_squidgrad, peak_opm, params)
+function [squidmag_dipole, squidgrad_dipole, opm_dipole] = fit_dipoles(save_path,squid_timelocked,opm_timelocked,headmodels,mri,peak_squid, peak_opm, params)
 %UNTITLED3 Summary of this function goes here
 %   Detailed explanation goes here
 
@@ -13,7 +13,7 @@ cfg              = [];
 cfg.resolution   = 0.5;
 cfg.tight        = 'yes';
 cfg.inwardshift  = 0;
-cfg.headmodel    = headmodels.headmodel_meg;
+cfg.headmodel    = headmodel;
 sourcemodel    = ft_prepare_sourcemodel(cfg);
 
 %% Fit dipoles
@@ -23,24 +23,24 @@ for i_phalange = 1:5
     cfg.gridsearch      = 'yes';           
     cfg.numdipoles      = 1;                
     cfg.sourcemodel     = sourcemodel;           
-    cfg.headmodel       = headmodels.headmodel_meg;    
+    cfg.headmodel       = headmodel;    
     cfg.senstype        = 'meg';            
     cfg.channel         = 'megmag';         
     cfg.nonlinear       = 'yes';           
-    cfg.latency         = peak_squidmag{i_phalange}.peak_latency + [-0.01 0.01];
+    cfg.latency         = peak_squid{i_phalange}.peak_latency + [-0.01 0.01];
     cfg.dipfit.checkinside = 'yes';
-    squidmag_dipole{i_phalange} = ft_dipolefitting(cfg, squidmag_timelocked{i_phalange});
+    squidmag_dipole{i_phalange} = ft_dipolefitting(cfg, squid_timelocked{i_phalange});
     
-    cfg.latency         = peak_squidgrad{i_phalange}.peak_latency + [-0.01 0.01];   
-    cfg.channel         = 'megplanar';           
-    squidgrad_dipole{i_phalange} = ft_dipolefitting(cfg, squidgrad_timelocked{i_phalange});
+    cfg.latency         = peak_squid{i_phalange}.peak_latency + [-0.01 0.01];   
+    cfg.channel         = 'meggrad';           
+    squidgrad_dipole{i_phalange} = ft_dipolefitting(cfg, squid_timelocked{i_phalange});
 
     % OPM
     cfg = [];
     cfg.gridsearch      = 'yes';           
     cfg.numdipoles      = 1;                
     cfg.sourcemodel     = sourcemodel;            
-    cfg.headmodel       = headmodels.headmodel_meg;    
+    cfg.headmodel       = headmodel;    
     cfg.senstype        = 'meg';            
     cfg.channel         = '*bz';        
     cfg.nonlinear       = 'yes';            

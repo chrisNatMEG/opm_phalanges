@@ -10,11 +10,10 @@ for i_sub = subs
     ft_hastoolbox('mne', 1);
     save_path = fullfile(base_save_path,params.sub);
     clear M60_opm M60_opmeeg
-    clear M60_squidmag M60_squidgrad M60_squideeg
+    clear M60_squidmag M60_squideeg
     M60_opm = load(fullfile(save_path, [params.sub '_opm_M60.mat'])).peak; 
     M60_opmeeg = load(fullfile(save_path, [params.sub '_opmeeg_M60.mat'])).peak; 
     M60_squidmag = load(fullfile(save_path, [params.sub '_squidmag_M60.mat'])).peak; 
-    M60_squidgrad = load(fullfile(save_path, [params.sub '_squidgrad_M60.mat'])).peak; 
     M60_squideeg = load(fullfile(save_path, [params.sub '_squideeg_M60.mat'])).peak;
 
     clear squidmag_timelocked opm_timelocked
@@ -38,12 +37,10 @@ for i_sub = subs
         snr.ratio_prestim(i_sub,i_phalange) = snr.prestim_opm(i_sub,i_phalange)/snr.prestim_squidmag(i_sub,i_phalange);
         latency.opm(i_sub,i_phalange) = M60_opm{i_phalange}.peak_latency;
         latency.squidmag(i_sub,i_phalange) = M60_squidmag{i_phalange}.peak_latency;
-        latency.squidgrad(i_sub,i_phalange) = M60_squidgrad{i_phalange}.peak_latency;
         latency.opmeeg(i_sub,i_phalange) = M60_opmeeg{i_phalange}.peak_latency;
         latency.squideeg(i_sub,i_phalange) = M60_squideeg{i_phalange}.peak_latency;
         amp.opm(i_sub,i_phalange) = M60_opm{i_phalange}.peak_amplitude;
         amp.squidmag(i_sub,i_phalange) = M60_squidmag{i_phalange}.peak_amplitude;
-        amp.squidgrad(i_sub,i_phalange) = M60_squidgrad{i_phalange}.peak_amplitude;
         amp.opmeeg(i_sub,i_phalange) = M60_opmeeg{i_phalange}.peak_amplitude;
         amp.squideeg(i_sub,i_phalange) = M60_squideeg{i_phalange}.peak_amplitude;
 
@@ -324,16 +321,14 @@ for i_sub = subs
     ft_hastoolbox('mne', 1);
     save_path = fullfile(base_save_path,params.sub);
 
-    squidmag_timelocked = load(fullfile(save_path, [params.sub '_squidmag_timelocked'])).timelocked; 
-    squidgrad_timelocked = load(fullfile(save_path, [params.sub '_squidgrad_timelocked'])).timelocked; 
+    squid_timelocked = load(fullfile(save_path, [params.sub '_squid_timelocked'])).timelocked; 
     opm_timelocked = load(fullfile(save_path, [params.sub '_opm_timelocked'])).timelocked; 
 
     for i_ph = 1:length(params.phalange_labels)
-        squidmag{i_ph}{i_sub} = squidmag_timelocked{i_ph};
-        squidgrad{i_ph}{i_sub} = squidgrad_timelocked{i_ph};
+        squid{i_ph}{i_sub} = squid_timelocked{i_ph};
         opm{i_ph}{i_sub} = opm_timelocked{i_ph};
     end
-    clear squidmag_timelocked squidgrad_timelocked opm_timelocked
+    clear squid_timelocked opm_timelocked
 end
 for i_ph = 1:length(params.phalange_labels)
     % OPM
@@ -348,8 +343,8 @@ for i_ph = 1:length(params.phalange_labels)
 
     % SQUID-GRAD
     cfg = [];
-    cfg.channel = 'megplanar';
-    grandavg_squidgrad{i_ph} = ft_timelockgrandaverage(cfg,squidgrad{i_ph}{:});
+    cfg.channel = 'meggrad';
+    grandavg_squidgrad{i_ph} = ft_timelockgrandaverage(cfg,squid{i_ph}{:});
     cfg = [];
     cfg.xlim = [0.08 0.12];
     %cfg.zlim = [0 6e-14];

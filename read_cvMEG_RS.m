@@ -108,13 +108,9 @@ squid_RS_ica = ft_preprocessing(cfg,squid_RS_ica);
 cfg = [];
 cfg.covariance          = 'yes';
 cfg.covariancewindow    = 'all';
-squidmag_RS_cov = ft_timelockanalysis(cfg, squid_RS_ica).cov;
-cfg = [];
-cfg.covariance          = 'yes';
-cfg.covariancewindow    = 'all';
-squidgrad_RS_cov = ft_timelockanalysis(cfg, squid_RS_ica).cov;
+squid_RS_cov = ft_timelockanalysis(cfg, squid_RS_ica).cov;
 
 %% Save 
-save(fullfile(save_path, [params.sub '_resting_state_squid']), 'squid_RS_ica', 'squidmag_RS_cov', 'squidgrad_RS_cov',"-v7.3");
+save(fullfile(save_path, [params.sub '_resting_state_squid']), 'squid_RS_ica', 'squid_RS_cov',"-v7.3");
 
 end

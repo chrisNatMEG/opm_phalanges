@@ -1,4 +1,4 @@
-function fit_mne(save_path, squidmag_timelocked, squidgrad_timelocked, opm_timelocked, headmodels, sourcemodel, sourcemodel_inflated, params)
+function fit_mne(save_path, squid_timelocked, opm_timelocked, headmodel, sourcemodel, sourcemodel_inflated, params)
 %UNTITLED3 Summary of this function goes here
 %   Detailed explanation goes here
 
@@ -7,7 +7,6 @@ if ~isfield(params,'plot_inflated')
 end
 
 %% Prepare leadfields
-headmodel = headmodels.headmodel_meg;
 headmodel = ft_convert_units(headmodel,'cm');
 sourcemodel = ft_convert_units(sourcemodel,'cm');
 sourcemodel.mom = surface_normals(sourcemodel.pos, sourcemodel.tri, 'vertex')';
@@ -19,44 +18,42 @@ opm_peak = cell(length(params.trigger_code),length(params.peaks));
 
 %% Leadfields
 cfg = [];
-cfg.grad             = squidmag_timelocked{1}.grad; % sensor positions
+cfg.grad             = squid_timelocked{1}.grad; % sensor positions
 cfg.channel          = 'megmag';
 cfg.senstype         = 'meg';            % sensor type
 cfg.sourcemodel      = sourcemodel;           % source points
 cfg.headmodel        = headmodel;          % volume conduction model
-cfg.normalize        = 'yes';
-leadfield_squidmag = ft_prepare_leadfield(cfg,squidmag_timelocked{1});
+%cfg.normalize        = 'yes';
+leadfield_squidmag = ft_prepare_leadfield(cfg,squid_timelocked{1});
 
 cfg = [];
-cfg.grad             = squidgrad_timelocked{1}.grad; % sensor positions
-cfg.channel          = 'megplanar';
+cfg.grad             = squid_timelocked{1}.grad; % sensor positions
+cfg.channel          = 'meggrad';
 cfg.senstype         = 'meg';            % sensor type
 cfg.sourcemodel      = sourcemodel;           % source points
 cfg.headmodel        = headmodel;          % volume conduction model
-cfg.normalize        = 'yes';
-leadfield_squidgrad = ft_prepare_leadfield(cfg,squidgrad_timelocked{1});
+%cfg.normalize        = 'yes';
+leadfield_squidgrad = ft_prepare_leadfield(cfg,squid_timelocked{1});
 
 cfg = [];
 cfg.grad             = opm_timelocked{1}.grad; % sensor positions
 cfg.senstype         = 'meg';            % sensor type
 cfg.sourcemodel      = sourcemodel;           % source points
 cfg.headmodel        = headmodel;          % volume conduction model
-cfg.normalize        = 'yes';
+%cfg.normalize        = 'yes';
 leadfield_opm = ft_prepare_leadfield(cfg,opm_timelocked{1});
 
 for i_phalange = 1:length(params.trigger_code)
     params.i_phalange = i_phalange;
     cov = '';
     if isfield(params,'use_cov') && strcmp(params.use_cov,'all')
-        squidmag_timelocked{i_phalange}.cov = squidmag_timelocked{i_phalange}.cov_all;
-        squidgrad_timelocked{i_phalange}.cov = squidgrad_timelocked{i_phalange}.cov_all;
+        squid_timelocked{i_phalange}.cov = squid_timelocked{i_phalange}.cov_all;
         opm_timelocked{i_phalange}.cov = opm_timelocked{i_phalange}.cov_all;
         cov = '_covAll';
     elseif isfield(params,'use_cov') && strcmp(params.use_cov,'resting_state')
         cov = '_covRS';
         if size(opm_timelocked{i_phalange}.cov_RS,1) >= size(opm_timelocked{i_phalange}.cov,1)
-            squidmag_timelocked{i_phalange}.cov = squidmag_timelocked{i_phalange}.cov_RS;
-            squidgrad_timelocked{i_phalange}.cov = squidgrad_timelocked{i_phalange}.cov_RS;
+            squid_timelocked{i_phalange}.cov = squid_timelocked{i_phalange}.cov_RS;
             opm_timelocked{i_phalange}.cov = opm_timelocked{i_phalange}.cov_RS;
         else
             disp([params.sub '_' params.phalange_labels{params.i_phalange} ': ' num2str(size(opm_timelocked{i_phalange}.cov_RS,1)) ' vs ' num2str(size(opm_timelocked{i_phalange}.cov,1))])
@@ -65,15 +62,13 @@ for i_phalange = 1:length(params.trigger_code)
         end
     elseif isfield(params,'use_cov') && strcmp(params.use_cov,'empty_room')
         cov = '_covER';
-        if ~isfield(squidmag_timelocked{i_phalange},'cov_ER')
+        if ~isfield(squid_timelocked{i_phalange},'cov_ER')
             continue % skip if no empty room covariance available
         end
-        squidmag_timelocked{i_phalange}.cov = squidmag_timelocked{i_phalange}.cov_ER;
-        squidgrad_timelocked{i_phalange}.cov = squidgrad_timelocked{i_phalange}.cov_ER;
+        squid_timelocked{i_phalange}.cov = squid_timelocked{i_phalange}.cov_ER;
         opm_timelocked{i_phalange}.cov = opm_timelocked{i_phalange}.cov_ER;
         if size(opm_timelocked{i_phalange}.cov_ER) == size(opm_timelocked{i_phalange}.cov)
-            squidmag_timelocked{i_phalange}.cov = squidmag_timelocked{i_phalange}.cov_ER;
-            squidgrad_timelocked{i_phalange}.cov = squidgrad_timelocked{i_phalange}.cov_ER;
+            squid_timelocked{i_phalange}.cov = squid_timelocked{i_phalange}.cov_ER;
             opm_timelocked{i_phalange}.cov = opm_timelocked{i_phalange}.cov_ER;
         else
             opm_peak{i_phalange,1} = [params.sub '_' params.phalange_labels{params.i_phalange} ': ' num2str(size(opm_timelocked{i_phalange}.cov_ER,1)) ' vs ' num2str(size(opm_timelocked{i_phalange}.cov,1))];
@@ -92,7 +87,7 @@ for i_phalange = 1:length(params.trigger_code)
     cfg.senstype            = 'meg';            % sensor type
     cfg.keepfilter          = 'yes';
     cfg.channel             = 'megmag';
-    tmp = ft_sourceanalysis(cfg, squidmag_timelocked{i_phalange});
+    tmp = ft_sourceanalysis(cfg, squid_timelocked{i_phalange});
     tmp.tri = sourcemodel.tri;
 
     params.modality = 'squidmag';
@@ -153,8 +148,8 @@ for i_phalange = 1:length(params.trigger_code)
     cfg.senstype            = 'meg';
     cfg.sourcemodel         = leadfield_squidgrad;
     cfg.keepfilter          = 'yes';
-    cfg.channel             = 'megplanar';
-    tmp = ft_sourceanalysis(cfg, squidgrad_timelocked{i_phalange});
+    cfg.channel             = 'meggrad';
+    tmp = ft_sourceanalysis(cfg, squid_timelocked{i_phalange});
     tmp.tri = sourcemodel.tri;
 
     params.modality = 'squidgrad';
