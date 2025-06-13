@@ -13,12 +13,12 @@ squid_trig = contains(squid_raw.label,'STI101');
 trig = squid_raw.trial{1}(squid_trig,:)>0.5;
 trig = [false trig(2:end)&~trig(1:end-1)];
 trig = find(trig);
-n_smpl = round((params.pre+params.post)*squid_raw.fsample);
+n_smpl = round((params.pre+params.post+2*params.pad)*squid_raw.fsample);
 n_trl = floor((trig(end)-trig(1))/n_smpl -1);
 trl_meg = zeros(n_trl,4);
 trl_meg(:,1) = trig(1) + n_smpl*(0:(n_trl-1))';
 trl_meg(:,2) = trig(1) + n_smpl*(1:n_trl)' - 1;
-trl_meg(:,3) = -params.pre*squid_raw.fsample;
+trl_meg(:,3) = -(params.pad+params.pre)*squid_raw.fsample;
 trl_meg(:,4) = ones(length(trl_meg(:,1)),1);
 
 %% MEG data filter & epoch

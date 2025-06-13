@@ -16,7 +16,7 @@ cfg.coordsys        = 'dewar';
 cfg.coilaccuracy    = 0;
 cfg.channel         = opm_chs;
 data_raw = ft_preprocessing(cfg);
-n_smpl = round((params.pre+params.post)*data_raw.fsample);
+n_smpl = round((params.pre+params.post+2*params.pad)*data_raw.fsample);
 n_trl = floor(data_raw.sampleinfo(2)/n_smpl-2);
 if n_trl > 120
     n_trl = 120;
@@ -24,7 +24,7 @@ end
 trl = zeros(n_trl,4);
 trl(:,1) = data_raw.fsample + n_smpl*(0:(n_trl-1))';
 trl(:,2) = data_raw.fsample + n_smpl*(1:n_trl)' - 1;
-trl(:,3) = -params.pre*data_raw.fsample;
+trl(:,3) = -(params.pad+params.pre)*data_raw.fsample;
 trl(:,4) = ones(length(trl(:,1)),1);
 
 % Filter & epoch
@@ -64,10 +64,15 @@ cfg.trials  = setdiff(1:length(data_epo.trial),badtrl_zmax); % remove bad trials
 data_epo = ft_selectdata(cfg, data_epo);
 
 %% Spatiotemporal filtering
-if anynan(data_epo.grad.chanpos) && isempty(setdiff(opm_chs,data_epo.grad.label))
-    opm_grad.balance = data_epo.grad.balance;
-    opm_grad.tra = eye(size(opm_grad.tra,1));
-    data_epo.grad = opm_grad;
+if any(isnan(data_epo.grad.chanpos),'all') 
+    if isempty(setdiff(opm_chs,data_epo.grad.label))
+        opm_grad.balance = data_epo.grad.balance;
+        opm_grad.tra = eye(size(opm_grad.tra,1));
+        data_epo.grad = opm_grad;
+    else
+        warning("OPM empty room: grad error. No covariance saved for %s",params.sub)
+        return
+    end
 end
 
 if params.do_hfc
@@ -164,7 +169,7 @@ cfg.datafile    = squid_file;
 cfg.channel         = squid_chs;
 cfg.checkmaxfilter = 'no';
 data_raw         = ft_preprocessing(cfg);
-n_smpl = round((params.pre+params.post)*data_raw.fsample);
+n_smpl = round((params.pre+params.post+2*params.pad)*data_raw.fsample);
 n_trl = floor(data_raw.sampleinfo(2)/n_smpl -2);
 if n_trl > 120
     n_trl = 120;
@@ -172,7 +177,7 @@ end
 trl = zeros(n_trl,4);
 trl(:,1) = data_raw.fsample + n_smpl*(0:(n_trl-1))';
 trl(:,2) = data_raw.fsample + n_smpl*(1:n_trl)' - 1;
-trl(:,3) = -params.pre*data_raw.fsample;
+trl(:,3) = -(params.pad+params.pre)*data_raw.fsample;
 trl(:,4) = ones(length(trl(:,1)),1);
 
 % Filter & epoch

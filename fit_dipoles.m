@@ -1,4 +1,4 @@
-function [squidmag_dipole, squidgrad_dipole, opm_dipole] = fit_dipoles(save_path,squid_timelocked,opm_timelocked,headmodels,mri,peak_squid, peak_opm, params)
+function [squidmag_dipole, squidgrad_dipole, opm_dipole] = fit_dipoles(save_path,squid_timelocked,opm_timelocked,headmodel,mri,peak_squid, peak_opm, params)
 %UNTITLED3 Summary of this function goes here
 %   Detailed explanation goes here
 
@@ -67,11 +67,11 @@ for i_phalange = 1:5
     hold on;
     ft_plot_dipole(pos_opm,ori_opm,'color',colors(2,:))
     ft_plot_dipole(pos_gad,ori_grad,'color',colors(3,:))
-    ft_plot_headmodel(headmodels.headmodel_meg,'EdgeAlpha',0,'FaceAlpha',0.3,'FaceColor',[229 194 152]/256,'unit','cm') 
+    ft_plot_headmodel(headmodel,'EdgeAlpha',0,'FaceAlpha',0.3,'FaceColor',[229 194 152]/256,'unit','cm') 
     hold off
     title([params.phalange_labels{i_phalange} ' (SQMAG-OPM = ' num2str(norm(pos_mag-pos_opm)*10,'%.1f') 'mm / SQGRAD-OPM = ' num2str(norm(pos_gad-pos_opm)*10,'%.1f') 'mm)'])
     legend('SQUIDMAG','OPM','SQUIDPLANAR','brain')
-    saveas(h, fullfile(save_path, 'figs', [params.sub '_' peak_squidmag{i_phalange}.label '_dipfit_SQUIDvOPM_ph-' params.phalange_labels{i_phalange} '.jpg']))
+    saveas(h, fullfile(save_path, 'figs', [params.sub '_' peak_squid{i_phalange}.label '_dipfit_SQUIDvOPM_ph-' params.phalange_labels{i_phalange} '.jpg']))
     close
 end
 close all
@@ -99,7 +99,7 @@ end
 hold off
 view(-90,0)
 title('SQUID-MAG')
-saveas(h, fullfile(save_path, 'figs', [params.sub '_' params.modality '_' peak_squidmag{i_phalange}.label '_dipfit-100.jpg']))
+saveas(h, fullfile(save_path, 'figs', [params.sub '_' params.modality '_' peak_squid{i_phalange}.label '_dipfit-100.jpg']))
 %010
 h=figure;
 hold on
@@ -112,7 +112,7 @@ end
 hold off
 view(0,0)
 title('SQUID-MAG')
-saveas(h, fullfile(save_path, 'figs', [params.sub '_' params.modality '_' peak_squidmag{i_phalange}.label '_dipfit-010.jpg']))
+saveas(h, fullfile(save_path, 'figs', [params.sub '_' params.modality '_' peak_squid{i_phalange}.label '_dipfit-010.jpg']))
 %001
 h=figure;
 hold on
@@ -124,7 +124,7 @@ for i = 1:5
 end
 hold off
 title('SQUID-MAG')
-saveas(h, fullfile(save_path, 'figs', [params.sub '_' params.modality '_' peak_squidmag{i_phalange}.label '_dipfit-001.jpg']))
+saveas(h, fullfile(save_path, 'figs', [params.sub '_' params.modality '_' peak_squid{i_phalange}.label '_dipfit-001.jpg']))
 close all
 
 % OPM
@@ -199,7 +199,7 @@ end
 hold off
 view(-90,0)
 title('SQUID-GRAD')
-saveas(h, fullfile(save_path, 'figs', [params.sub '_' params.modality '_' peak_squidgrad{i_phalange}.label '_dipfit-100.jpg']))
+saveas(h, fullfile(save_path, 'figs', [params.sub '_' params.modality '_' peak_squid{i_phalange}.label '_dipfit-100.jpg']))
 %010
 h=figure;
 hold on
@@ -212,7 +212,7 @@ end
 hold off
 view(0,0)
 title('SQUID-GRAD')
-saveas(h, fullfile(save_path, 'figs', [params.sub '_' params.modality '_' peak_squidgrad{i_phalange}.label '_dipfit-010.jpg']))
+saveas(h, fullfile(save_path, 'figs', [params.sub '_' params.modality '_' peak_squid{i_phalange}.label '_dipfit-010.jpg']))
 %001
 h=figure;
 hold on
@@ -224,9 +224,9 @@ for i = 1:5
 end
 hold off
 title('SQUID-GRAD')
-saveas(h, fullfile(save_path, 'figs', [params.sub '_' params.modality '_' peak_squidgrad{i_phalange}.label '_dipfit-001.jpg']))
+saveas(h, fullfile(save_path, 'figs', [params.sub '_' params.modality '_' peak_squid{i_phalange}.label '_dipfit-001.jpg']))
 close all
 %% Save 
-save(fullfile(save_path, [ peak_squidgrad{i_phalange}.label '_dipoles']), 'squidmag_dipole', 'squidgrad_dipole', 'opm_dipole'); disp('done');
+save(fullfile(save_path, [ peak_squid{i_phalange}.label '_dipoles']), 'squidmag_dipole', 'squidgrad_dipole', 'opm_dipole'); disp('done');
 
 end

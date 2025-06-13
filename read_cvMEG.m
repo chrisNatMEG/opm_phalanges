@@ -211,12 +211,12 @@ save(fullfile(save_path, [params.sub '_squideeg_badtrls']), ...
 %save(fullfile(save_path, [params.sub '_squideeg_cleaned']), 'squideeg_cleaned',"-v7.3"); disp('done');
 
 %% Remove padding
-cfg = [];
-cfg.latency = [-params.pre params.post];
-squid_cleaned = ft_selectdata(cfg, squid_cleaned); 
-
-cfg = [];
-cfg.latency = [-params.pre params.post];
-squideeg_cleaned = ft_selectdata(cfg, squideeg_cleaned); 
+% cfg = [];
+% cfg.latency = [-params.pre params.post];
+% squid_cleaned = ft_selectdata(cfg, squid_cleaned); 
+% 
+% cfg = [];
+% cfg.latency = [-params.pre params.post];
+% squideeg_cleaned = ft_selectdata(cfg, squideeg_cleaned); 
 
 end

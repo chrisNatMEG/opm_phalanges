@@ -35,12 +35,12 @@ trig = opm_raw.trial{1}(opm_trig,:)>0.5;
 trig = [false trig(2:end)&~trig(1:end-1)];
 trig = find(trig);
 opm_period = opm_raw.time{1}(trig(end))-opm_raw.time{1}(trig(1));
-n_smpl = round((opm_period/aux_period)*(params.pre+params.post)*opm_raw.fsample);
+n_smpl = round((opm_period/aux_period)*(params.pre+params.post+2*params.pad)*opm_raw.fsample);
 n_trl = floor((trig(end)-trig(1))/n_smpl-1);
 trl_opm = zeros(n_trl,4);
 trl_opm(:,1) = trig(1) + n_smpl*(0:(n_trl-1))';
 trl_opm(:,2) = trig(1) + n_smpl*(1:n_trl)' - 1;
-trl_opm(:,3) = -params.pre*opm_raw.fsample;
+trl_opm(:,3) = -(params.pad+params.pre)*opm_raw.fsample;
 trl_opm(:,4) = ones(length(trl_opm(:,1)),1);
 
 % Check if uneven amount of trial. If so assume error in beginning.
@@ -149,10 +149,15 @@ cfg.channel = {'EOG*', 'ECG*'};
 ExG = ft_selectdata(cfg,comb);
 
 %% Spatiotemporal filtering
-if anynan(comb.grad.chanpos) && isempty(setdiff(opm_chs,comb.grad.label))
-    opm_grad.balance = comb.grad.balance;
-    opm_grad.tra = eye(size(opm_grad.tra,1));
-    comb.grad = opm_grad;
+if any(isnan(comb.grad.chanpos),'all')
+    if isempty(setdiff(opm_chs,comb.grad.label))
+        opm_grad.balance = comb.grad.balance;
+        opm_grad.tra = eye(size(opm_grad.tra,1));
+        comb.grad = opm_grad;
+    else
+        warning("OPM resting state: grad error. No covariance saved for %s",params.sub)
+        return
+    end
 end
 
 if params.do_hfc

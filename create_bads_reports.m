@@ -136,7 +136,7 @@ for subNumber = subs
             end
 
             % Define the folder and the pattern
-            pattern = ['sub_' subStr '_' sections2{i_section} '_ica_rejected_comps*.jpg']; % Replace 'your_string' with the starting string
+            pattern = ['sub_' subStr '_' sections{i_section} '_ica_rejected_comps*.jpg']; % Replace 'your_string' with the starting string
             files = dir(fullfile(subjectFolderPath, 'figs', pattern));
 
             if ~isempty(files)
@@ -169,7 +169,7 @@ for subNumber = subs
             end
     
             % Load the .mat file
-            data = load(fullfile(subjectFolderPath,['sub_' subStr '_' sections2{i_section} '_' peak_label '.mat']));
+            data = load(fullfile(subjectFolderPath,['sub_' subStr '_' sections{i_section} '_' peak_label '.mat']));
             peak = data.peak;
             
             % Create the table with the required data
@@ -234,7 +234,7 @@ for subNumber = subs
                 row = TableRow();
                 for j = 1:2
                     imgIndex = (j-1)*2 + i;
-                    img = Image(fullfile(subjectFolderPath,'figs',['sub_' subStr '_' sections2{imgIndex} '_' peak_label '_butterfly_ph-' params.phalange_labels{i_phalange} '.jpg']));
+                    img = Image(fullfile(subjectFolderPath,'figs',['sub_' subStr '_' sections{imgIndex} '_' peak_label '_butterfly_ph-' params.phalange_labels{i_phalange} '.jpg']));
                     img.Style = {Width('8cm'), ScaleToFit};
                     entry = TableEntry();
                     append(entry, img);
@@ -261,7 +261,7 @@ for subNumber = subs
                 row = TableRow();
                 for j = 1:2
                     imgIndex = (j-1)*2 + i;
-                    img = Image(fullfile(subjectFolderPath,'figs',['sub_' subStr '_' sections2{imgIndex} '_' peak_label '_evoked_peakchannel_ph-' params.phalange_labels{i_phalange} '.jpg']));
+                    img = Image(fullfile(subjectFolderPath,'figs',['sub_' subStr '_' sections{imgIndex} '_' peak_label '_evoked_peakchannel_ph-' params.phalange_labels{i_phalange} '.jpg']));
                     img.Style = {Width('8cm'), ScaleToFit};
                     entry = TableEntry();
                     append(entry, img);
@@ -287,7 +287,7 @@ for subNumber = subs
                 row = TableRow();
                 for j = 1:2
                     imgIndex = (j-1)*2 + i;
-                    img = Image(fullfile(subjectFolderPath,'figs',['sub_' subStr '_' sections2{imgIndex} '_' peak_label '_topo_ph-' params.phalange_labels{i_phalange} '.jpg']));
+                    img = Image(fullfile(subjectFolderPath,'figs',['sub_' subStr '_' sections{imgIndex} '_' peak_label '_topo_ph-' params.phalange_labels{i_phalange} '.jpg']));
                     img.Style = {Width('8cm'), ScaleToFit};
                     entry = TableEntry();
                     append(entry, img);

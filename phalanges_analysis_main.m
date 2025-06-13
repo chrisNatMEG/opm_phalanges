@@ -43,8 +43,8 @@ if on_server
     overwrite.dip_group = false;
     overwrite.mne_group = true;
 else
-    overwrite.preproc = false;
-    overwrite.coreg = false;
+    overwrite.preproc = true;
+    overwrite.coreg = true;
     overwrite.mri = false;
     overwrite.dip = false;
     overwrite.empty_room = true;
@@ -62,7 +62,7 @@ params.post = 0.3; %sec
 params.pad = 0.2; %sec
 
 params.filter = [];
-params.filter.hp_freq = 1;
+params.filter.hp_freq = 3;
 params.filter.lp_freq = 70;
 params.filter.bp_freq = [];
 params.filter.notch = [50 60 100 120 150]; %[50 60 100 120 150];
@@ -100,7 +100,9 @@ params.peaks{2}.peak_latency = [0.08 0.12];
 params.trigger_code = [2 4 8 16 32];
 params.phalange_labels = {'I3' 'I2' 'I1' 'T1' 'I2b'};
 
-params.use_cov = 'empty_room'; % noise cov to use; default=prestim, alt: 'resting_state', 'all', 'empty_room'
+params.source_fixedori = true;
+
+params.use_cov = 'resting_state'; % noise cov to use; default=prestim, alt: 'resting_state', 'all', 'empty_room'
 
 %% Subjects + dates
 subses = {'0005' '240208';
@@ -124,7 +126,7 @@ excl_subs = [];
 if on_server
     subs_to_run = 1:size(subses,1);
 else
-    subs_to_run = 4; %1:size(subses,1)
+    subs_to_run = 2; %1:size(subses,1)
 end
 
 %% Loop over subjects
@@ -336,7 +338,7 @@ for i_sub = setdiff(subs_to_run,excl_subs)
         opm_timelockedT = load(fullfile(save_path, [params.sub '_opm_timelocked.mat'])).timelocked;
         opmeeg_timelockedT = load(fullfile(save_path, [params.sub '_opmeeg_timelocked.mat'])).timelocked;
         squideeg_timelocked = load(fullfile(save_path, [params.sub '_squideeg_timelocked.mat'])).timelocked;
-        squid_timelocked = load(fullfile(save_path, [params.sub '_squidmag_timelocked.mat'])).timelocked;
+        squid_timelocked = load(fullfile(save_path, [params.sub '_squid_timelocked.mat'])).timelocked;
 
         % Transform opm & opmeeg data 
         meg_file = fullfile(raw_path, 'meg', 'PhalangesMEG_proc-tsss+corr98+mc+avgHead_meg.fif');
@@ -448,7 +450,7 @@ for i_sub = setdiff(subs_to_run,excl_subs)
     raw_path = fullfile(base_data_path,'MEG',['NatMEG_' subses{i_sub,1}], subses{i_sub,2});
     save_path = fullfile(base_save_path,params.sub);
 
-    if exist(fullfile(save_path, 'dipoles.mat'),'file') && overwrite.dip==false
+    if exist(fullfile(save_path, [params.peaks{1}.label '_dipoles.mat']),'file') && overwrite.dip==false
         disp(['Not overwriting dipole source reconstruction for ' params.sub]);
     else
         clear headmodel mri_resliced
@@ -567,4 +569,7 @@ end
 %%
 close all
 clear all
-exit
+
+if on_server
+    exit
+end

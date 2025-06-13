@@ -34,37 +34,39 @@ cfg.numcomponent = n_comp;
 cfg.channel    = params.chs;                     
 comp           = ft_componentanalysis(cfg, data_ds);
 
-%% Plot
-if params.n_comp>16
-    for i = 1:floor(n_comp/16)
+%% Plot all components
+if save_results 
+    if params.n_comp>16
+        for i = 1:floor(n_comp/16)
+            cfg           = [];
+            cfg.component = (((i-1)*16)+1):(i*16);       
+            cfg.layout    = params.layout; 
+            cfg.comment   = 'no';
+            h = figure;
+            ft_topoplotIC(cfg, comp);   
+            saveas(h,fullfile(save_path, 'figs', [params.sub '_' params.modality '_ica_comps' num2str(i) '.jpg'])) 
+        end
+    
+        if mod(params.n_comp,16)~=0
+            cfg           = [];
+            cfg.component = ((i*16)+1):n_comp;       
+            cfg.layout    = params.layout; 
+            cfg.comment   = 'no';
+            h = figure;
+            ft_topoplotIC(cfg, comp);   
+            saveas(h,fullfile(save_path, 'figs', [params.sub '_' params.modality '_ica_comps' num2str(i+1) '.jpg'])) 
+        end
+    else
         cfg           = [];
-        cfg.component = (((i-1)*16)+1):(i*16);       
+        cfg.component = 1:n_comp;       
         cfg.layout    = params.layout; 
         cfg.comment   = 'no';
         h = figure;
         ft_topoplotIC(cfg, comp);   
-        saveas(h,fullfile(save_path, 'figs', [params.sub '_' params.modality '_ica_comps' num2str(i) '.jpg'])) 
+        saveas(h,fullfile(save_path, 'figs', [params.sub '_' params.modality '_ica_comps.jpg'])) 
     end
-
-    if mod(params.n_comp,16)~=0
-        cfg           = [];
-        cfg.component = ((i*16)+1):n_comp;       
-        cfg.layout    = params.layout; 
-        cfg.comment   = 'no';
-        h = figure;
-        ft_topoplotIC(cfg, comp);   
-        saveas(h,fullfile(save_path, 'figs', [params.sub '_' params.modality '_ica_comps' num2str(i+1) '.jpg'])) 
-    end
-else
-    cfg           = [];
-    cfg.component = 1:n_comp;       
-    cfg.layout    = params.layout; 
-    cfg.comment   = 'no';
-    h = figure;
-    ft_topoplotIC(cfg, comp);   
-    saveas(h,fullfile(save_path, 'figs', [params.sub '_' params.modality '_ica_comps.jpg'])) 
+    close all
 end
-close all
 
 %% --- ECG ----
 % Find ECG artifacts
