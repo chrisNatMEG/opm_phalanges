@@ -32,7 +32,7 @@ else
     [peak_mom, i_maxsource] = max(abs(sourcedistribution.avg.mom(:,i_latency)));
     half_max = peak_mom/2;
     peak_loc = sourcemodel.pos(i_maxsource,:);
-    peak_pow = peak_mom.^2; % power at max latency and source
+    peak_pow = sourcedistribution.avg.pow(i_maxsource,i_latency); % power at max latency and source
 
     % Find triangles that have at least one point with amplitude >= half max   
     halfmax_distribution = abs(sourcedistribution.avg.mom(:,i_latency))>=half_max;

@@ -31,9 +31,11 @@ trl(:,4) = ones(length(trl(:,1)),1);
 cfg = [];
 cfg.lpfilter        = 'yes';         
 cfg.lpfreq          = params.filter.lp_freq;
-cfg.hpfilter        = 'yes';         
-cfg.hpfreq          = params.filter.hp_freq;
-cfg.hpinstabilityfix  = 'reduce';
+if ~isempty(params.filter.hp_freq)
+    cfg.hpfilter        = 'yes'; 
+    cfg.hpfreq          = params.filter.hp_freq;
+    cfg.hpinstabilityfix  = 'reduce';
+end
 data_epo = ft_preprocessing(cfg, data_raw);
 
 cfg = [];
@@ -184,9 +186,11 @@ trl(:,4) = ones(length(trl(:,1)),1);
 cfg = [];
 cfg.lpfilter        = 'yes';         
 cfg.lpfreq          = params.filter.lp_freq;
-cfg.hpfilter        = 'yes';         
-cfg.hpfreq          = params.filter.hp_freq;
-cfg.hpinstabilityfix  = 'reduce';
+if ~isempty(params.filter.hp_freq)
+    cfg.hpfilter        = 'yes'; 
+    cfg.hpfreq          = params.filter.hp_freq;
+    cfg.hpinstabilityfix  = 'reduce';
+end
 data_epo = ft_preprocessing(cfg, data_raw);
 
 cfg = [];

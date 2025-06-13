@@ -58,9 +58,11 @@ end
 cfg = [];
 cfg.lpfilter        = 'yes';         
 cfg.lpfreq          = params.filter.lp_freq;
-cfg.hpfilter        = 'yes';         
-cfg.hpfreq          = params.filter.hp_freq;
-cfg.hpinstabilityfix  = 'reduce';
+if ~isempty(params.filter.hp_freq)
+    cfg.hpfilter        = 'yes'; 
+    cfg.hpfreq          = params.filter.hp_freq;
+    cfg.hpinstabilityfix  = 'reduce';
+end
 aux_epo = ft_preprocessing(cfg, aux_raw);
 
 cfg = [];
@@ -76,9 +78,11 @@ aux_epo = ft_preprocessing(cfg,aux_epo);
 cfg = [];
 cfg.lpfilter        = 'yes';         
 cfg.lpfreq          = params.filter.lp_freq;
-cfg.hpfilter        = 'yes';         
-cfg.hpfreq          = params.filter.hp_freq;
-cfg.hpinstabilityfix  = 'reduce';
+if ~isempty(params.filter.hp_freq)
+    cfg.hpfilter        = 'yes'; 
+    cfg.hpfreq          = params.filter.hp_freq;
+    cfg.hpinstabilityfix  = 'reduce';
+end
 opm_epo = ft_preprocessing(cfg,opm_raw);
 
 cfg = [];

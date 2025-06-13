@@ -9,7 +9,9 @@ end
 %% Prepare leadfields
 headmodel = ft_convert_units(headmodel,'cm');
 sourcemodel = ft_convert_units(sourcemodel,'cm');
-sourcemodel.mom = surface_normals(sourcemodel.pos, sourcemodel.tri, 'vertex')';
+if params.source_fixedori
+    sourcemodel.mom = surface_normals(sourcemodel.pos, sourcemodel.tri, 'vertex')';
+end
 
 %% invserse
 squidmag_peak = cell(length(params.trigger_code),length(params.peaks));
@@ -90,17 +92,14 @@ for i_phalange = 1:length(params.trigger_code)
 
     params.modality = 'squidmag';
 
-    if iscell(tmp.avg.mom)
-        if size(tmp.avg.mom{1},1)>1
-            for i = 1:length(tmp.avg.mom)
-                tmp.avg.mom{i} = vecnorm(tmp.avg.mom{i},1);
-            end
-        elseif size(tmp.avg.mom,1) == 1
+    if iscell(tmp.avg.mom) && size(tmp.avg.mom{1},1)~=3
+        if size(tmp.avg.mom,1) == 1
             tmp.avg.mom = cell2mat(tmp.avg.mom');
         else
             tmp.avg.mom = cell2mat(tmp.avg.mom);
         end
     end
+
     h = figure;
     plot(tmp.time*1e3,tmp.avg.mom.^2)
     xlabel('t [msec]')
@@ -152,17 +151,14 @@ for i_phalange = 1:length(params.trigger_code)
 
     params.modality = 'squidgrad';
 
-    if iscell(tmp.avg.mom)
-        if size(tmp.avg.mom{1},1)>1
-            for i = 1:length(tmp.avg.mom)
-                tmp.avg.mom{i} = vecnorm(tmp.avg.mom{i},1);
-            end
-        elseif size(tmp.avg.mom,1) == 1
+    if iscell(tmp.avg.mom) && size(tmp.avg.mom{1},1)~=3
+        if size(tmp.avg.mom,1) == 1
             tmp.avg.mom = cell2mat(tmp.avg.mom');
         else
             tmp.avg.mom = cell2mat(tmp.avg.mom);
         end
     end
+
     h = figure;
     plot(tmp.time*1e3,tmp.avg.mom.^2)
     xlabel('t [msec]')
@@ -214,17 +210,14 @@ for i_phalange = 1:length(params.trigger_code)
 
     params.modality = 'opm';
 
-    if iscell(tmp.avg.mom)
-        if size(tmp.avg.mom{1},1)>1
-            for i = 1:length(tmp.avg.mom)
-                tmp.avg.mom{i} = vecnorm(tmp.avg.mom{i},1);
-            end
-        elseif size(tmp.avg.mom,1) == 1
+    if iscell(tmp.avg.mom) && size(tmp.avg.mom{1},1)~=3
+        if size(tmp.avg.mom,1) == 1
             tmp.avg.mom = cell2mat(tmp.avg.mom');
         else
             tmp.avg.mom = cell2mat(tmp.avg.mom);
         end
     end
+
     h = figure;
     plot(tmp.time*1e3,tmp.avg.mom.^2)
     xlabel('t [msec]')

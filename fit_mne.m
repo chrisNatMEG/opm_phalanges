@@ -101,6 +101,7 @@ for i_phalange = 1:length(params.trigger_code)
             tmp.avg.mom = cell2mat(tmp.avg.mom);
         end
     end
+    
     h = figure;
     plot(tmp.time*1e3,tmp.avg.pow)
     xlabel('t [msec]')
