@@ -86,6 +86,8 @@ params.ica_coh = 0.95; % cutoff for EOG/ECG coherence
 
 params.ds_freq = 500; % downsample frequency (timelock)
 
+params.hpi_freq = 33;
+params.hpi_gof = 0.9;
 
 params.peaks = {};%cell(2,1);
 params.peaks{1} = [];
@@ -256,8 +258,6 @@ for i_sub = setdiff(subs_to_run,excl_subs)
 
         params = rmfield(params,{'modality', 'layout', 'chs', 'amp_scaler', 'amp_label'}); % remove fields used for picking modality    
     
-        %% Save results in report
-        create_bads_reports(base_save_path, i_sub, params);
     end
 end
 
@@ -553,8 +553,8 @@ for i_sub = setdiff(subs_to_run,excl_subs)
         params.use_cov = 'empty_room'; 
         fit_mne(save_path, squid_timelocked, opm_timelockedT, headmodel, sourcemodel, sourcemodel_inflated, params);
 
-        params.use_cov = 'all'; 
-        fit_mne(save_path, squid_timelocked, opm_timelockedT, headmodel, sourcemodel, sourcemodel_inflated, params);
+        %params.use_cov = 'all'; 
+        %fit_mne(save_path, squid_timelocked, opm_timelockedT, headmodel, sourcemodel, sourcemodel_inflated, params);
 
         params.use_cov = ' '; 
         fit_mne(save_path, squid_timelocked, opm_timelockedT, headmodel, sourcemodel, sourcemodel_inflated, params);
@@ -568,6 +568,13 @@ for i_sub = setdiff(subs_to_run,excl_subs)
     end
 end
 close all
+
+%% Save results in report
+for i_sub = setdiff(subs_to_run,excl_subs)
+    params.sub = ['sub_' num2str(i_sub,'%02d')];
+    save_path = fullfile(base_save_path,params.sub);
+    create_sub_reports(save_path, i_sub, params);
+end
 
 %% MNE group analysis
 if overwrite.mne_group
