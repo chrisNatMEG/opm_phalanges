@@ -119,13 +119,24 @@ cfg.threshold = params.opm_std_threshold;
 [cfg,badtrl_std] = ft_badsegment(cfg, opm_ER_cleaned);
 opm_ER_cleaned = ft_rejectartifact(cfg,opm_ER_cleaned);
 
+cfg = [];
+cfg.channel = {'*bz'};
+cfg.metric = 'range';
+cfg.threshold = params.opm_range_threshold;
+[cfg,badtrl_range] = ft_badsegment(cfg, opm_ER_cleaned);
+opm_ER_cleaned = ft_rejectartifact(cfg,opm_ER_cleaned);
+
 [~,idx]=ismember(opm_ER_cleaned.sampleinfo,badtrl_jump,'rows');
 badtrl_jump = find(idx);
 [~,idx]=ismember(opm_ER_cleaned.sampleinfo,badtrl_std,'rows');
 badtrl_std = find(idx);
+[~,idx]=ismember(opm_ER_cleaned.sampleinfo,badtrl_range,'rows');
+badtrl_range = find(idx);
+
 save(fullfile(save_path, [params.sub '_opm_badtrls']), ...
     'badtrl_jump', ...
     'badtrl_std', ...
+    'badtrl_range', ...
     'badtrl_zmax' ,"-v7.3"); 
 
 % Flip?
@@ -229,10 +240,24 @@ cfg.threshold = params.squidmag_std_threshold;
 squid_ER_cleaned = ft_rejectartifact(cfg,squid_ER_cleaned);
 
 cfg = [];
+cfg.channel = 'megmag';
+cfg.metric = 'range';
+cfg.threshold = params.squidmag_range_threshold;
+[cfg,badtrl_squidmag_range] = ft_badsegment(cfg, squid_ER_cleaned);
+squid_ER_cleaned = ft_rejectartifact(cfg,squid_ER_cleaned);
+
+cfg = [];
 cfg.channel = 'megplanar';
 cfg.metric = 'std';
 cfg.threshold = params.squidgrad_std_threshold;
 [cfg,badtrl_squidgrad_std] = ft_badsegment(cfg, squid_ER_cleaned);
+squid_ER_cleaned = ft_rejectartifact(cfg,squid_ER_cleaned);
+
+cfg = [];
+cfg.channel = 'megplanar';
+cfg.metric = 'range';
+cfg.threshold = params.squidgrad_range_threshold;
+[cfg,badtrl_squidgrad_range] = ft_badsegment(cfg, squid_ER_cleaned);
 squid_ER_cleaned = ft_rejectartifact(cfg,squid_ER_cleaned);
 
 [~,idx]=ismember(squid_ER_cleaned.sampleinfo,badtrl_squid_jump,'rows');
@@ -241,8 +266,13 @@ badtrl_squid_jump = find(idx);
 badtrl_squid_std = find(idx);
 [~,idx]=ismember(squid_ER_cleaned.sampleinfo,badtrl_squidgrad_std,'rows');
 badtrl_squid_std = unique([badtrl_squid_std; find(idx)]);
+[~,idx]=ismember(squid_ER_cleaned.sampleinfo,badtrl_squidmag_range,'rows');
+badtrl_squid_range = find(idx);
+[~,idx]=ismember(squid_ER_cleaned.sampleinfo,badtrl_squidgrad_range,'rows');
+badtrl_squid_range = unique([badtrl_squid_range; find(idx)]);
 save(fullfile(save_path, [params.sub '_squid_badtrls']), ...
     'badtrl_squid_jump', ...
+    'badtrl_squid_range', ...
     'badtrl_squid_std',"-v7.3"); 
 
 %% Timelock

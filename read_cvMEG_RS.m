@@ -80,6 +80,20 @@ cfg.threshold = params.squidgrad_std_threshold;
 [cfg,~] = ft_badsegment(cfg, squid_cleaned);
 squid_cleaned = ft_rejectartifact(cfg,squid_cleaned);
 
+cfg = [];
+cfg.channel = 'megmag';
+cfg.metric = 'range';
+cfg.threshold = params.squidmag_range_threshold;
+[cfg,~] = ft_badsegment(cfg, squid_cleaned);
+squid_cleaned = ft_rejectartifact(cfg,squid_cleaned);
+
+cfg = [];
+cfg.channel = 'megplanar';
+cfg.metric = 'range';
+cfg.threshold = params.squidgrad_range_threshold;
+[cfg,~] = ft_badsegment(cfg, squid_cleaned);
+squid_cleaned = ft_rejectartifact(cfg,squid_cleaned);
+
 %% ICA
 params.modality = 'squid';
 params.layout = 'neuromag306mag.lay';

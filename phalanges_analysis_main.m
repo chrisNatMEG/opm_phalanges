@@ -32,14 +32,14 @@ ft_default.showcallinfo = 'no';
 %% Overwrite
 overwrite = [];
 if on_server
-    overwrite.preproc = false;
+    overwrite.preproc = true;
     overwrite.coreg = false;
     overwrite.mri = false;
-    overwrite.dip = false;
+    overwrite.dip = true;
     overwrite.empty_room = true;
     overwrite.mne = true;
 
-    overwrite.sens_group = false;
+    overwrite.sens_group = true;
     overwrite.dip_group = true;
     overwrite.mne_group = true;
 else
@@ -78,9 +78,12 @@ params.amm_thr = 1;
 params.z_threshold = 20;
 params.corr_threshold = 0.6; % correlation threshold for badchannel neighbors
 params.opm_std_threshold = 5e-12;
-params.eeg_std_threshold = 1e-4;
 params.squidmag_std_threshold = 2.5e-12;
 params.squidgrad_std_threshold = 5e-11;
+params.eeg_std_threshold = 1e-4;
+params.opm_range_threshold = 10e-12;
+params.squidmag_std_threshold = 10e-12;
+params.squidgrad_std_threshold = 10e-11;
 
 params.n_comp = 40;
 params.ica_cor = 0.8; % cutoff for EOG/ECG coherence

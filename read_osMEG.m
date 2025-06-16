@@ -288,6 +288,14 @@ cfg.threshold = params.opm_std_threshold;
 [cfg,badtrl_opm_std] = ft_badsegment(cfg, opm_cleaned);
 opm_cleaned = ft_rejectartifact(cfg,opm_cleaned);
 
+% Reject noisy trials
+cfg = [];
+cfg.channel = {'*bz'};
+cfg.metric = 'range';
+cfg.threshold = params.opm_range_threshold;
+[cfg,badtrl_opm_range] = ft_badsegment(cfg, opm_cleaned);
+opm_cleaned = ft_rejectartifact(cfg,opm_cleaned);
+
 % Convert grad unit to cm to match TRIUX grad
 opm_cleaned.grad = ft_convert_units(opm_cleaned.grad,'cm');
 
@@ -388,9 +396,12 @@ save(fullfile(save_path, [params.sub '_opmeeg_badchs']), ...
 badtrl_opm_jump = find(idx);
 [~,idx]=ismember(opm_cleaned.sampleinfo,badtrl_opm_std,'rows');
 badtrl_opm_std = find(idx);
+[~,idx]=ismember(opm_cleaned.sampleinfo,badtrl_opm_range,'rows');
+badtrl_opm_range = find(idx);
 save(fullfile(save_path, [params.sub '_opm_badtrls']), ...
     'badtrl_opm_jump', ...
     'badtrl_opm_std', ...
+    'badtrl_opm_range', ...
     'badtrl_opm_zmax' ,"-v7.3"); 
 
 [~,idx]=ismember(opmeeg_cleaned.sampleinfo,badtrl_opmeeg_jump,'rows');

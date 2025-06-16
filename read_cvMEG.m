@@ -85,6 +85,20 @@ cfg.threshold = params.squidgrad_std_threshold;
 [cfg,badtrl_squidgrad_std] = ft_badsegment(cfg, squid_cleaned);
 squid_cleaned = ft_rejectartifact(cfg,squid_cleaned);
 
+cfg = [];
+cfg.channel = 'megmag';
+cfg.metric = 'range';
+cfg.threshold = params.squidmag_range_threshold;
+[cfg,badtrl_squidmag_range] = ft_badsegment(cfg, squid_cleaned);
+squid_cleaned = ft_rejectartifact(cfg,squid_cleaned);
+
+cfg = [];
+cfg.channel = 'megplanar';
+cfg.metric = 'range';
+cfg.threshold = params.squidgrad_range_threshold;
+[cfg,badtrl_squidgrad_range] = ft_badsegment(cfg, squid_cleaned);
+squid_cleaned = ft_rejectartifact(cfg,squid_cleaned);
+
 %% EEG
 cfg = [];
 cfg.channel = squid_epo.label(find(~contains(squid_epo.label,'MEG')));
@@ -196,7 +210,12 @@ badtrl_squid_jump = find(idx);
 badtrl_squid_std = find(idx);
 [~,idx]=ismember(squid_cleaned.sampleinfo,badtrl_squidgrad_std,'rows');
 badtrl_squid_std = unique([badtrl_squid_std; find(idx)]);
+[~,idx]=ismember(squid_cleaned.sampleinfo,badtrl_squidmag_range,'rows');
+badtrl_squid_range = find(idx);
+[~,idx]=ismember(squid_cleaned.sampleinfo,badtrl_squidgrad_range,'rows');
+badtrl_squid_range = unique([badtrl_squid_std; find(idx)]);
 save(fullfile(save_path, [params.sub '_squid_badtrls']), ...
+    'badtrl_squid_jump', ...
     'badtrl_squid_jump', ...
     'badtrl_squid_std',"-v7.3"); 
 

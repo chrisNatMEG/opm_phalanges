@@ -220,6 +220,13 @@ cfg.threshold = params.opm_std_threshold;
 [cfg,~] = ft_badsegment(cfg, opm_cleaned);
 opm_cleaned = ft_rejectartifact(cfg,opm_cleaned);
 
+cfg = [];
+cfg.channel = {'*bz'};
+cfg.metric = 'range';
+cfg.threshold = params.opm_range_threshold;
+[cfg,~] = ft_badsegment(cfg, opm_cleaned);
+opm_cleaned = ft_rejectartifact(cfg,opm_cleaned);
+
 %% Convert grad unit to cm to match TRIUX
 opm_cleaned.grad = ft_convert_units(opm_cleaned.grad,'cm');
 
