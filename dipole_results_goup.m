@@ -14,10 +14,9 @@ for i_sub = subs
     ft_hastoolbox('mne', 1);
     save_path = fullfile(base_save_path,params.sub);
     clear squidmag_dipole squidgrad_dipole opm_dipole
-    load(fullfile(save_path, 'dipoles')); 
-    dipole_squidmag{i_sub} = squidmag_dipole;
-    dipole_squidgrad{i_sub} = squidgrad_dipole;
-    dipole_opm{i_sub} = opm_dipole;
+    dipole_squidmag{i_sub} = load(fullfile(save_path, 'dipoles')).squidmag_dipole;
+    dipole_squidgrad{i_sub} = load(fullfile(save_path, 'dipoles')).squidgrad_dipole;
+    dipole_opm{i_sub} = load(fullfile(save_path, 'dipoles')).opm_dipole;
   
     % Metrics: 
     % - distance between dipoles for same phalange different systems
@@ -138,65 +137,6 @@ title('Group level M60 dipole spread')
 ylabel('Dipoles spread [mm]')
 legend({'squidmag','opm','squidgrad'},'Location','eastoutside');
 saveas(h, fullfile(base_save_path, 'figs', 'dipole_spread.jpg'))
-
-%% Plot spread squidgrad vs opm
-% data1 = spread_squidgrad;
-% data2 = spread_opm;
-% mean1 = mean(data1,1,'omitnan');
-% mean2 = mean(data2,1,'omitnan');
-% min1 = min(data1,[],1,'omitnan');
-% min2 = min(data2,[],1,'omitnan');
-% max1 = max(data1,[],1,'omitnan');
-% max2 = max(data2,[],1,'omitnan');
-% err1 = [mean1-min1; max1-mean1];
-% err2 = [mean2-min2; max2-mean2];
-% 
-% h = figure('DefaultAxesFontSize',16);
-% bar(1,[mean1; mean2]','grouped');
-% hold on
-% k=1;
-% errorbar(k-0.15,mean1(k),err1(1,k),err1(2,k),'k','linestyle','none');
-% errorbar(k+0.15,mean2(k),err2(1,k),err2(2,k),'k','linestyle','none');
-% [~, p_values] = ttest(data1(:, 1), data2(:, 1));
-% 
-% sigstar({[1, 1]}, p_values);
-% hold off
-% title('Group level M100 dipole spread')
-% ylabel('Dipoles spread [mm]')
-% %xlabel('Phalange')
-% legend({'squidgrad','opm'});
-% xticklabels(params.phalange_labels)
-% saveas(h, fullfile(base_save_path, 'figs', 'dipole_spread_squidgrad_opm.jpg'))
-% 
-%% Plot spread squidgrad vs squidmag
-% data1 = spread_squidgrad;
-% data2 = spread_squidmag;
-% mean1 = mean(data1,1,'omitnan');
-% mean2 = mean(data2,1,'omitnan');
-% min1 = min(data1,[],1,'omitnan');
-% min2 = min(data2,[],1,'omitnan');
-% max1 = max(data1,[],1,'omitnan');
-% max2 = max(data2,[],1,'omitnan');
-% err1 = [mean1-min1; max1-mean1];
-% err2 = [mean2-min2; max2-mean2];
-% 
-% h = figure('DefaultAxesFontSize',16);
-% bar(1,[mean1; mean2]','grouped');
-% hold on
-% k=1;
-% errorbar(k-0.15,mean1(k),err1(1,k),err1(2,k),'k','linestyle','none');
-% errorbar(k+0.15,mean2(k),err2(1,k),err2(2,k),'k','linestyle','none');
-% [~, p_values] = ttest(data1(:, 1), data2(:, 1));
-% 
-% sigstar({[1, 1]}, p_values);
-% hold off
-% title('Group level M100 dipole spread')
-% ylabel('Dipoles spread [mm]')
-% %xlabel('Phalange')
-% legend({'squidgrad','squidmag'});
-% xticklabels(params.phalange_labels)
-% saveas(h, fullfile(base_save_path, 'figs', 'dipole_spread_squidgrad_squidmag.jpg'))
-
 
 close all
 end

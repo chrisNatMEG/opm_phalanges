@@ -28,6 +28,9 @@ if ~isempty(params.filter.hp_freq)
     cfg.hpfilter        = 'yes'; 
     cfg.hpfreq          = params.filter.hp_freq;
     cfg.hpinstabilityfix  = 'reduce';
+    if params.filter.hp_freq<1
+        cfg.hpfilttype = 'firws';
+    end
 end
 squid_epo = ft_preprocessing(cfg,squid_raw);
 

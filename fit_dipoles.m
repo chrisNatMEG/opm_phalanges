@@ -89,42 +89,45 @@ end
 mean_pos = mean(pos_mag,1);
 tmp = pos_mag;
 tmp(:,1) = mean_pos(1)-1;
-%100
+
 h=figure;
-hold on
-ft_plot_slice(mri.anatomy, 'transform', mri.transform, 'location', mean_pos, 'orientation', [1 0 0], 'resolution', 0.1)
-for i = 1:5
-    ft_plot_dipole(tmp(i,:),ori_mag(i,:),'color',colors(i,:))
-end
-hold off
-view(-90,0)
-title('SQUID-MAG')
-saveas(h, fullfile(save_path, 'figs', [params.sub '_' params.modality '_' peak_squid{i_phalange}.label '_dipfit-100.jpg']))
+h.Position = [100 100 800 800];
+set(gca,'LooseInset',get(gca,'TightInset'));
 %010
-h=figure;
+subplot(2,2,1)
 hold on
-tmp = pos_mag;
+tmp = pos_opm;
 tmp(:,2) = mean_pos(2)-1;
-ft_plot_slice(mri.anatomy, 'transform', mri.transform, 'location', mean_pos, 'orientation', [0 1 0], 'resolution', 0.1)
+ft_plot_slice(mri.anatomy, 'transform', mri.transform, 'location', mean_pos, 'orientation', [0 1 0], 'tag', 'y')
 for i = 1:5
     ft_plot_dipole(tmp(i,:),ori_mag(i,:),'color',colors(i,:))
 end
 hold off
 view(0,0)
-title('SQUID-MAG')
-saveas(h, fullfile(save_path, 'figs', [params.sub '_' params.modality '_' peak_squid{i_phalange}.label '_dipfit-010.jpg']))
-%001
-h=figure;
+axis equal; axis tight; axis vis3d; axis off
+%100
+subplot(2,2,2)
 hold on
-tmp = pos_mag;
-tmp(:,3) = mean_pos(3)+1;
-ft_plot_slice(mri.anatomy, 'transform', mri.transform, 'location', mean_pos, 'orientation', [0 0 1], 'resolution', 0.1)       
+ft_plot_slice(mri.anatomy, 'transform', mri.transform, 'location', mean_pos, 'orientation', [1 0 0], 'tag', 'x')
 for i = 1:5
     ft_plot_dipole(tmp(i,:),ori_mag(i,:),'color',colors(i,:))
 end
 hold off
-title('SQUID-MAG')
-saveas(h, fullfile(save_path, 'figs', [params.sub '_' params.modality '_' peak_squid{i_phalange}.label '_dipfit-001.jpg']))
+view(90,0)
+axis equal; axis tight; axis vis3d; axis off
+%001
+subplot(2,2,3)
+hold on
+tmp = pos_opm;
+tmp(:,3) = mean_pos(3)+1;
+ft_plot_slice(mri.anatomy, 'transform', mri.transform, 'location', mean_pos, 'orientation', [0 0 1], 'tag', 'z')       
+for i = 1:5
+    ft_plot_dipole(tmp(i,:),ori_mag(i,:),'color',colors(i,:))
+end
+hold off
+axis equal; axis tight; axis vis3d; axis off
+h.Position = [100 100 800 900];
+saveas(h, fullfile(save_path, 'figs', [params.sub '_' params.modality '_' peak_squid{i_phalange}.label '_dipfit_mri.jpg']))
 close all
 
 % OPM
@@ -139,42 +142,45 @@ end
 mean_pos = mean(pos_opm,1);
 tmp = pos_opm;
 tmp(:,1) = mean_pos(1)-1;
-%100
+
 h=figure;
-hold on
-ft_plot_slice(mri.anatomy, 'transform', mri.transform, 'location', mean_pos, 'orientation', [1 0 0], 'resolution', 0.1)
-for i = 1:5
-    ft_plot_dipole(tmp(i,:),ori_opm(i,:),'color',colors(i,:))
-end
-hold off
-view(-90,0)
-title('OPM')
-saveas(h, fullfile(save_path, 'figs', [params.sub '_' params.modality '_' peak_opm{i_phalange}.label '_dipfit-100.jpg']))
+h.Position = [100 100 800 800];
+set(gca,'LooseInset',get(gca,'TightInset'));
 %010
-h=figure;
+subplot(2,2,1)
 hold on
 tmp = pos_opm;
 tmp(:,2) = mean_pos(2)-1;
-ft_plot_slice(mri.anatomy, 'transform', mri.transform, 'location', mean_pos, 'orientation', [0 1 0], 'resolution', 0.1)
+ft_plot_slice(mri.anatomy, 'transform', mri.transform, 'location', mean_pos, 'orientation', [0 1 0], 'tag', 'y')
 for i = 1:5
     ft_plot_dipole(tmp(i,:),ori_opm(i,:),'color',colors(i,:))
 end
 hold off
 view(0,0)
-title('OPM')
-saveas(h, fullfile(save_path, 'figs', [params.sub '_' params.modality '_' peak_opm{i_phalange}.label '_dipfit-010.jpg']))
-%001
-h=figure;
+axis equal; axis tight; axis vis3d; axis off
+%100
+subplot(2,2,2)
 hold on
-tmp = pos_opm;
-tmp(:,3) = mean_pos(3)+1;
-ft_plot_slice(mri.anatomy, 'transform', mri.transform, 'location', mean_pos, 'orientation', [0 0 1], 'resolution', 0.1)       
+ft_plot_slice(mri.anatomy, 'transform', mri.transform, 'location', mean_pos, 'orientation', [1 0 0], 'tag', 'x')
 for i = 1:5
     ft_plot_dipole(tmp(i,:),ori_opm(i,:),'color',colors(i,:))
 end
 hold off
-title('OPM')
-saveas(h, fullfile(save_path, 'figs', [params.sub '_' params.modality '_' peak_opm{i_phalange}.label '_dipfit-001.jpg']))
+view(90,0)
+axis equal; axis tight; axis vis3d; axis off
+%001
+subplot(2,2,3)
+hold on
+tmp = pos_opm;
+tmp(:,3) = mean_pos(3)+1;
+ft_plot_slice(mri.anatomy, 'transform', mri.transform, 'location', mean_pos, 'orientation', [0 0 1], 'tag', 'z')       
+for i = 1:5
+    ft_plot_dipole(tmp(i,:),ori_opm(i,:),'color',colors(i,:))
+end
+hold off
+axis equal; axis tight; axis vis3d; axis off
+h.Position = [100 100 800 900];
+saveas(h, fullfile(save_path, 'figs', [params.sub '_' params.modality '_' peak_opm{i_phalange}.label '_dipfit_mri.jpg']))
 close all
 
 % SQUID-GRAD
@@ -189,43 +195,47 @@ end
 mean_pos = mean(pos_grad,1);
 tmp = pos_grad;
 tmp(:,1) = mean_pos(1)-1;
-%100
+
 h=figure;
-hold on
-ft_plot_slice(mri.anatomy, 'transform', mri.transform, 'location', mean_pos, 'orientation', [1 0 0], 'resolution', 0.1)
-for i = 1:5
-    ft_plot_dipole(tmp(i,:),ori_grad(i,:),'color',colors(i,:))
-end
-hold off
-view(-90,0)
-title('SQUID-GRAD')
-saveas(h, fullfile(save_path, 'figs', [params.sub '_' params.modality '_' peak_squid{i_phalange}.label '_dipfit-100.jpg']))
+h.Position = [100 100 800 800];
+set(gca,'LooseInset',get(gca,'TightInset'));
 %010
-h=figure;
+subplot(2,2,1)
 hold on
-tmp = pos_grad;
+tmp = pos_opm;
 tmp(:,2) = mean_pos(2)-1;
-ft_plot_slice(mri.anatomy, 'transform', mri.transform, 'location', mean_pos, 'orientation', [0 1 0], 'resolution', 0.1)
+ft_plot_slice(mri.anatomy, 'transform', mri.transform, 'location', mean_pos, 'orientation', [0 1 0], 'tag', 'y')
 for i = 1:5
     ft_plot_dipole(tmp(i,:),ori_grad(i,:),'color',colors(i,:))
 end
 hold off
 view(0,0)
-title('SQUID-GRAD')
-saveas(h, fullfile(save_path, 'figs', [params.sub '_' params.modality '_' peak_squid{i_phalange}.label '_dipfit-010.jpg']))
-%001
-h=figure;
+axis equal; axis tight; axis vis3d; axis off
+%100
+subplot(2,2,2)
 hold on
-tmp = pos_mag;
-tmp(:,3) = mean_pos(3)+1;
-ft_plot_slice(mri.anatomy, 'transform', mri.transform, 'location', mean_pos, 'orientation', [0 0 1], 'resolution', 0.1)       
+ft_plot_slice(mri.anatomy, 'transform', mri.transform, 'location', mean_pos, 'orientation', [1 0 0], 'tag', 'x')
 for i = 1:5
     ft_plot_dipole(tmp(i,:),ori_grad(i,:),'color',colors(i,:))
 end
 hold off
-title('SQUID-GRAD')
-saveas(h, fullfile(save_path, 'figs', [params.sub '_' params.modality '_' peak_squid{i_phalange}.label '_dipfit-001.jpg']))
+view(90,0)
+axis equal; axis tight; axis vis3d; axis off
+%001
+subplot(2,2,3)
+hold on
+tmp = pos_opm;
+tmp(:,3) = mean_pos(3)+1;
+ft_plot_slice(mri.anatomy, 'transform', mri.transform, 'location', mean_pos, 'orientation', [0 0 1], 'tag', 'z')       
+for i = 1:5
+    ft_plot_dipole(tmp(i,:),ori_grad(i,:),'color',colors(i,:))
+end
+hold off
+axis equal; axis tight; axis vis3d; axis off
+h.Position = [100 100 800 900];
+saveas(h, fullfile(save_path, 'figs', [params.sub '_' params.modality '_' peak_squid{i_phalange}.label '_dipfit_mri.jpg']))
 close all
+
 %% Save 
 save(fullfile(save_path, [ peak_squid{i_phalange}.label '_dipoles']), 'squidmag_dipole', 'squidgrad_dipole', 'opm_dipole'); disp('done');
 
