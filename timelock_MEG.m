@@ -61,6 +61,10 @@ for i_phalange = 1:length(params.trigger_code)
 end
 save(fullfile(save_path, [params.sub '_' params.modality '_timelocked']), 'timelocked', '-v7.3'); 
 
+cfg = [];
+cfg.channel = params.chs;
+data = ft_selectdata(cfg,data);
+
 %% Find peaks
 for i_peak = 1:length(params.peaks)
     peak = cell(length(params.trigger_code),1);

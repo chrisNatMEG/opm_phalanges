@@ -9,12 +9,12 @@ for i_sub = subs
     params.sub = ['sub_' num2str(i_sub,'%02d')];
     ft_hastoolbox('mne', 1);
     save_path = fullfile(base_save_path,params.sub);
-    clear M60_opm M60_opmeeg
-    clear M60_squidmag M60_squideeg
-    M60_opm = load(fullfile(save_path, [params.sub '_opm_M60.mat'])).peak; 
-    M60_opmeeg = load(fullfile(save_path, [params.sub '_opmeeg_M60.mat'])).peak; 
-    M60_squidmag = load(fullfile(save_path, [params.sub '_squidmag_M60.mat'])).peak; 
-    M60_squideeg = load(fullfile(save_path, [params.sub '_squideeg_M60.mat'])).peak;
+    clear peak_opm peak_opmeeg
+    clear peak_squidmag peak_squideeg
+    peak_opm = load(fullfile(save_path, [params.sub '_opm_' params.peaks{1}.label '.mat'])).peak; 
+    peak_opmeeg = load(fullfile(save_path, [params.sub '_opmeeg_' params.peaks{1}.label '.mat'])).peak; 
+    peak_squidmag = load(fullfile(save_path, [params.sub '_squidmag_' params.peaks{1}.label '.mat'])).peak; 
+    peak_squideeg = load(fullfile(save_path, [params.sub '_squideeg_' params.peaks{1}.label '.mat'])).peak;
 
     clear squidmag_timelocked opm_timelocked
     squidmag_timelocked = load(fullfile(save_path, [params.sub '_squidmag_timelocked'])).timelocked; 
@@ -23,26 +23,26 @@ for i_sub = subs
     opm_chs = find(contains(opm_timelocked{1}.label,'bz'));
 
     for i_phalange = 1:length(params.phalange_labels)
-        peak_ratio.meg(i_sub,i_phalange) = M60_opm{i_phalange}.peak_amplitude/M60_squidmag{i_phalange}.peak_amplitude;
-        peak_ratio.eeg(i_sub,i_phalange) = M60_opmeeg{i_phalange}.peak_amplitude/M60_squideeg{i_phalange}.peak_amplitude;
-        snr.error_opm(i_sub,i_phalange) = M60_opm{i_phalange}.peak_amplitude/M60_opm{i_phalange}.std_error;
-        snr.error_squidmag(i_sub,i_phalange) = M60_squidmag{i_phalange}.peak_amplitude/M60_squidmag{i_phalange}.std_error;
-        snr.error_squideeg(i_sub,i_phalange) = M60_squideeg{i_phalange}.peak_amplitude/M60_squideeg{i_phalange}.std_error;
-        snr.error_opmeeg(i_sub,i_phalange) = M60_opmeeg{i_phalange}.peak_amplitude/M60_opmeeg{i_phalange}.std_error;
-        snr.prestim_opm(i_sub,i_phalange) = M60_opm{i_phalange}.peak_amplitude/M60_opm{i_phalange}.prestim_std;
-        snr.prestim_squidmag(i_sub,i_phalange) = M60_squidmag{i_phalange}.peak_amplitude/M60_squidmag{i_phalange}.prestim_std;
-        snr.prestim_opmeeg(i_sub,i_phalange) = M60_opmeeg{i_phalange}.peak_amplitude/M60_opmeeg{i_phalange}.prestim_std;
-        snr.prestim_squideeg(i_sub,i_phalange) = M60_squideeg{i_phalange}.peak_amplitude/M60_squideeg{i_phalange}.prestim_std;
+        peak_ratio.meg(i_sub,i_phalange) = peak_opm{i_phalange}.peak_amplitude/peak_squidmag{i_phalange}.peak_amplitude;
+        peak_ratio.eeg(i_sub,i_phalange) = peak_opmeeg{i_phalange}.peak_amplitude/peak_squideeg{i_phalange}.peak_amplitude;
+        snr.error_opm(i_sub,i_phalange) = peak_opm{i_phalange}.peak_amplitude/peak_opm{i_phalange}.std_error;
+        snr.error_squidmag(i_sub,i_phalange) = peak_squidmag{i_phalange}.peak_amplitude/peak_squidmag{i_phalange}.std_error;
+        snr.error_squideeg(i_sub,i_phalange) = peak_squideeg{i_phalange}.peak_amplitude/peak_squideeg{i_phalange}.std_error;
+        snr.error_opmeeg(i_sub,i_phalange) = peak_opmeeg{i_phalange}.peak_amplitude/peak_opmeeg{i_phalange}.std_error;
+        snr.prestim_opm(i_sub,i_phalange) = peak_opm{i_phalange}.peak_amplitude/peak_opm{i_phalange}.prestim_std;
+        snr.prestim_squidmag(i_sub,i_phalange) = peak_squidmag{i_phalange}.peak_amplitude/peak_squidmag{i_phalange}.prestim_std;
+        snr.prestim_opmeeg(i_sub,i_phalange) = peak_opmeeg{i_phalange}.peak_amplitude/peak_opmeeg{i_phalange}.prestim_std;
+        snr.prestim_squideeg(i_sub,i_phalange) = peak_squideeg{i_phalange}.peak_amplitude/peak_squideeg{i_phalange}.prestim_std;
         snr.ratio_error(i_sub,i_phalange) = snr.error_opm(i_sub,i_phalange)/snr.error_squidmag(i_sub,i_phalange);
         snr.ratio_prestim(i_sub,i_phalange) = snr.prestim_opm(i_sub,i_phalange)/snr.prestim_squidmag(i_sub,i_phalange);
-        latency.opm(i_sub,i_phalange) = M60_opm{i_phalange}.peak_latency;
-        latency.squidmag(i_sub,i_phalange) = M60_squidmag{i_phalange}.peak_latency;
-        latency.opmeeg(i_sub,i_phalange) = M60_opmeeg{i_phalange}.peak_latency;
-        latency.squideeg(i_sub,i_phalange) = M60_squideeg{i_phalange}.peak_latency;
-        amp.opm(i_sub,i_phalange) = M60_opm{i_phalange}.peak_amplitude;
-        amp.squidmag(i_sub,i_phalange) = M60_squidmag{i_phalange}.peak_amplitude;
-        amp.opmeeg(i_sub,i_phalange) = M60_opmeeg{i_phalange}.peak_amplitude;
-        amp.squideeg(i_sub,i_phalange) = M60_squideeg{i_phalange}.peak_amplitude;
+        latency.opm(i_sub,i_phalange) = peak_opm{i_phalange}.peak_latency;
+        latency.squidmag(i_sub,i_phalange) = peak_squidmag{i_phalange}.peak_latency;
+        latency.opmeeg(i_sub,i_phalange) = peak_opmeeg{i_phalange}.peak_latency;
+        latency.squideeg(i_sub,i_phalange) = peak_squideeg{i_phalange}.peak_latency;
+        amp.opm(i_sub,i_phalange) = peak_opm{i_phalange}.peak_amplitude;
+        amp.squidmag(i_sub,i_phalange) = peak_squidmag{i_phalange}.peak_amplitude;
+        amp.opmeeg(i_sub,i_phalange) = peak_opmeeg{i_phalange}.peak_amplitude;
+        amp.squideeg(i_sub,i_phalange) = peak_squideeg{i_phalange}.peak_amplitude;
 
         h = figure;
         subplot(2,1,1)
@@ -101,7 +101,7 @@ er.LineStyle = 'none';
 er.LineWidth = 1;
 er.CapSize = 30;
 hold off
-title(['M60 peak amp ratio (mean = ' num2str(mean(mean(peak_ratio.meg,'omitnan'),'omitnan'),'%.2f') ')'])
+title([params.peaks{1}.label ' peak amp ratio (mean = ' num2str(mean(mean(peak_ratio.meg,'omitnan'),'omitnan'),'%.2f') ')'])
 ylabel('OPM/SQUID')
 xlabel('Phalange')
 xticklabels(params.phalange_labels)
@@ -116,7 +116,7 @@ er.LineStyle = 'none';
 er.LineWidth = 1;
 er.CapSize = 30;
 hold off
-title(['M60 peak amp ratio (mean = ' num2str(mean(mean(peak_ratio.eeg,'omitnan'),'omitnan'),'%.2f') ')'])
+title([params.peaks{1}.label ' peak amp ratio (mean = ' num2str(mean(mean(peak_ratio.eeg,'omitnan'),'omitnan'),'%.2f') ')'])
 ylabel('OPMEEG/SQUIDEEG')
 xlabel('Phalange')
 xticklabels(params.phalange_labels)
@@ -132,7 +132,7 @@ er.LineStyle = 'none';
 er.LineWidth = 1;
 er.CapSize = 30;
 hold off
-title(['M60 SNR_{stderror} ratio (mean = ' num2str(mean(mean(snr.ratio_error,'omitnan'),'omitnan'),'%.2f') ')'])
+title([params.peaks{1}.label ' SNR_{stderror} ratio (mean = ' num2str(mean(mean(snr.ratio_error,'omitnan'),'omitnan'),'%.2f') ')'])
 ylabel('OPM/SQUID')
 xlabel('Phalange')
 xticklabels(params.phalange_labels)
@@ -148,7 +148,7 @@ er.LineStyle = 'none';
 er.LineWidth = 1;
 er.CapSize = 30;
 hold off
-title(['M60 SNR_{prestim} ratio (mean = ' num2str(mean(mean(snr.ratio_prestim,'omitnan'),'omitnan'),'%.2f') ')'])
+title([params.peaks{1}.label ' SNR_{prestim} ratio (mean = ' num2str(mean(mean(snr.ratio_prestim,'omitnan'),'omitnan'),'%.2f') ')'])
 ylabel('OPM/SQUID')
 xlabel('Phalange')
 xticklabels(params.phalange_labels)
@@ -180,7 +180,7 @@ for i = 1:5
 end
 sigstar({[1, 1], [2, 2], [3, 3], [4, 4], [5, 5]}, p_values);
 hold off
-title('Group level M60 amplitude')
+title(['Group level ' params.peaks{1}.label ' amplitude'])
 ylabel('Peak amplitude [fT]')
 xlabel('Phalange')
 xticklabels(params.phalange_labels)
@@ -212,7 +212,7 @@ for i = 1:5
 end
 sigstar({[1, 1], [2, 2], [3, 3], [4, 4], [5, 5]}, p_values);
 hold off
-title('Group level M60 amplitude')
+title(['Group level ' params.peaks{1}.label ' amplitude'])
 ylabel('Peak amplitude [uV]')
 xlabel('Phalange')
 xticklabels(params.phalange_labels)
@@ -244,7 +244,7 @@ for i = 1:5
 end
 sigstar({[1, 1], [2, 2], [3, 3], [4, 4], [5, 5]}, p_values);
 hold off
-title('Group level M60 latency')
+title(['Group level ' params.peaks{1}.label ' latency'])
 ylabel('Latency [ms]')
 xlabel('Phalange')
 xticklabels(params.phalange_labels)
@@ -276,7 +276,7 @@ for i = 1:5
 end
 sigstar({[1, 1], [2, 2], [3, 3], [4, 4], [5, 5]}, p_values);
 hold off
-title('Group level SNR_{M60,stderror}')
+title('Group level SNR_{stderror}')
 ylabel('SNR')
 xlabel('Phalange')
 legend({'squidmag','opm'});
@@ -308,7 +308,7 @@ for i = 1:5
 end
 sigstar({[1, 1], [2, 2], [3, 3], [4, 4], [5, 5]}, p_values);
 hold off
-title('Group level SNR_{M60,prestim}')
+title('Group level SNR_{prestim}')
 ylabel('SNR')
 xlabel('Phalange')
 legend({'squidmag','opm'});
@@ -337,30 +337,63 @@ for i_ph = 1:length(params.phalange_labels)
     cfg = [];
     cfg.channel = '*bz';
     grandavg_opm{i_ph} = ft_timelockgrandaverage(cfg,opm{i_ph}{:});
+
+    h = figure; 
+    plot(grandavg_opm{i_ph}.time*1e3,grandavg_opm{i_ph}.avg*1e15)
+    xlabel('t [msec]')
+    ylabel('B [fT]')
+    xlim([-params.pre params.post]*1e3);
+    title(['Grand average opm - phalange ' params.phalange_labels{i_phalange}])
+    saveas(h, fullfile(save_path, 'figs', [params.sub '_opm_grndAvg_butterfly_ph-' params.phalange_labels{i_phalange} '.jpg']))
+    close all
+
     cfg = [];
-    cfg.xlim = [0.04 0.08];
+    cfg.xlim = params.peaks{1}.peak_latency;
     %cfg.zlim = [0 6e-14];
     cfg.layout = 'fieldlinebeta2bz_helmet.mat';
     h = figure; ft_topoplotER(cfg,grandavg_opm{i_ph}); colorbar; title(['GRAND AVG OPM - ' params.phalange_labels{i_ph}])
+    clsoe all
 
     % SQUID-GRAD
     cfg = [];
     cfg.channel = 'meggrad';
     grandavg_squidgrad{i_ph} = ft_timelockgrandaverage(cfg,squid{i_ph}{:});
+
+    h = figure; 
+    plot(grandavg_squidgrad{i_ph}.time*1e3,grandavg_squidgrad{i_ph}.avg*1e15)
+    xlabel('t [msec]')
+    ylabel('B [fT]')
+    xlim([-params.pre params.post]*1e3);
+    title(['Grand average squidgrad - phalange ' params.phalange_labels{i_phalange}])
+    saveas(h, fullfile(save_path, 'figs', [params.sub '_squidgrad_grndAvg_butterfly_ph-' params.phalange_labels{i_phalange} '.jpg']))
+    close all
+
     cfg = [];
-    cfg.xlim = [0.04 0.08];
+    cfg.xlim = params.peaks{1}.peak_latency;
     %cfg.zlim = [0 6e-14];
     cfg.layout = 'neuromag306planar.lay';
     h = figure; ft_topoplotER(cfg,grandavg_squidgrad{i_ph}); colorbar; title(['GRAND AVG SQUID-GRAD - ' params.phalange_labels{i_ph}])
+    close all
 
     % SQUID-MAG
     cfg = [];
     cfg.channel = 'megmag';
     grandavg_squidmag{i_ph} = ft_timelockgrandaverage(cfg,squidmag{i_ph}{:});
+
+    h = figure; 
+    plot(grandavg_squidmag{i_ph}.time*1e3,grandavg_squidmag{i_ph}.avg*1e15)
+    xlabel('t [msec]')
+    ylabel('B [fT]')
+    xlim([-params.pre params.post]*1e3);
+    title(['Grand average squidmag - phalange ' params.phalange_labels{i_phalange}])
+    saveas(h, fullfile(save_path, 'figs', [params.sub '_squidmag_grndAvg_butterfly_ph-' params.phalange_labels{i_phalange} '.jpg']))
+    close all
+
     cfg = [];
-    cfg.xlim = [0.04 0.08];
+    cfg.xlim = params.peaks{1}.peak_latency;
     %cfg.zlim = [0 6e-14];
     cfg.layout = 'neuromag306mag.lay';
     h = figure; ft_topoplotER(cfg,grandavg_squidmag{i_ph}); colorbar; title(['GRAND AVG SQUID-MAG - ' params.phalange_labels{i_ph}])
+    close all
 end
 end
