@@ -187,6 +187,16 @@ xticklabels(params.phalange_labels)
 legend({'squidmag','opm'});
 saveas(h, fullfile(base_save_path, 'figs', 'Amplitude_meg.jpg'))
 
+%%
+data = data1;
+triggerLabels = params.phalange_labels;
+yLabelStr = 'Peak amplitude [fT]';
+titleStr = ['Group level ' params.peaks{1}.label ' amplitude'];
+save_path = fullfile(base_save_path, 'figs', 'Amplitude_meg_box.jpg');
+pairedBoxplots(data, triggerLabels, yLabelStr, titleStr, save_path);
+
+%%
+
 % EEG
 data1 = 1e6*amp.squideeg;
 data2 = 1e6*amp.opmeeg;
