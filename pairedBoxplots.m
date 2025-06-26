@@ -51,4 +51,5 @@ function pairedBoxplots(data, triggerLabels, yLabelStr, titleStr, save_path)
     grid on;
     hold off;
     saveas(h, save_path);
+    close all
 end
