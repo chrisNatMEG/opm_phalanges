@@ -32,7 +32,7 @@ ft_default.showcallinfo = 'no';
 %% Overwrite
 overwrite = [];
 if on_server
-    overwrite.preproc = true;
+    overwrite.preproc = false;
     overwrite.coreg = false;
     overwrite.mri = false;
     overwrite.dip = true;
