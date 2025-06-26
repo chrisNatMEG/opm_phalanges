@@ -352,7 +352,7 @@ for i_ph = 1:length(params.phalange_labels)
     %cfg.zlim = [0 6e-14];
     cfg.layout = 'fieldlinebeta2bz_helmet.mat';
     h = figure; ft_topoplotER(cfg,grandavg_opm{i_ph}); colorbar; title(['GRAND AVG OPM - ' params.phalange_labels{i_ph}])
-    clsoe all
+    close all
 
     % SQUID-GRAD
     cfg = [];
@@ -378,7 +378,7 @@ for i_ph = 1:length(params.phalange_labels)
     % SQUID-MAG
     cfg = [];
     cfg.channel = 'megmag';
-    grandavg_squidmag{i_ph} = ft_timelockgrandaverage(cfg,squidmag{i_ph}{:});
+    grandavg_squidmag{i_ph} = ft_timelockgrandaverage(cfg,squid{i_ph}{:});
 
     h = figure; 
     plot(grandavg_squidmag{i_ph}.time*1e3,grandavg_squidmag{i_ph}.avg*1e15)

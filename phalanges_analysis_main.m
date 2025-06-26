@@ -62,7 +62,7 @@ params.post = 0.3; %sec
 params.pad = 0.2; %sec
 
 params.filter = [];
-params.filter.hp_freq = 0.1;
+params.filter.hp_freq = 1;
 params.filter.lp_freq = 70;
 params.filter.bp_freq = [];
 params.filter.notch = [50 60 100 120 150]; %[50 60 100 120 150];
@@ -71,7 +71,7 @@ params.do_hfc = false;
 params.hfc_order = 1;
 
 params.do_amm = true;
-params.amm_in = 11;
+params.amm_in = 12;
 params.amm_out = 2;
 params.amm_thr = 1;
 
@@ -82,8 +82,8 @@ params.squidmag_std_threshold = 2.5e-12;
 params.squidgrad_std_threshold = 5e-11;
 params.eeg_std_threshold = 1e-4;
 params.opm_range_threshold = 10e-12;
-params.squidmag_std_threshold = 10e-12;
-params.squidgrad_std_threshold = 10e-11;
+params.squidmag_range_threshold = 10e-12;
+params.squidgrad_range_threshold = 10e-11;
 
 params.n_comp = 40;
 params.ica_cor = 0.8; % cutoff for EOG/ECG coherence

@@ -292,6 +292,7 @@ squid_ER_cleaned = ft_selectdata(cfg, squid_ER_cleaned);
 % Demean
 cfg = [];
 cfg.demean = 'yes'; %% demean entire trial for whole trial cov
+cfg.baselinewindow = [-params.pre 0];
 squid_ER_cleaned = ft_preprocessing(cfg, squid_ER_cleaned);
 
 % Average

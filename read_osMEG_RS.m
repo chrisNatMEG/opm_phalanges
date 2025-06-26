@@ -256,6 +256,7 @@ opm_RS_ica = ft_selectdata(cfg, opm_RS_ica);
 % Demean
 cfg = [];
 cfg.demean = 'yes'; %% demean entire trial for whole trial cov
+cfg.baselinewindow = [-params.pre 0];
 opm_RS_ica = ft_preprocessing(cfg,opm_RS_ica);
 
 % Average
