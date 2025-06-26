@@ -16,7 +16,7 @@ for i_sub = subs
     peak_squid = load(fullfile(save_path, [params.sub '_squid_' params.peaks{1}.label '.mat'])).peak; 
     peak_squideeg = load(fullfile(save_path, [params.sub '_squideeg_' params.peaks{1}.label '.mat'])).peak;
 
-    clear squidmag_timelocked opm_timelocked
+    clear squid_timelocked opm_timelocked
     squid_timelocked = load(fullfile(save_path, [params.sub '_squid_timelocked'])).timelocked; 
     opm_timelocked = load(fullfile(save_path, [params.sub '_opm_timelocked'])).timelocked; 
     meg_chs = find(contains(squid_timelocked{1}.label,'MEG')&endsWith(squid_timelocked{1}.label,'1'));
@@ -30,7 +30,7 @@ for i_sub = subs
         snr.error_squideeg(i_sub,i_phalange) = peak_squideeg{i_phalange}.peak_amplitude/peak_squideeg{i_phalange}.std_error;
         snr.error_opmeeg(i_sub,i_phalange) = peak_opmeeg{i_phalange}.peak_amplitude/peak_opmeeg{i_phalange}.std_error;
         snr.prestim_opm(i_sub,i_phalange) = peak_opm{i_phalange}.peak_amplitude/peak_opm{i_phalange}.prestim_std;
-        snr.prestim_squidmmag(i_sub,i_phalange) = peak_squid{i_phalange}.peak_amplitude/peak_squid{i_phalange}.prestim_std;
+        snr.prestim_squidmag(i_sub,i_phalange) = peak_squid{i_phalange}.peak_amplitude/peak_squid{i_phalange}.prestim_std;
         snr.prestim_opmeeg(i_sub,i_phalange) = peak_opmeeg{i_phalange}.peak_amplitude/peak_opmeeg{i_phalange}.prestim_std;
         snr.prestim_squideeg(i_sub,i_phalange) = peak_squideeg{i_phalange}.peak_amplitude/peak_squideeg{i_phalange}.prestim_std;
         snr.ratio_error(i_sub,i_phalange) = snr.error_opm(i_sub,i_phalange)/snr.error_squidmag(i_sub,i_phalange);
