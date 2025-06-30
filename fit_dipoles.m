@@ -18,6 +18,8 @@ sourcemodel    = ft_prepare_sourcemodel(cfg);
 
 %% Fit dipoles
 for i_phalange = 1:5
+    opm_timelocked{i_phalange}.avg = -opm_timelocked{i_phalange}.avg;
+
     % MEG
     cfg = [];
     cfg.gridsearch      = 'yes';           
