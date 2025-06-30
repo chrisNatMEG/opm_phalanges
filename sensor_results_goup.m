@@ -108,7 +108,7 @@ ylabel('OPM/SQUID')
 xlabel('Phalange')
 xticklabels(params.phalange_labels)
 saveas(h, fullfile(base_save_path, 'figs', 'Peak_amplitude_ratios_meg.jpg'))
-clsoe all
+close all
 
 h = figure('DefaultAxesFontSize',16);
 bar(1:length(params.phalange_labels),mean(peak_ratio.eeg,1,'omitnan'));
@@ -192,18 +192,16 @@ xlabel('Phalange')
 xticklabels(params.phalange_labels)
 legend({'squidmag','opm'});
 saveas(h, fullfile(base_save_path, 'figs', 'Amplitude_meg.jpg'))
+close all 
 
-%%
 data = {data1, data2};
 triggerLabels = params.phalange_labels;
 yLabelStr = 'Peak amplitude [fT]';
 titleStr = ['Group level ' params.peaks{1}.label ' amplitude'];
 save_path = fullfile(base_save_path, 'figs', 'Amplitude_meg_box.jpg');
-pairedBoxplots(data, triggerLabels, yLabelStr, titleStr, save_path);
+pairedBoxplots(data, triggerLabels, yLabelStr, titleStr, save_path,1);
 
-%%
-
-% EEG
+%% EEG
 data1 = 1e6*amp.squideeg;
 data2 = 1e6*amp.opmeeg;
 mean1 = mean(data1,1,'omitnan');
@@ -235,6 +233,14 @@ xticklabels(params.phalange_labels)
 legend({'squideeg','opmeeg'});
 saveas(h, fullfile(base_save_path, 'figs', 'Amplitude_eeg.jpg'))
 close all
+
+data = {data1, data2};
+triggerLabels = params.phalange_labels;
+yLabelStr = 'Peak amplitude [uV]';
+titleStr = ['Group level ' params.peaks{1}.label ' amplitude'];
+save_path = fullfile(base_save_path, 'figs', 'Amplitude_eeg_box.jpg');
+pairedBoxplots(data, triggerLabels, yLabelStr, titleStr, save_path,1);
+
 
 %% Plot peak latency
 data1 = 1e3*latency.squidmag;
@@ -269,6 +275,14 @@ legend({'squidmag','opm'},'Location','southeast');
 saveas(h, fullfile(base_save_path, 'figs', 'Latency.jpg'))
 close all
 
+data = {data1, data2};
+triggerLabels = params.phalange_labels;
+yLabelStr = 'Latency [ms]';
+titleStr = ['Group level ' params.peaks{1}.label ' latency'];
+save_path = fullfile(base_save_path, 'figs', 'Latency_box.jpg');
+pairedBoxplots(data, triggerLabels, yLabelStr, titleStr, save_path,1);
+
+
 %% Plot SNR - error
 data1 = snr.error_squidmag;
 data2 = snr.error_opm;
@@ -302,6 +316,14 @@ xticklabels(params.phalange_labels)
 saveas(h, fullfile(base_save_path, 'figs', 'SNR_error.jpg'))
 close all
 
+data = {data1, data2};
+triggerLabels = params.phalange_labels;
+yLabelStr = 'SNR';
+titleStr = ['Group level ' params.peaks{1}.label ' SNR_{stderror}'];
+save_path = fullfile(base_save_path, 'figs', 'SNR_error_box.jpg');
+pairedBoxplots(data, triggerLabels, yLabelStr, titleStr, save_path,1);
+
+
 %% Plot SNR - prestim
 data1 = snr.prestim_squidmag;
 data2 = snr.prestim_opm;
@@ -334,6 +356,13 @@ legend({'squidmag','opm'});
 xticklabels(params.phalange_labels)
 saveas(h, fullfile(base_save_path, 'figs', 'SNR_prestim.jpg'))
 close all
+
+data = {data1, data2};
+triggerLabels = params.phalange_labels;
+yLabelStr = 'SNR';
+titleStr = ['Group level ' params.peaks{1}.label ' SNR_{prestim}'];
+save_path = fullfile(base_save_path, 'figs', 'SNR_prestim_box.jpg');
+pairedBoxplots(data, triggerLabels, yLabelStr, titleStr, save_path, 1);
 
 %% Grand average
 for i_sub = subs
@@ -415,7 +444,7 @@ for i_ph = 1:length(params.phalange_labels)
     %cfg.zlim = [0 6e-14];
     cfg.layout = 'neuromag306mag.lay';
     h = figure; ft_topoplotER(cfg,grandavg_squidmag{i_ph}); colorbar; title(['GRAND AVG SQUID-MAG - ' params.phalange_labels{i_ph}])
-    saveas(h, fullfile(base_save_path, 'figs', ['squidmag_grndAvg_butterfly_ph-' params.phalange_labels{i_phalange} '.jpg']))
+    saveas(h, fullfile(base_save_path, 'figs', ['squidmag_grndAvg_topo_ph-' params.phalange_labels{i_phalange} '.jpg']))
     close all
 end
 end

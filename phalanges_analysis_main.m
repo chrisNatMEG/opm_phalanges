@@ -481,7 +481,7 @@ if overwrite.dip_group
 end
 
 %% Empty room & resting state for noise covariances
-for i_sub = setdiff(subs_to_run,excl_subs)
+for i_sub = 8%setdiff(subs_to_run,excl_subs)
     params.sub = ['sub_' num2str(i_sub,'%02d')];
     save_path = fullfile(base_save_path,params.sub);
     raw_path = fullfile(base_data_path,'MEG',['NatMEG_' subses{i_sub,1}], subses{i_sub,2});

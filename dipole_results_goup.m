@@ -33,9 +33,32 @@ for i_sub = subs
         dist_sqgrad_opm(i_sub,i_phalange) = 1e1*norm(pos_squidgrad(i_phalange,:)-pos_opm(i_phalange,:));
         dist_sqmag_sqgrad(i_sub,i_phalange) = 1e1*norm(pos_squidmag(i_phalange,:)-pos_squidgrad(i_phalange,:));
     end
-    spread_opm(i_sub,:) = mean(1e1*vecnorm(pos_opm-repmat(mean(pos_opm,1),[n_ph 1]),2,2))'; % mean distance from center of phalanges
-    spread_squidmag(i_sub,:) = mean(1e1*vecnorm(pos_squidmag-repmat(mean(pos_squidmag,1),[n_ph 1]),2,2))'; % mean distance from center of phalanges
-    spread_squidgrad(i_sub,:) = mean(1e1*vecnorm(pos_squidgrad-repmat(mean(pos_squidgrad,1),[n_ph 1]),2,2))'; % mean distance from center of phalanges
+    D = pdist2(pos_opm,pos_opm);
+    goods = ~any(D<50&D>0,2);
+    if length(goods)>=3 % remove up to 2 outliers
+        center = mean(pos_opm(goods,:),1);
+    else
+        center = mean(pos_opm,1);
+    end
+    spread_opm(i_sub,:) = 1e1*mean(vecnorm(pos_opm-center,2,2))';
+
+    D = pdist2(pos_squidmag,pos_squidmag);
+    goods = ~any(D<50&D>0,2);
+    if length(goods)>=3 % remove up to 2 outliers
+        center = mean(pos_squidmag(goods,:),1);
+    else
+        center = mean(pos_squidmag,1);
+    end
+    spread_squidmag(i_sub,:) = 1e1*mean(vecnorm(pos_opm-center,2,2))'; % mean distance from center of phalanges
+    
+    D = pdist2(pos_squidgrad,pos_squidgrad);
+    goods = ~any(D<50&D>0,2);
+    if length(goods)>=3 % remove up to 2 outliers 
+        center = mean(pos_squidgrad(goods,:),1);
+    else
+        center = mean(pos_squidgrad,1);
+    end
+    spread_squidgrad(i_sub,:) = 1e1*mean(vecnorm(pos_opm-center,2,2))'; % mean distance from center of phalanges
 end
 
 %% Plot distances
@@ -48,7 +71,7 @@ er.LineStyle = 'none';
 er.LineWidth = 1;
 er.CapSize = 30;
 hold off
-title(['Dist SQUID-MAG to OPM (mean = ' num2str(mean(mean(dist_sqmag_opm,'omitnan'),'omitnan'),'%.1f') 'mm)'])
+title(['Dist SQMAG to OPM (mean = ' num2str(mean(mean(dist_sqmag_opm,'omitnan'),'omitnan'),'%.1f') 'mm)'])
 ylabel('Distance [mm]')
 xlabel('Phalange')
 xticklabels(params.phalange_labels)
@@ -63,7 +86,7 @@ er.LineStyle = 'none';
 er.LineWidth = 1;
 er.CapSize = 30;
 hold off
-title(['Dist SQUID-GRAD to OPM (mean = ' num2str(mean(mean(dist_sqgrad_opm,'omitnan'),'omitnan'),'%.1f') 'mm)'])
+title(['Dist SQGRAD to OPM (mean = ' num2str(mean(mean(dist_sqgrad_opm,'omitnan'),'omitnan'),'%.1f') 'mm)'])
 ylabel('Distance [mm]')
 xlabel('Phalange')
 xticklabels(params.phalange_labels)
@@ -79,7 +102,7 @@ er.LineStyle = 'none';
 er.LineWidth = 1;
 er.CapSize = 30;
 hold off
-title(['Dist SQUID-MAG to SQUID-GRAD (mean = ' num2str(mean(mean(dist_sqmag_sqgrad,'omitnan'),'omitnan'),'%.1f') 'mm)'])
+title(['Dist SQMAG to SQGRAD (mean = ' num2str(mean(mean(dist_sqmag_sqgrad,'omitnan'),'omitnan'),'%.1f') 'mm)'])
 ylabel('Distance [mm]')
 xlabel('Phalange')
 xticklabels(params.phalange_labels)
@@ -137,6 +160,27 @@ title('Group level M60 dipole spread')
 ylabel('Dipoles spread [mm]')
 legend({'squidmag','opm','squidgrad'},'Location','eastoutside');
 saveas(h, fullfile(base_save_path, 'figs', 'dipole_spread.jpg'))
+close
 
-close all
+data = {spread_squidmag, spread_squidgrad};
+triggerLabels = params.phalange_labels;
+yLabelStr = 'Dipole spread';
+titleStr = ['Group level ' params.peaks{1}.label ' dipole spread - SQMAG vs SQGRAD'];
+save_path = fullfile(base_save_path, 'figs', 'dipole_spread_sqmag_sqgrad_box.jpg');
+pairedBoxplots(data, triggerLabels, yLabelStr, titleStr, save_path,1);
+
+data = {spread_squidmag, spread_opm};
+triggerLabels = params.phalange_labels;
+yLabelStr = 'Dipole spread';
+titleStr = ['Group level ' params.peaks{1}.label ' dipole spread - SQMAG vs OPM'];
+save_path = fullfile(base_save_path, 'figs', 'dipole_spread_sqmag_opm_box.jpg');
+pairedBoxplots(data, triggerLabels, yLabelStr, titleStr, save_path,1);
+
+data = {spread_squidgrad, spread_opm};
+triggerLabels = params.phalange_labels;
+yLabelStr = 'Dipole spread';
+titleStr = ['Group level ' params.peaks{1}.label ' dipole spread - SQGRAD vs OPM'];
+save_path = fullfile(base_save_path, 'figs', 'dipole_spread_sqgrad_opm_box.jpg');
+pairedBoxplots(data, triggerLabels, yLabelStr, titleStr, save_path,1);
+
 end

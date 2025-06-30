@@ -1,4 +1,4 @@
-function pairedBoxplots(data, triggerLabels, yLabelStr, titleStr, save_path)
+function pairedBoxplots(data, triggerLabels, yLabelStr, titleStr, save_path, showSig)
     % data: cell array containing 2 or 3 matrices (participants x triggercodes)
     % triggerLabels: cell array of strings for x-axis labels
     % yLabelStr: string for y-axis label
@@ -46,10 +46,31 @@ function pairedBoxplots(data, triggerLabels, yLabelStr, titleStr, save_path)
     set(gca, 'XTick', 1:nTriggers, 'XTickLabel', triggerLabels);
     ylabel(yLabelStr);
     title(titleStr);
-    legend(arrayfun(@(i) sprintf('Matrix %d', i), 1:nGroups, 'UniformOutput', false));
+    %legend(arrayfun(@(i) sprintf('Matrix %d', i), 1:nGroups, 'UniformOutput', false));
     xtickangle(45);
     grid on;
+
+    if showSig
+        meanOffset = mean(offset);
+        sigPairs = {};
+        pValues = [];
+
+        %Compare each pair of groups
+        for g1 = 1:nGroups-1
+            for g2 = g1+1:nGroups
+                for t = 1:nTriggers
+                    [~, p] = ttest(data{g1}(:,t),data{g2}(:,t));
+                    sigPairs(end+1) = [t + offset(g1), t+ offset(g2)];
+                    pValues(end+1) = p;
+                end
+            end
+        end
+
+        % Add significance markers
+        sigstar(sigPairs,pValues)
+    end
+
     hold off;
     saveas(h, save_path);
-    close all
+    close
 end

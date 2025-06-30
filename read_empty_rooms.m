@@ -249,7 +249,7 @@ squid_ER_cleaned = ft_rejectartifact(cfg,squid_ER_cleaned);
 cfg = [];
 cfg.channel = 'megplanar';
 cfg.metric = 'std';
-cfg.threshold = params.squidgrad_std_threshold;
+cfg.threshold = params.squidmag_std_threshold;
 [cfg,badtrl_squidgrad_std] = ft_badsegment(cfg, squid_ER_cleaned);
 squid_ER_cleaned = ft_rejectartifact(cfg,squid_ER_cleaned);
 
