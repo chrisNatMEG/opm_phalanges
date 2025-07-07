@@ -35,12 +35,12 @@ if on_server
     overwrite.preproc = false;
     overwrite.coreg = false;
     overwrite.mri = false;
-    overwrite.dip = true;
+    overwrite.dip = false;
     overwrite.empty_room = true;
     overwrite.mne = true;
 
-    overwrite.sens_group = true;
-    overwrite.dip_group = true;
+    overwrite.sens_group = false;
+    overwrite.dip_group = false;
     overwrite.mne_group = true;
 else
     overwrite.preproc = true;
@@ -78,12 +78,12 @@ params.amm_thr = 1;
 params.z_threshold = 20;
 params.corr_threshold = 0.6; % correlation threshold for badchannel neighbors
 params.opm_std_threshold = 5e-12;
-params.squidmag_std_threshold = 2.5e-12;
-params.squidgrad_std_threshold = 5e-11;
+params.squidmag_std_threshold = 2e-12;
+params.squidgrad_std_threshold = 2000e-13;
 params.eeg_std_threshold = 1e-4;
 params.opm_range_threshold = 10e-12;
-params.squidmag_range_threshold = 10e-12;
-params.squidgrad_range_threshold = 10e-11;
+params.squidmag_range_threshold = 4e-12;
+params.squidgrad_range_threshold = 4000e-13;
 
 params.n_comp = 40;
 params.ica_cor = 0.8; % cutoff for EOG/ECG coherence
@@ -481,7 +481,7 @@ if overwrite.dip_group
 end
 
 %% Empty room & resting state for noise covariances
-for i_sub = 8%setdiff(subs_to_run,excl_subs)
+for i_sub = setdiff(subs_to_run,excl_subs)
     params.sub = ['sub_' num2str(i_sub,'%02d')];
     save_path = fullfile(base_save_path,params.sub);
     raw_path = fullfile(base_data_path,'MEG',['NatMEG_' subses{i_sub,1}], subses{i_sub,2});
@@ -505,7 +505,7 @@ for i_sub = 8%setdiff(subs_to_run,excl_subs)
         opm_file = fullfile(raw_path, 'osmeg', 'EmptyRoomOPM_raw.fif');
         squid_file = fullfile(raw_path, 'meg', 'EmptyRoomMEG.fif');
         if exist(opm_file,'file') && exist(squid_file,'file')
-            read_empty_rooms(opm_file, squid_file, opm_chs, squid_chs, opm_grad, save_path, params);
+        %    read_empty_rooms(opm_file, squid_file, opm_chs, squid_chs, opm_grad, save_path, params);
         end
     
         % RESO

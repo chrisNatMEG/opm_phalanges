@@ -152,13 +152,20 @@ for k=1:length(params.phalange_labels)
 end
 p_values = zeros(1, 5);
 for i = 1:5
-    [~, p_values(i,1)] = ttest(data1(:, i), data2(:, i));
-    [~, p_values(i,2)] = ttest(data2(:, i), data3(:, i));
-    [~, p_values(i,3)] = ttest(data1(:, i), data3(:, i));
-    sigstar({[i-0.22, i]}, p_values(i,1));
-    sigstar({[i, i+0.22]}, p_values(i,2));
-    sigstar({[i-0.22, i+0.22]}, p_values(i,3));
+    [~, p_values(i)] = ttest(data1(:, i), data2(:, i));
+    [~, p_values(1)] = ttest(data1(:, i), data2);
+    [~, p_values(2)] = ttest(data2, data3);
+    [~, p_values(3)] = ttest(data1, data3);
 end
+sigstar({[1, 1], [2, 2], [3, 3], [4, 4], [5, 5]}, p_values);
+
+p_values = zeros(1, 3);
+[~, p_values(1)] = ttest(data1, data2);
+[~, p_values(2)] = ttest(data2, data3);
+[~, p_values(3)] = ttest(data1, data3);
+sigstar({[1-0.22, 1]}, p_values(1));
+sigstar({[1, 1+0.22]}, p_values(2));
+sigstar({[1-0.22, 1+0.22]}, p_values(3));
 hold off
 title('Group level M60 dipole spread')
 ylabel('Dipoles spread [mm]')

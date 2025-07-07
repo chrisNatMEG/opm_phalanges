@@ -40,7 +40,7 @@ if on_server
     overwrite.mne = true;
 
     overwrite.sens_group = false;
-    overwrite.dip_group = true;
+    overwrite.dip_group = false;
     overwrite.mne_group = true;
 else
     overwrite.preproc = true;
@@ -62,7 +62,7 @@ params.post = 0.3; %sec
 params.pad = 0.2; %sec
 
 params.filter = [];
-params.filter.hp_freq = 0.1;
+params.filter.hp_freq = 1;
 params.filter.lp_freq = 70;
 params.filter.bp_freq = [];
 params.filter.notch = [50 60 100 120 150]; %[50 60 100 120 150];
@@ -71,16 +71,19 @@ params.do_hfc = false;
 params.hfc_order = 1;
 
 params.do_amm = true;
-params.amm_in = 11;
+params.amm_in = 12;
 params.amm_out = 2;
 params.amm_thr = 1;
 
 params.z_threshold = 20;
 params.corr_threshold = 0.6; % correlation threshold for badchannel neighbors
 params.opm_std_threshold = 5e-12;
+params.squidmag_std_threshold = 4e-12;
+params.squidgrad_std_threshold = 2e-12;
 params.eeg_std_threshold = 1e-4;
-params.squidmag_std_threshold = 2.5e-12;
-params.squidgrad_std_threshold = 5e-11;
+params.opm_range_threshold = 10e-12;
+params.squidmag_range_threshold = 4e-12;
+params.squidgrad_range_threshold = 4000e-13;
 
 params.n_comp = 40;
 params.ica_cor = 0.8; % cutoff for EOG/ECG coherence
@@ -322,14 +325,13 @@ for i_sub = setdiff(subs_to_run,excl_subs)
     save_path = fullfile(base_save_path,params.sub);
     mri_path = fullfile(base_data_path,'MRI',['NatMEG_' subses{i_sub,1}]);
     if exist(fullfile(save_path, 'headmodels.mat'),'file') && exist(fullfile(save_path, 'opm_trans.mat'),'file') && or(overwrite.preproc,or(overwrite.coreg,overwrite.mri))
-        clear headmodels meshes filename headshape  
+        clear headmodels meshes filename headshape  opm_trans
         headmodels = load(fullfile(save_path,'headmodels.mat')).headmodels;
         meshes = load(fullfile(save_path,'meshes.mat')).meshes;    
         mri_resliced = load(fullfile(save_path, 'mri_resliced.mat')).mri_resliced;
         opm_trans = load(fullfile(save_path, 'opm_trans.mat')).opm_trans;
         
-        clear opm_timelockedT opmeeg_timelcokedT 
-        clear squideeg_timelocked squid_timelocked
+        clear opm_timelockedT opmeeg_timelcokedT squideeg_timelocked squid_timelocked
         opm_timelockedT = load(fullfile(save_path, [params.sub '_opm_timelocked.mat'])).timelocked;
         opmeeg_timelockedT = load(fullfile(save_path, [params.sub '_opmeeg_timelocked.mat'])).timelocked;
         squideeg_timelocked = load(fullfile(save_path, [params.sub '_squideeg_timelocked.mat'])).timelocked;
@@ -397,6 +399,7 @@ for i_sub = setdiff(subs_to_run,excl_subs)
         sourcemodel_inflated.brainstructurelabel = sourcemodel.brainstructurelabel;
         sourcemodel_inflated.brainstructurecolor = sourcemodel.brainstructurecolor;
 
+        clear T opm_trans filename tmp filename2
         % Plot source and head models
         h=figure; 
         ft_plot_mesh(sourcemodel, 'maskstyle', 'opacity', 'facecolor', 'black', 'facealpha', 0.25, 'edgecolor', 'red',   'edgeopacity', 0.5,'unit','cm');
@@ -410,7 +413,8 @@ for i_sub = setdiff(subs_to_run,excl_subs)
         view([-140 10])
         savefig(h, fullfile(save_path, 'figs', 'opm_layout2.fig'))
         saveas(h, fullfile(save_path, 'figs', 'opm_layout2.jpg'))
-    
+        close all
+
         h=figure; 
         ft_plot_mesh(sourcemodel, 'maskstyle', 'opacity', 'facecolor', 'black', 'facealpha', 0.25, 'edgecolor', 'red',   'edgeopacity', 0.5,'unit','cm');
         hold on; 
@@ -423,8 +427,9 @@ for i_sub = setdiff(subs_to_run,excl_subs)
         view([-140 10])
         savefig(h, fullfile(save_path, 'figs', 'meg_layout2.fig'))
         saveas(h, fullfile(save_path, 'figs', 'meg_layout2.jpg'))
-
         close all
+
+        clear headmodels meshes headshape
 
         %% Save
         save(fullfile(save_path, [params.sub '_opm_timelockedT']), 'opm_timelockedT', '-v7.3');
@@ -500,7 +505,7 @@ for i_sub = setdiff(subs_to_run,excl_subs)
         opm_file = fullfile(raw_path, 'osmeg', 'EmptyRoomOPM_raw.fif');
         squid_file = fullfile(raw_path, 'meg', 'EmptyRoomMEG.fif');
         if exist(opm_file,'file') && exist(squid_file,'file')
-            read_empty_rooms(opm_file, squid_file, opm_chs, squid_chs, opm_grad, save_path, params);
+        %    read_empty_rooms(opm_file, squid_file, opm_chs, squid_chs, opm_grad, save_path, params);
         end
     
         % RESO
@@ -509,6 +514,7 @@ for i_sub = setdiff(subs_to_run,excl_subs)
         read_osMEG_RS(opm_file, aux_file, opm_chs, save_path, params)
         squid_file = fullfile(raw_path, 'meg', 'RSEOMEG_proc-tsss+corr98+mc+avgHead_meg.fif');
         read_cvMEG_RS(squid_file, squid_chs, save_path, params)
+        clear aux_file opm_file squid_file squid_chs opm_grad opm_chs
     end
 end
 

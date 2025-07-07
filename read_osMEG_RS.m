@@ -75,6 +75,8 @@ aux_epo = ft_redefinetrial(cfg,aux_epo);
 cfg = [];
 cfg.dftfilter    = 'yes';        
 cfg.dftfreq      = params.filter.notch;
+cfg.demean          = 'yes';
+cfg.baselinewindow  = [-params.pre 0];
 aux_epo = ft_preprocessing(cfg,aux_epo);
 
 %% OPM data filter & epoch

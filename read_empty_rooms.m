@@ -48,6 +48,8 @@ data_epo = ft_redefinetrial(cfg,data_epo);
 cfg = [];
 cfg.dftfilter    = 'yes';        
 cfg.dftfreq      = params.filter.notch;
+cfg.demean          = 'yes';
+cfg.baselinewindow  = [-params.pre 0];
 data_epo = ft_preprocessing(cfg,data_epo);
 
 % Resample 
@@ -163,7 +165,8 @@ opm_ER_cleaned = ft_selectdata(cfg, opm_ER_cleaned);
 
 % Demean
 cfg = [];
-cfg.demean = 'yes'; %% demean entire trial for whole trial cov
+cfg.demean          = 'yes';
+cfg.baselinewindow  = [-params.pre 0];
 opm_ER_cleaned = ft_preprocessing(cfg, opm_ER_cleaned);
 
 % Average
@@ -218,6 +221,8 @@ clear trl
 cfg = [];
 cfg.dftfilter    = 'yes';        
 cfg.dftfreq      = params.filter.notch;
+cfg.demean          = 'yes';
+cfg.baselinewindow  = [-params.pre 0];
 data_epo = ft_preprocessing(cfg,data_epo);
 
 % Reject jump trials
@@ -249,7 +254,7 @@ squid_ER_cleaned = ft_rejectartifact(cfg,squid_ER_cleaned);
 cfg = [];
 cfg.channel = 'megplanar';
 cfg.metric = 'std';
-cfg.threshold = params.squidmag_std_threshold;
+cfg.threshold = params.squidgrad_std_threshold;
 [cfg,badtrl_squidgrad_std] = ft_badsegment(cfg, squid_ER_cleaned);
 squid_ER_cleaned = ft_rejectartifact(cfg,squid_ER_cleaned);
 
@@ -291,7 +296,7 @@ squid_ER_cleaned = ft_selectdata(cfg, squid_ER_cleaned);
 
 % Demean
 cfg = [];
-cfg.demean = 'yes'; %% demean entire trial for whole trial cov
+cfg.demean = 'yes';
 cfg.baselinewindow = [-params.pre 0];
 squid_ER_cleaned = ft_preprocessing(cfg, squid_ER_cleaned);
 

@@ -60,7 +60,7 @@ function pairedBoxplots(data, triggerLabels, yLabelStr, titleStr, save_path, sho
             for g2 = g1+1:nGroups
                 for t = 1:nTriggers
                     [~, p] = ttest(data{g1}(:,t),data{g2}(:,t));
-                    sigPairs(end+1) = [t + offset(g1), t+ offset(g2)];
+                    sigPairs{end+1} = [t + offset(g1), t+ offset(g2)];
                     pValues(end+1) = p;
                 end
             end

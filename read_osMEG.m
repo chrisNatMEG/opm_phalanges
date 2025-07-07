@@ -102,6 +102,8 @@ opm_epo = ft_redefinetrial(cfg,opm_epo);
 cfg = [];
 cfg.dftfilter       = 'yes';        
 cfg.dftfreq         = params.filter.notch;
+cfg.demean          = 'yes';
+cfg.baselinewindow  = [-params.pre 0];
 opm_epo = ft_preprocessing(cfg, opm_epo);
 
 % Find bad opm channels
