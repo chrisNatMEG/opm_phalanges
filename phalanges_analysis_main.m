@@ -32,15 +32,15 @@ ft_default.showcallinfo = 'no';
 %% Overwrite
 overwrite = [];
 if on_server
-    overwrite.preproc = false;
+    overwrite.preproc = true;
     overwrite.coreg = false;
     overwrite.mri = false;
-    overwrite.dip = false;
+    overwrite.dip = true;
     overwrite.empty_room = true;
     overwrite.mne = true;
 
-    overwrite.sens_group = false;
-    overwrite.dip_group = false;
+    overwrite.sens_group = true;
+    overwrite.dip_group = true;
     overwrite.mne_group = true;
 else
     overwrite.preproc = true;
@@ -62,17 +62,17 @@ params.post = 0.3; %sec
 params.pad = 0.2; %sec
 
 params.filter = [];
-params.filter.hp_freq = 1;
+params.filter.hp_freq = 0.1;
 params.filter.lp_freq = 70;
 params.filter.bp_freq = [];
 params.filter.notch = [50 60 100 120 150]; %[50 60 100 120 150];
 
-params.do_hfc = false;
-params.hfc_order = 1;
+params.do_hfc = true;
+params.hfc_order = 3;
 
-params.do_amm = true;
+params.do_amm = false;
 params.amm_in = 12;
-params.amm_out = 2;
+params.amm_out = 3;
 params.amm_thr = 1;
 
 params.z_threshold = 20;
@@ -98,9 +98,9 @@ params.peaks = {};%cell(2,1);
 params.peaks{1} = [];
 params.peaks{1}.label = 'M60';
 params.peaks{1}.peak_latency = [0.04 0.08];
-params.peaks{2} = [];
-params.peaks{2}.label = 'M100';
-params.peaks{2}.peak_latency = [0.09 0.12];
+% params.peaks{2} = [];
+% params.peaks{2}.label = 'M100';
+% params.peaks{2}.peak_latency = [0.09 0.12];
 
 params.trigger_code = [2 4 8 16 32];
 params.phalange_labels = {'I3' 'I2' 'I1' 'T1' 'I2b'};
@@ -505,7 +505,7 @@ for i_sub = setdiff(subs_to_run,excl_subs)
         opm_file = fullfile(raw_path, 'osmeg', 'EmptyRoomOPM_raw.fif');
         squid_file = fullfile(raw_path, 'meg', 'EmptyRoomMEG.fif');
         if exist(opm_file,'file') && exist(squid_file,'file')
-        %    read_empty_rooms(opm_file, squid_file, opm_chs, squid_chs, opm_grad, save_path, params);
+            %read_empty_rooms(opm_file, squid_file, opm_chs, squid_chs, opm_grad, save_path, params);
         end
     
         % RESO
@@ -543,8 +543,8 @@ for i_sub = setdiff(subs_to_run,excl_subs)
             opm_timelockedT{i}.cov_RS = load(fullfile(save_path, [params.sub '_resting_state_opm.mat'])).opm_RS_cov;
             squid_timelocked{i}.cov_RS = load(fullfile(save_path, [params.sub '_resting_state_squid.mat'])).squid_RS_cov;
             if exist(fullfile(save_path, [params.sub '_ER_squid.mat']),'file')
-                opm_timelockedT{i}.cov_ER = load(fullfile(save_path, [params.sub '_ER_opm.mat'])).opm_ER_cov;
-                squid_timelocked{i}.cov_ER = load(fullfile(save_path, [params.sub '_ER_squid.mat'])).squid_ER_cov;
+                %opm_timelockedT{i}.cov_ER = load(fullfile(save_path, [params.sub '_ER_opm.mat'])).opm_ER.cov;
+                %squid_timelocked{i}.cov_ER = load(fullfile(save_path, [params.sub '_ER_squid.mat'])).squid_ER.cov;
             end
         end
         

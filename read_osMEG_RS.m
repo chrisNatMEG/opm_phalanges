@@ -87,9 +87,9 @@ if ~isempty(params.filter.hp_freq)
     cfg.hpfilter        = 'yes'; 
     cfg.hpfreq          = params.filter.hp_freq;
     cfg.hpinstabilityfix  = 'reduce';
-    if params.filter.hp_freq<1
-        cfg.hpfilttype = 'firws';
-    end
+%     if params.filter.hp_freq<1
+%         cfg.hpfilttype = 'firws';
+%     end
 end
 opm_epo = ft_preprocessing(cfg,opm_raw);
 

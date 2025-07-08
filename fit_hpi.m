@@ -158,12 +158,19 @@ for i_file = 1:length(hpi_files)
     ft_hastoolbox('mne',1);
     headshape = ft_read_headshape(aux_file);
     hpi_polhemus = headshape.pos(find(contains(headshape.label,'hpi')),:);
-    [~, i_min] = min(pdist2(hpi{i_file}.dip_pos(:,1:2),hpi_polhemus(:,1:2)),[],1);
+    [~, i_min] = min(pdist2(hpi{i_file}.dip_pos(hpi{i_file}.dip_include,1:2),hpi_polhemus(:,1:2)),[],2);
     
-    hpi{i_file}.dip_pos = hpi{i_file}.dip_pos(i_min,:);
-    hpi{i_file}.dip_ori = hpi{i_file}.dip_ori(i_min,:);
-    hpi{i_file}.dip_include = hpi{i_file}.dip_include(i_min);
-    hpi{i_file}.dip_gof = hpi{i_file}.dip_gof(i_min);
+    tmp = hpi{i_file};
+    hpi{i_file} = [];
+    hpi{i_file}.dip_pos = zeros(length(hpi_chs),3);
+    hpi{i_file}.dip_ori = zeros(length(hpi_chs),3);
+    hpi{i_file}.dip_include = false(length(hpi_chs),1);
+    hpi{i_file}.dip_gof = zeros(length(hpi_chs),1);
+
+    hpi{i_file}.dip_pos = tmp.dip_pos(i_min,:);
+    hpi{i_file}.dip_ori = tmp.dip_ori(i_min,:);
+    hpi{i_file}.dip_include = tmp.dip_include(i_min);
+    hpi{i_file}.dip_gof = tmp.dip_gof(i_min);
     hpi_labels = hpi_labels(i_min);
     
     ft_hastoolbox('mne',1);
