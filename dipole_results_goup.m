@@ -24,10 +24,18 @@ for i_sub = subs
     pos_squidmag = zeros(n_ph,3);
     pos_squidgrad = zeros(n_ph,3);
     pos_opm = zeros(n_ph,3);
+
+    mom_squidmag = zeros(n_ph,3);
+    mom_squidgrad = zeros(n_ph,3);
+    mom_opm = zeros(n_ph,3);
+
     for i_phalange = 1:n_ph
         pos_squidmag(i_phalange,:) = dipole_squidmag{i_sub}{i_phalange}.dip.pos;
         pos_squidgrad(i_phalange,:) = dipole_squidgrad{i_sub}{i_phalange}.dip.pos;
         pos_opm(i_phalange,:) = dipole_opm{i_sub}{i_phalange}.dip.pos;
+        mom_squidmag(i_phalange,:) = max(vecnorm(squidmag_dipole{i_phalange}.dip.mom,2,1));
+        mom_squidgrad(i_phalange,:) = max(vecnorm(squidgrad_dipole{i_phalange}.dip.mom,2,1));
+        mom_opm(i_phalange,:) = max(vecnorm(opm_dipole{i_phalange}.dip.mom,2,1));
 
         dist_sqmag_opm(i_sub,i_phalange) = 1e1*norm(pos_squidmag(i_phalange,:)-pos_opm(i_phalange,:));
         dist_sqgrad_opm(i_sub,i_phalange) = 1e1*norm(pos_squidgrad(i_phalange,:)-pos_opm(i_phalange,:));
@@ -186,5 +194,14 @@ pairedBoxplots(data, triggerLabels, yLabelStr, titleStr, save_path,1);
 % titleStr = ['Group level ' params.peaks{1}.label ' dipole spread - SQGRAD vs OPM'];
 % save_path = fullfile(base_save_path, 'figs', 'dipole_spread_sqgrad_opm_box.jpg');
 % pairedBoxplots(data, triggerLabels, yLabelStr, titleStr, save_path,1);
+
+%% Peak mom
+data = {mom_squidmag, mom_opm, mom_squidgrad};
+triggerLabels = params.phalange_labels;
+yLabelStr = 'Peak moment';
+titleStr = ['Group level ' params.peaks{1}.label ' peak dipole moment - SQMAG vs OPM vs SQGRAD'];
+save_path = fullfile(base_save_path, 'figs', 'dipole_mom_sqmag_opm_sqgrad_box.jpg');
+pairedBoxplots(data, triggerLabels, yLabelStr, titleStr, save_path,1);
+
 
 end
