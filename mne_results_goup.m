@@ -183,7 +183,7 @@ for i_peak = 1:length(params.peaks)
     
     data = {fahm_squidmag, fahm_opm, fahm_squidgrad};
     triggerLabels = params.phalange_labels;
-    yLabelStr = 'FAHM';
+    yLabelStr = 'FAHM [cm^2]';
     titleStr = ['Group level ' params.peaks{1}.label ' MNE FAHM - SQMAG vs OPM vs SQGRAD'];
     save_path = fullfile(base_save_path, 'figs', 'mne_fahm_sqmag_opm_sqgrad_box.jpg');
     pairedBoxplots(data, triggerLabels, yLabelStr, titleStr, save_path,1);
@@ -289,14 +289,20 @@ for i_peak = 1:length(params.peaks)
     xticklabels(params.phalange_labels)
     saveas(h, fullfile(base_save_path, 'figs', ['mne_mom_' peak_label cov '.jpg']))
     
-    data = {mom_squidmag, mom_opm, mom_squidgrad};
+    data = {1e9*mom_squidmag, 1e9*mom_opm, 1e9*mom_squidgrad};
     triggerLabels = params.phalange_labels;
-    yLabelStr = 'Peak moment';
+    yLabelStr = 'Peak moment [nAm]';
     titleStr = ['Group level ' params.peaks{1}.label ' MNE Peak Moment - SQMAG vs OPM vs SQGRAD'];
     save_path = fullfile(base_save_path, 'figs', 'mne_mom_sqmag_opm_sqgrad_box.jpg');
     pairedBoxplots(data, triggerLabels, yLabelStr, titleStr, save_path,1);
     
-    
+    data = {1e9*mom_squidmag, 1e9*mom_opm};
+    triggerLabels = params.phalange_labels;
+    yLabelStr = 'Peak moment [nAm]';
+    titleStr = ['Group level ' params.peaks{1}.label ' MNE Peak Moment - SQMAG vs OPM'];
+    save_path = fullfile(base_save_path, 'figs', 'mne_mom_sqmag_opm_box.jpg');
+    pairedBoxplots(data, triggerLabels, yLabelStr, titleStr, save_path,1);
+
     %% Plot peak powers - opm and squidmag only
     data1 = pow_squidmag;
     data2 = pow_opm;
@@ -381,19 +387,18 @@ for i_peak = 1:length(params.peaks)
     xticklabels(params.phalange_labels)
     saveas(h, fullfile(base_save_path, 'figs', ['mne_latency_' peak_label cov '.jpg']))
     
-    data = {lat_squidmag, lat_opm, lat_squidgrad};
+    data = {1e3*lat_squidmag, 1e3*lat_opm, 1e3*lat_squidgrad};
     triggerLabels = params.phalange_labels;
-    yLabelStr = 'Peak latnecy';
+    yLabelStr = 'Peak latency [ms]';
     titleStr = ['Group level ' params.peaks{1}.label ' MNE Peak Latency - SQMAG vs OPM vs SQGRAD'];
     save_path = fullfile(base_save_path, 'figs', 'mne_lat_sqmag_opm_sqgrad_box.jpg');
     pairedBoxplots(data, triggerLabels, yLabelStr, titleStr, save_path,1);
 
-
     %%
     data = {dist_sqmag_opm, dist_sqgrad_opm, dist_sqmag_sqgrad};
     triggerLabels = params.phalange_labels;
-    yLabelStr = 'Peak moment';
-    titleStr = ['Group level ' params.peaks{1}.label ' MNE Peak distances - MAG-OPM vs GRAD-OPM vs MAG-GRAD'];
+    yLabelStr = 'Peak distances [mm]';
+    titleStr = ['Group level ' params.peaks{1}.label ' MNE Peak distances - SM-O vs SG-O vs SM-SG'];
     save_path = fullfile(base_save_path, 'figs', 'mne_dist_sqmag_opm_sqgrad_box.jpg');
     pairedBoxplots(data, triggerLabels, yLabelStr, titleStr, save_path,1);
 

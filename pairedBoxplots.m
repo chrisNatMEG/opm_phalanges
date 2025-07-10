@@ -38,7 +38,7 @@ function pairedBoxplots(data, triggerLabels, yLabelStr, titleStr, save_path, sho
         for t = 1:nTriggers
             x = t + offset(g);
             boxplot(data{g}(:, t), 'positions', x, 'colors', colors(g,:), ...
-                    'widths', 0.15, 'symbol', '');
+                    'widths', 0.15);
         end
     end
 

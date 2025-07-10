@@ -32,15 +32,15 @@ ft_default.showcallinfo = 'no';
 %% Overwrite
 overwrite = [];
 if on_server
-    overwrite.preproc = true;
+    overwrite.preproc = false;
     overwrite.coreg = false;
     overwrite.mri = false;
-    overwrite.dip = true;
-    overwrite.empty_room = true;
-    overwrite.mne = true;
+    overwrite.dip = false;
+    overwrite.empty_room = false;
+    overwrite.mne = false;
 
-    overwrite.sens_group = true;
-    overwrite.dip_group = true;
+    overwrite.sens_group = false;
+    overwrite.dip_group = false;
     overwrite.mne_group = true;
 else
     overwrite.preproc = true;
@@ -503,7 +503,7 @@ for i_sub = setdiff(subs_to_run,excl_subs)
         clear data_ica
         % Empty room
         opm_file = fullfile(raw_path, 'osmeg', 'EmptyRoomOPM_raw.fif');
-        squid_file = fullfile(raw_path, 'meg', 'EmptyRoomMEG.fif');
+        squid_file = fullfile(raw_path, 'meg', 'EmptyRoomMEG_tsss.fif');
         if exist(opm_file,'file') && exist(squid_file,'file')
             %read_empty_rooms(opm_file, squid_file, opm_chs, squid_chs, opm_grad, save_path, params);
         end

@@ -150,6 +150,8 @@ if isfield(params,'flip_sign') && params.flip_sign
     for i = 1:length(comb.trial)
         comb.trial{i}(chs,:) = -comb.trial{i}(chs,:);
     end
+    comb.grad.chanori = -comb.grad.chanori;
+    comb.grad.coilori = -comb.grad.coilori;
 end
 
 %% OPM 
