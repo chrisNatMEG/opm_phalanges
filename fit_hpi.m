@@ -160,29 +160,22 @@ for i_file = 1:length(hpi_files)
     hpi_polhemus = headshape.pos(find(contains(headshape.label,'hpi')),:);
     [~, i_min] = min(pdist2(hpi{i_file}.dip_pos(hpi{i_file}.dip_include,1:2),hpi_polhemus(:,1:2)),[],2);
     
-    tmp = hpi{i_file};
-    hpi{i_file} = [];
-    hpi{i_file}.dip_pos = zeros(length(hpi_chs),3);
-    hpi{i_file}.dip_ori = zeros(length(hpi_chs),3);
-    hpi{i_file}.dip_include = false(length(hpi_chs),1);
-    hpi{i_file}.dip_gof = zeros(length(hpi_chs),1);
-
-    hpi{i_file}.dip_pos = tmp.dip_pos(i_min,:);
-    hpi{i_file}.dip_ori = tmp.dip_ori(i_min,:);
-    hpi{i_file}.dip_include = tmp.dip_include(i_min);
-    hpi{i_file}.dip_gof = tmp.dip_gof(i_min);
-    hpi_labels = hpi_labels(i_min);
+    hpi2{i_file}.dip_pos = hpi{i_file}.dip_pos(i_min,:);
+    hpi2{i_file}.dip_ori = hpi{i_file}.dip_ori(i_min,:);
+    hpi2{i_file}.dip_include = hpi{i_file}.dip_include(i_min);
+    hpi2{i_file}.dip_gof = hpi{i_file}.dip_gof(i_min);
+    hpi_labels2 = hpi_labels(i_min);
     
     ft_hastoolbox('mne',1);
     headshape = ft_read_headshape(aux_file);
     hpi_polhemus = headshape.pos(find(contains(headshape.label,'hpi')),:);
-    fixed = pointCloud(hpi_polhemus(hpi{i_file}.dip_include,:));
-    moving = pointCloud(hpi{i_file}.dip_pos(hpi{i_file}.dip_include,:));
+    fixed = pointCloud(hpi_polhemus(hpi2{i_file}.dip_include,:));
+    moving = pointCloud(hpi2{i_file}.dip_pos(hpi2{i_file}.dip_include,:));
     try
         [opm_trans, temp, dist] = pcregistericp(moving, fixed, 'Tolerance',[0.0001 0.001], 'MaxIterations',500,'Verbose',true);
-        hpi{i_file}.dip_pos_tf(hpi{i_file}.dip_include,:) = temp.Location;
-        hpi{i_file}.dip_ori_tf = hpi{i_file}.dip_ori*opm_trans.Rotation;
-        hpi{i_file}.opm_trans = opm_trans;
+        hpi2{i_file}.dip_pos_tf(hpi2{i_file}.dip_include,:) = temp.Location;
+        hpi2{i_file}.dip_ori_tf = hpi2{i_file}.dip_ori*opm_trans.Rotation;
+        hpi2{i_file}.opm_trans = opm_trans;
         
         epoT = epo;
         epoT.grad.chanpos = opm_trans.transformPointsForward(epo.grad.chanpos);
@@ -198,31 +191,31 @@ for i_file = 1:length(hpi_files)
         h = figure;
         ft_plot_sens(epoT.grad,'unit','cm','DisplayName','senspos'); 
         hold on 
-        for coil = find(hpi{i_file}.dip_include)'
-            quiver3(hpi{i_file}.dip_pos_tf(coil,1),hpi{i_file}.dip_pos_tf(coil,2),hpi{i_file}.dip_pos_tf(coil,3),hpi{i_file}.dip_ori_tf(coil,1),hpi{i_file}.dip_ori_tf(coil,2),hpi{i_file}.dip_ori_tf(coil,3),'*','Color',colors(coil,:),'DisplayName',['hpi' hpi_labels{coil}((end-2):end) ' (GOF=' num2str((hpi{i_file}.dip_gof(coil))*100,'%.2f') '%)'],'LineWidth',2);
+        for coil = find(hpi2{i_file}.dip_include)'
+            quiver3(hpi2{i_file}.dip_pos_tf(coil,1),hpi2{i_file}.dip_pos_tf(coil,2),hpi2{i_file}.dip_pos_tf(coil,3),hpi2{i_file}.dip_ori_tf(coil,1),hpi2{i_file}.dip_ori_tf(coil,2),hpi2{i_file}.dip_ori_tf(coil,3),'*','Color',colors(coil,:),'DisplayName',['hpi' hpi_labels2{coil}((end-2):end) ' (GOF=' num2str((hpi2{i_file}.dip_gof(coil))*100,'%.2f') '%)'],'LineWidth',2);
         end
         scatter3(hpi_polhemus(:,1),hpi_polhemus(:,2),hpi_polhemus(:,3),'r','DisplayName','polhemus'); 
         scatter3(headshape.fid.pos(:,1),headshape.fid.pos(:,2),headshape.fid.pos(:,3),'g.','DisplayName','fiducials'); 
         scatter3(headshape.pos(:,1),headshape.pos(:,2),headshape.pos(:,3),'k.','DisplayName','headshape'); 
-        scatter3(hpi_polhemus(hpi{i_file}.dip_include,1),hpi_polhemus(hpi{i_file}.dip_include,2),hpi_polhemus(hpi{i_file}.dip_include,3),'r*','DisplayName','polhemus'); 
+        scatter3(hpi_polhemus(hpi2{i_file}.dip_include,1),hpi_polhemus(hpi2{i_file}.dip_include,2),hpi_polhemus(hpi2{i_file}.dip_include,3),'r*','DisplayName','polhemus'); 
         hold off
         title(['HPI fits (mean dist = ' num2str(dist*10) ' mm)'])
         legend('Location','eastoutside')
         saveas(h, fullfile(save_path, 'figs', ['hpi_fits-' num2str(i_file) '.jpg']))
     catch
         warning(['PCregister failed on hpi-file: ' hpi_files(i_file).name ])
-        hpi{i}.dip_gof = 0;
+        hpi2{i}.dip_gof = 0;
     end
 end
 
 %% Save 
 for i = 1:length(hpi_files)
-    gofsum(i) = sum(hpi{i}.dip_gof);
+    gofsum(i) = sum(hpi2{i}.dip_gof);
 end
 [~,i_bestfit] = max(gofsum);
-hpi_fit = hpi{i_bestfit};
+hpi_fit = hpi2{i_bestfit};
 save(fullfile(save_path, 'hpi_fit'), 'hpi_fit'); disp('done');
-opm_trans =  hpi{i_bestfit}.opm_trans;
+opm_trans =  hpi2{i_bestfit}.opm_trans;
 save(fullfile(save_path, 'opm_trans'), 'opm_trans'); disp('done');
 
 end
