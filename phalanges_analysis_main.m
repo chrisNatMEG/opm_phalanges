@@ -33,14 +33,14 @@ ft_default.showcallinfo = 'no';
 overwrite = [];
 if on_server
     overwrite.preproc = false;
-    overwrite.coreg = false;
+    overwrite.coreg = true;
     overwrite.mri = false;
-    overwrite.dip = false;
-    overwrite.empty_room = false;
-    overwrite.mne = false;
+    overwrite.dip = true;
+    overwrite.empty_room = true;
+    overwrite.mne = true;
 
-    overwrite.sens_group = false;
-    overwrite.dip_group = false;
+    overwrite.sens_group = true;
+    overwrite.dip_group = true;
     overwrite.mne_group = true;
 else
     overwrite.preproc = true;
@@ -62,7 +62,7 @@ params.post = 0.3; %sec
 params.pad = 0.2; %sec
 
 params.filter = [];
-params.filter.hp_freq = 0.1;
+params.filter.hp_freq = 0.3;
 params.filter.lp_freq = 70;
 params.filter.bp_freq = [];
 params.filter.notch = [50 60 100 120 150]; %[50 60 100 120 150];
