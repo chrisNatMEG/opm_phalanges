@@ -131,9 +131,9 @@ pos = zeros(n_triggers,3);
 ori= zeros(n_triggers,3);
 for i_trigger = 1:n_triggers
     for i_dip = 1:numdipoles
-        pos((i_trigger*numdipoles-1)+i_dip,:) = dip{i_trigger}.dip.pos(i_dip,:);
+        pos(((i_trigger-1)*numdipoles)+i_dip,:) = dip{i_trigger}.dip.pos(i_dip,:);
         [~,idx] = max(vecnorm(dip{i_trigger}.dip.mom((1:3)+((i_dip-1)*3),:),2,1));
-        ori((i_trigger*numdipoles-1)+i_dip,:) = dip{i_trigger}.dip.mom((1:3)+((i_dip-1)*3),idx);
+        ori(((i_trigger-1)*numdipoles)+i_dip,:) = dip{i_trigger}.dip.mom((1:3)+((i_dip-1)*3),idx);
     end
 end
 mean_pos = mean(pos,1);
@@ -211,9 +211,9 @@ pos = zeros(n_triggers,3);
 ori= zeros(n_triggers,3);
 for i_trigger = 1:n_triggers
     for i_dip = 1:numdipoles
-        pos((i_trigger*numdipoles-1)+i_dip,:) = dip{i_trigger}.dip.pos(i_dip,:);
+        pos(((i_trigger-1)*numdipoles)+i_dip,:) = dip{i_trigger}.dip.pos(i_dip,:);
         [~,idx] = max(vecnorm(dip{i_trigger}.dip.mom((1:3)+((i_dip-1)*3),:),2,1));
-        ori((i_trigger*numdipoles-1)+i_dip,:) = dip{i_trigger}.dip.mom((1:3)+((i_dip-1)*3),idx);
+        ori(((i_trigger-1)*numdipoles)+i_dip,:) = dip{i_trigger}.dip.mom((1:3)+((i_dip-1)*3),idx);
     end
 end
 mean_pos = mean(pos,1);
@@ -291,9 +291,9 @@ pos = zeros(n_triggers,3);
 ori= zeros(n_triggers,3);
 for i_trigger = 1:n_triggers
     for i_dip = 1:numdipoles
-        pos((i_trigger*numdipoles-1)+i_dip,:) = dip{i_trigger}.dip.pos(i_dip,:);
+        pos(((i_trigger-1)*numdipoles)+i_dip,:) = dip{i_trigger}.dip.pos(i_dip,:);
         [~,idx] = max(vecnorm(dip{i_trigger}.dip.mom((1:3)+((i_dip-1)*3),:),2,1));
-        ori((i_trigger*numdipoles-1)+i_dip,:) = dip{i_trigger}.dip.mom((1:3)+((i_dip-1)*3),idx);
+        ori(((i_trigger-1)*numdipoles)+i_dip,:) = dip{i_trigger}.dip.mom((1:3)+((i_dip-1)*3),idx);
     end
 end
 mean_pos = mean(pos,1);
@@ -365,6 +365,6 @@ saveas(h, fullfile(save_path, 'figs', [params.sub '_' params.modality '_' peak_s
 close all
 
 %% Save 
-save(fullfile(save_path, [ peak_squid{i_trigger}.label '_dipoles']), 'squidmag_dipole', 'squidgrad_dipole', 'opm_dipole'); disp('done');
+save(fullfile(save_path, [ peak_opm{i_trigger}.label '_dipoles']), 'squidmag_dipole', 'squidgrad_dipole', 'opm_dipole'); disp('done');
 
 end

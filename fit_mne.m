@@ -48,35 +48,31 @@ opm_peak = cell(length(n_triggers),length(params.peaks));
 for i_trigger = 1:n_triggers
     params.i_trigger = i_trigger;
 
-    %% Set covariance matrix (based on params.use_cov selection)
+    %% Set covariance matrix (based on params.noise_cov selection)
     cov = '';
-    if isfield(params,'use_cov') && strcmp(params.use_cov,'all')
-        squid_timelocked{i_trigger}.cov = squid_timelocked{i_trigger}.cov_all;
-        opm_timelocked{i_trigger}.cov = opm_timelocked{i_trigger}.cov_all;
-        cov = '_covAll';
-    elseif isfield(params,'use_cov') && strcmp(params.use_cov,'resting_state')
-        cov = '_covRS';
-        if size(opm_timelocked{i_trigger}.cov_RS,1) >= size(opm_timelocked{i_trigger}.cov,1)
-            squid_timelocked{i_trigger}.cov = squid_timelocked{i_trigger}.cov_RS;
-            opm_timelocked{i_trigger}.cov = opm_timelocked{i_trigger}.cov_RS;
-        else
-            disp([params.sub '_' params.trigger_labels{params.i_trigger} ': ' num2str(size(opm_timelocked{i_trigger}.cov_RS,1)) ' vs ' num2str(size(opm_timelocked{i_trigger}.cov,1))])
-            opm_peak{i_trigger,1} = [params.sub '_' params.trigger_labels{params.i_trigger} ': ' num2str(size(opm_timelocked{i_trigger}.cov_RS,1)) ' vs ' num2str(size(opm_timelocked{i_trigger}.cov,1))];
-            continue
-        end
-    elseif isfield(params,'use_cov') && strcmp(params.use_cov,'empty_room')
-        cov = '_covER';
-        if ~isfield(squid_timelocked{i_trigger},'cov_ER')
-            continue % skip if no empty room covariance available
-        end
-        squid_timelocked{i_trigger}.cov = squid_timelocked{i_trigger}.cov_ER;
-        opm_timelocked{i_trigger}.cov = opm_timelocked{i_trigger}.cov_ER;
-        if size(opm_timelocked{i_trigger}.cov_ER) == size(opm_timelocked{i_trigger}.cov)
-            squid_timelocked{i_trigger}.cov = squid_timelocked{i_trigger}.cov_ER;
-            opm_timelocked{i_trigger}.cov = opm_timelocked{i_trigger}.cov_ER;
-        else
-            opm_peak{i_trigger,1} = [params.sub '_' params.trigger_labels{params.i_trigger} ': ' num2str(size(opm_timelocked{i_trigger}.cov_ER,1)) ' vs ' num2str(size(opm_timelocked{i_trigger}.cov,1))];
-            continue
+    if isfield(params,'noise_cov')
+        if strcmp(params.noise_cov,'all')
+            cov = '_covAll';
+            squid_timelocked{i_trigger}.cov = squid_timelocked{i_trigger}.cov_all;
+            opm_timelocked{i_trigger}.cov = opm_timelocked{i_trigger}.cov_all;
+        elseif strcmp(params.noise_cov,'resting_state') && ~isfield(squid_timelocked{i_trigger},'cov_RS')
+            cov = '_covRS';
+            if isfield(squid_timelocked{i_trigger},'cov_RS') && size(opm_timelocked{i_trigger}.cov_RS,1) == size(opm_timelocked{i_trigger}.cov,1)
+                squid_timelocked{i_trigger}.cov = squid_timelocked{i_trigger}.cov_RS;
+                opm_timelocked{i_trigger}.cov = opm_timelocked{i_trigger}.cov_RS;
+            else
+                warning('Resting state covariance not existing or incorrect size.');
+                break
+            end
+        elseif strcmp(params.noise_cov,'empty_room') && ~isfield(squid_timelocked{i_trigger},'cov_ER')
+            cov = '_covER';
+            if isfield(squid_timelocked{i_trigger},'cov_ER') && size(opm_timelocked{i_trigger}.cov_ER) == size(opm_timelocked{i_trigger}.cov)
+                squid_timelocked{i_trigger}.cov = squid_timelocked{i_trigger}.cov_ER;
+                opm_timelocked{i_trigger}.cov = opm_timelocked{i_trigger}.cov_ER;
+            else
+                warning('Empty room covariance not existing or incorrect size.');
+                break
+            end
         end
     end
 
@@ -236,19 +232,19 @@ for i_trigger = 1:n_triggers
     if size(opm_peak{i_trigger,i_peak}.loc,1) == 2
         for i_peak = 1:length(params.peaks)
             for i_hemi = 1:2
-                i_vertices = unique(opm_peak{i_trigger,i_peak}.halfmax_distribution{i_hemi},squidmag_peak{i_trigger,i_peak}.halfmax_distribution{i_hemi});
+                i_vertices = intersect(opm_peak{i_trigger,i_peak}.halfmax_distribution{i_hemi},squidmag_peak{i_trigger,i_peak}.halfmax_distribution{i_hemi});
                 [triangles,~] = find(ismember(sourcemodel.tri,i_vertices)); 
                 triangles = sourcemodel.tri(triangles,:);
                 opm_peak{i_trigger,i_peak}.overlap_squidmag(i_hemi) = sum(calculateTriangleAreas(sourcemodel.pos, triangles))/3;
                 squidmag_peak{i_trigger,i_peak}.overlap_opm(i_hemi) = opm_peak{i_trigger,i_peak}.overlap_squidmag(i_hemi);
             
-                i_vertices = unique(opm_peak{i_trigger,i_peak}.halfmax_distribution{i_hemi}, squidgrad_peak{i_trigger,i_peak}.halfmax_distribution{i_hemi});
+                i_vertices = intersect(opm_peak{i_trigger,i_peak}.halfmax_distribution{i_hemi}, squidgrad_peak{i_trigger,i_peak}.halfmax_distribution{i_hemi});
                 [triangles,~] = find(ismember(sourcemodel.tri,i_vertices)); 
                 triangles = sourcemodel.tri(triangles,:);
                 opm_peak{i_trigger,i_peak}.overlap_squidgrad(i_hemi) = sum(calculateTriangleAreas(sourcemodel.pos, triangles))/3;
                 squidgrad_peak{i_trigger,i_peak}.overlap_opm(i_hemi) = opm_peak{i_trigger,i_peak}.overlap_squidgrad(i_hemi);
             
-                i_vertices = unique(squidmag_peak{i_trigger,i_peak}.halfmax_distribution{i_hemi}, squidgrad_peak{i_trigger,i_peak}.halfmax_distribution{i_hemi});
+                i_vertices = intersect(squidmag_peak{i_trigger,i_peak}.halfmax_distribution{i_hemi}, squidgrad_peak{i_trigger,i_peak}.halfmax_distribution{i_hemi});
                 [triangles,~] = find(ismember(sourcemodel.tri,i_vertices)); 
                 triangles = sourcemodel.tri(triangles,:);
                 squidmag_peak{i_trigger,i_peak}.overlap_squidgrad(i_hemi) = sum(calculateTriangleAreas(sourcemodel.pos, triangles))/3;
@@ -257,19 +253,19 @@ for i_trigger = 1:n_triggers
         end
     else
         for i_peak = 1:length(params.peaks)
-            i_vertices = unique(opm_peak{i_trigger,i_peak}.halfmax_distribution,squidmag_peak{i_trigger,i_peak}.halfmax_distribution);
+            i_vertices = intersect(opm_peak{i_trigger,i_peak}.halfmax_distribution,squidmag_peak{i_trigger,i_peak}.halfmax_distribution);
             [triangles,~] = find(ismember(sourcemodel.tri,i_vertices)); 
             triangles = sourcemodel.tri(triangles,:);
             opm_peak{i_trigger,i_peak}.overlap_squidmag = sum(calculateTriangleAreas(sourcemodel.pos, triangles))/3;
             squidmag_peak{i_trigger,i_peak}.overlap_opm = opm_peak{i_trigger,i_peak}.overlap_squidmag;
         
-            i_vertices = unique(opm_peak{i_trigger,i_peak}.halfmax_distribution, squidgrad_peak{i_trigger,i_peak}.halfmax_distribution);
+            i_vertices = intersect(opm_peak{i_trigger,i_peak}.halfmax_distribution, squidgrad_peak{i_trigger,i_peak}.halfmax_distribution);
             [triangles,~] = find(ismember(sourcemodel.tri,i_vertices)); 
             triangles = sourcemodel.tri(triangles,:);
             opm_peak{i_trigger,i_peak}.overlap_squidgrad = sum(calculateTriangleAreas(sourcemodel.pos, triangles))/3;
             squidgrad_peak{i_trigger,i_peak}.overlap_opm = opm_peak{i_trigger,i_peak}.overlap_squidgrad;
         
-            i_vertices = unique(squidmag_peak{i_trigger,i_peak}.halfmax_distribution, squidgrad_peak{i_trigger,i_peak}.halfmax_distribution);
+            i_vertices = intersect(squidmag_peak{i_trigger,i_peak}.halfmax_distribution, squidgrad_peak{i_trigger,i_peak}.halfmax_distribution);
             [triangles,~] = find(ismember(sourcemodel.tri,i_vertices)); 
             triangles = sourcemodel.tri(triangles,:);
             squidmag_peak{i_trigger,i_peak}.overlap_squidgrad = sum(calculateTriangleAreas(sourcemodel.pos, triangles))/3;
@@ -278,8 +274,11 @@ for i_trigger = 1:n_triggers
     end
 
 end
-save(fullfile(save_path, ['squidmag_mne_peaks' cov]), 'squidmag_peak'); 
-save(fullfile(save_path, ['squidgrad_mne_peaks' cov]), 'squidgrad_peak'); 
-save(fullfile(save_path, ['opm_mne_peaks' cov]), 'opm_peak'); 
+
+if ~isempty(squidmag_peak{1,1})
+    save(fullfile(save_path, ['squidmag_mne_peaks' cov]), 'squidmag_peak'); 
+    save(fullfile(save_path, ['squidgrad_mne_peaks' cov]), 'squidgrad_peak'); 
+    save(fullfile(save_path, ['opm_mne_peaks' cov]), 'opm_peak'); 
+end
 
 end

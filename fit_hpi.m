@@ -1,4 +1,4 @@
-function fit_hpi(hpi_path, aux_file, save_path, params)
+function opm_trans = fit_hpi(hpi_path, aux_file, save_path, params)
 %prprocess_osMEG Read on-scalp MEG data for benchmarking
 % recordings and combine with auxiliary TRIUX data/EEG. 
 % Requires the following arguments:
@@ -96,13 +96,13 @@ for i_file = 1:length(hpi_files)
         
         timelocked.avg = amp(:,coil);
     
-        cfg = [];
-        cfg.layout = 'fieldlinebeta2bz_helmet.mat'; 
-        cfg.parameter = 'avg';
-        cfg.channel = params.include_chs;
-        h = figure; ft_topoplotER(cfg,timelocked); colorbar
-        saveas(h, fullfile(save_path, 'figs', ['hpi_topo_coil-' num2str(coil) '.jpg']))
-        close
+%         cfg = [];
+%         cfg.layout = 'fieldlinebeta2bz_helmet.mat'; 
+%         cfg.parameter = 'avg';
+%         cfg.channel = params.include_chs;
+%         h = figure; ft_topoplotER(cfg,timelocked); colorbar
+%         saveas(h, fullfile(save_path, 'figs', ['hpi_topo_coil-' num2str(coil) '.jpg']))
+%         close
         disp(['Max amp: ' num2str(max(abs(timelocked.avg(find(contains(timelocked.label,'bz'))))))])
     
         if any(abs(timelocked.avg(find(contains(timelocked.label,'bz')))) > 1e-11)
@@ -186,8 +186,6 @@ for i_file = 1:length(hpi_files)
         epoT.grad.coilpos = opm_trans.transformPointsForward(epo.grad.coilpos);
         epoT.grad.chanori = (opm_trans.Rotation'*epoT.grad.chanori')';
         epoT.grad.coilori = (opm_trans.Rotation'*epoT.grad.coilori')';
-        %epoT.grad.chanpos = opm_trans.transformPointsForward(epo.grad.chanpos*1e2)*1e-2;
-        %epoT.grad.coilpos = opm_trans.transformPointsForward(epo.grad.coilpos*1e2)*1e-2;
         
         %%
         colors = [[0.8500 0.3250 0.0980]; [0.9290 0.6940 0.1250]; [0.4940 0.1840 0.5560]; [0.4660 0.6740 0.1880]; [0.6350 0.0780 0.1840]];
@@ -205,7 +203,7 @@ for i_file = 1:length(hpi_files)
         hold off
         title(['HPI fits (mean dist = ' num2str(dist*10) ' mm)'])
         legend('Location','eastoutside')
-        saveas(h, fullfile(save_path, 'figs', ['hpi_fits-' num2str(i_file) '.jpg']))
+        saveas(h, fullfile(save_path, ['hpi_fits-' num2str(i_file) '.jpg']))
     catch
         warning(['PCregister failed on hpi-file: ' hpi_files(i_file).name ])
         hpi2{i}.dip_gof = 0;
@@ -216,10 +214,14 @@ end
 for i = 1:length(hpi_files)
     gofsum(i) = sum(hpi2{i}.dip_gof);
 end
-[~,i_bestfit] = max(gofsum);
-hpi_fit = hpi2{i_bestfit};
-save(fullfile(save_path, 'hpi_fit'), 'hpi_fit'); disp('done');
-opm_trans =  hpi2{i_bestfit}.opm_trans;
-save(fullfile(save_path, 'opm_trans'), 'opm_trans'); disp('done');
+[max_gofsum,i_bestfit] = max(gofsum);
+if max_gofsum >= params.hpi_gof*3 % best fit needs to have at least 3 good coils for reasonable transform
+    hpi_fit = hpi2{i_bestfit};
+    save(fullfile(save_path, 'hpi_fit'), 'hpi_fit'); disp('done');
+    opm_trans =  hpi2{i_bestfit}.opm_trans;
+    save(fullfile(save_path, 'opm_trans'), 'opm_trans'); disp('done');
+else 
+    opm_trans = [];
+end
 
 end
