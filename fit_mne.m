@@ -5,20 +5,15 @@ function fit_mne(save_path, squid_timelocked, opm_timelocked, headmodel, sourcem
 if ~isfield(params,'plot_inflated')
     params.plot_inflated = false;
 end
+n_triggers = length(opm_timelocked);
 
-%% Prepare leadfields
 headmodel = ft_convert_units(headmodel,'cm');
 sourcemodel = ft_convert_units(sourcemodel,'cm');
 if params.source_fixedori
     sourcemodel.mom = surface_normals(sourcemodel.pos, sourcemodel.tri, 'vertex')';
 end
 
-%% MNE invserse
-squidmag_peak = cell(length(params.trigger_code),length(params.peaks));
-squidgrad_peak = cell(length(params.trigger_code),length(params.peaks));
-opm_peak = cell(length(params.trigger_code),length(params.peaks));
-
-%% Leadfields
+%% Prepare leadfields
 cfg = [];
 cfg.grad             = squid_timelocked{1}.grad; % sensor positions
 cfg.channel          = 'megmag';
@@ -45,35 +40,42 @@ cfg.headmodel        = headmodel;          % volume conduction model
 %cfg.normalize        = 'yes';
 leadfield_opm = ft_prepare_leadfield(cfg,opm_timelocked{1});
 
-for i_phalange = 1:length(params.trigger_code)
-    params.i_phalange = i_phalange;
+%% Loop over triggers
+squidmag_peak = cell(length(n_triggers),length(params.peaks));
+squidgrad_peak = cell(length(n_triggers),length(params.peaks));
+opm_peak = cell(length(n_triggers),length(params.peaks));
+
+for i_trigger = 1:n_triggers
+    params.i_trigger = i_trigger;
+
+    %% Set covariance matrix (based on params.use_cov selection)
     cov = '';
     if isfield(params,'use_cov') && strcmp(params.use_cov,'all')
-        squid_timelocked{i_phalange}.cov = squid_timelocked{i_phalange}.cov_all;
-        opm_timelocked{i_phalange}.cov = opm_timelocked{i_phalange}.cov_all;
+        squid_timelocked{i_trigger}.cov = squid_timelocked{i_trigger}.cov_all;
+        opm_timelocked{i_trigger}.cov = opm_timelocked{i_trigger}.cov_all;
         cov = '_covAll';
     elseif isfield(params,'use_cov') && strcmp(params.use_cov,'resting_state')
         cov = '_covRS';
-        if size(opm_timelocked{i_phalange}.cov_RS,1) >= size(opm_timelocked{i_phalange}.cov,1)
-            squid_timelocked{i_phalange}.cov = squid_timelocked{i_phalange}.cov_RS;
-            opm_timelocked{i_phalange}.cov = opm_timelocked{i_phalange}.cov_RS;
+        if size(opm_timelocked{i_trigger}.cov_RS,1) >= size(opm_timelocked{i_trigger}.cov,1)
+            squid_timelocked{i_trigger}.cov = squid_timelocked{i_trigger}.cov_RS;
+            opm_timelocked{i_trigger}.cov = opm_timelocked{i_trigger}.cov_RS;
         else
-            disp([params.sub '_' params.phalange_labels{params.i_phalange} ': ' num2str(size(opm_timelocked{i_phalange}.cov_RS,1)) ' vs ' num2str(size(opm_timelocked{i_phalange}.cov,1))])
-            opm_peak{i_phalange,1} = [params.sub '_' params.phalange_labels{params.i_phalange} ': ' num2str(size(opm_timelocked{i_phalange}.cov_RS,1)) ' vs ' num2str(size(opm_timelocked{i_phalange}.cov,1))];
+            disp([params.sub '_' params.trigger_labels{params.i_trigger} ': ' num2str(size(opm_timelocked{i_trigger}.cov_RS,1)) ' vs ' num2str(size(opm_timelocked{i_trigger}.cov,1))])
+            opm_peak{i_trigger,1} = [params.sub '_' params.trigger_labels{params.i_trigger} ': ' num2str(size(opm_timelocked{i_trigger}.cov_RS,1)) ' vs ' num2str(size(opm_timelocked{i_trigger}.cov,1))];
             continue
         end
     elseif isfield(params,'use_cov') && strcmp(params.use_cov,'empty_room')
         cov = '_covER';
-        if ~isfield(squid_timelocked{i_phalange},'cov_ER')
+        if ~isfield(squid_timelocked{i_trigger},'cov_ER')
             continue % skip if no empty room covariance available
         end
-        squid_timelocked{i_phalange}.cov = squid_timelocked{i_phalange}.cov_ER;
-        opm_timelocked{i_phalange}.cov = opm_timelocked{i_phalange}.cov_ER;
-        if size(opm_timelocked{i_phalange}.cov_ER) == size(opm_timelocked{i_phalange}.cov)
-            squid_timelocked{i_phalange}.cov = squid_timelocked{i_phalange}.cov_ER;
-            opm_timelocked{i_phalange}.cov = opm_timelocked{i_phalange}.cov_ER;
+        squid_timelocked{i_trigger}.cov = squid_timelocked{i_trigger}.cov_ER;
+        opm_timelocked{i_trigger}.cov = opm_timelocked{i_trigger}.cov_ER;
+        if size(opm_timelocked{i_trigger}.cov_ER) == size(opm_timelocked{i_trigger}.cov)
+            squid_timelocked{i_trigger}.cov = squid_timelocked{i_trigger}.cov_ER;
+            opm_timelocked{i_trigger}.cov = opm_timelocked{i_trigger}.cov_ER;
         else
-            opm_peak{i_phalange,1} = [params.sub '_' params.phalange_labels{params.i_phalange} ': ' num2str(size(opm_timelocked{i_phalange}.cov_ER,1)) ' vs ' num2str(size(opm_timelocked{i_phalange}.cov,1))];
+            opm_peak{i_trigger,1} = [params.sub '_' params.trigger_labels{params.i_trigger} ': ' num2str(size(opm_timelocked{i_trigger}.cov_ER,1)) ' vs ' num2str(size(opm_timelocked{i_trigger}.cov,1))];
             continue
         end
     end
@@ -89,7 +91,7 @@ for i_phalange = 1:length(params.trigger_code)
     cfg.senstype            = 'meg';            % sensor type
     cfg.keepfilter          = 'yes';
     cfg.channel             = 'megmag';
-    tmp = ft_sourceanalysis(cfg, squid_timelocked{i_phalange});
+    tmp = ft_sourceanalysis(cfg, squid_timelocked{i_trigger});
     tmp.tri = sourcemodel.tri;
 
     params.modality = 'squidmag';
@@ -107,34 +109,26 @@ for i_phalange = 1:length(params.trigger_code)
     xlabel('t [msec]')
     ylabel('Field power')
     xlim([-params.pre params.post]*1e3);
-    title([params.modality ' - ' params.phalange_labels{params.i_phalange}])
-    saveas(h, fullfile(save_path, 'figs', [params.sub '_' params.modality '_' params.inv_method '_sourcepow_ph-' params.phalange_labels{params.i_phalange} '.jpg']))
+    title([params.modality ' - ' params.trigger_labels{params.i_trigger}])
+    saveas(h, fullfile(save_path, 'figs', [params.sub '_' params.modality '_' params.inv_method '_sourcepow_trig-' params.trigger_labels{params.i_trigger} '.jpg']))
     close all
 
-    for i_peak = 1:length(params.peaks)
-       squidmag_peak{i_phalange,i_peak} = FullAreaHalfMax(tmp,sourcemodel,params.peaks{i_peak},params,save_path);
-    end
     if params.plot_inflated
         tmp.pos = sourcemodel_inflated.pos;
         tmp.tri = sourcemodel_inflated.tri;
     end
-    for i_peak = 1:length(params.peaks)
-        cfg = [];
-        cfg.method          = 'surface';
-        cfg.funparameter    = 'pow';
-        cfg.funcolormap     = 'jet';    
-        cfg.colorbar        = 'no';
-        cfg.latency         = squidmag_peak{i_phalange,i_peak}.latency;
-        h = figure;
-        h.Position(3) = round(h.Position(3)*1.2);
-        ft_sourceplot(cfg, tmp)
-        lighting gouraud
-        material dull
-        title(['SQUID-MAG (FAHM=' num2str(squidmag_peak{i_phalange,i_peak}.fahm,3) 'cm^2; t=' num2str(round(squidmag_peak{i_phalange,i_peak}.latency*1e3)) 'ms)'])
-        saveas(h, fullfile(save_path,'figs', [params.sub '_squidmag_' squidmag_peak{i_phalange,i_peak}.label '_mne_ph' params.phalange_labels{i_phalange} cov '.jpg']))
-        close all
-    end
 
+    for i_peak = 1:length(params.peaks)
+        peak = FullAreaHalfMax(tmp,sourcemodel,params.peaks{i_peak}.peak_latency,params);
+        peak.label = params.peaks{i_peak}.label;
+
+        h = plot_source_distribution(tmp, peak, params); 
+        saveas(h, fullfile(save_path,'figs', [params.sub '_' params.modality '_' peak.label '_mne_trig-' params.trigger_labels{i_trigger} cov '.jpg']))
+        close all 
+
+        squidmag_peak{i_trigger,i_peak} = peak;
+        clear peak
+    end
     clear tmp
 
     %% MEG-GRAD
@@ -148,7 +142,7 @@ for i_phalange = 1:length(params.trigger_code)
     cfg.sourcemodel         = leadfield_squidgrad;
     cfg.keepfilter          = 'yes';
     cfg.channel             = 'meggrad';
-    tmp = ft_sourceanalysis(cfg, squid_timelocked{i_phalange});
+    tmp = ft_sourceanalysis(cfg, squid_timelocked{i_trigger});
     tmp.tri = sourcemodel.tri;
 
     params.modality = 'squidgrad';
@@ -165,34 +159,26 @@ for i_phalange = 1:length(params.trigger_code)
     xlabel('t [msec]')
     ylabel('Field power')
     xlim([-params.pre params.post]*1e3);
-    title([params.modality ' - ' params.phalange_labels{params.i_phalange}])
-    saveas(h, fullfile(save_path, 'figs', [params.sub '_' params.modality '_' params.inv_method '_sourcepow_ph-' params.phalange_labels{params.i_phalange} '.jpg']))
+    title([params.modality ' - ' params.trigger_labels{params.i_trigger}])
+    saveas(h, fullfile(save_path, 'figs', [params.sub '_' params.modality '_' params.inv_method '_sourcepow_trig-' params.trigger_labels{params.i_trigger} '.jpg']))
     close all
 
-    for i_peak = 1:length(params.peaks)
-        squidgrad_peak{i_phalange,i_peak} = FullAreaHalfMax(tmp,sourcemodel,params.peaks{i_peak},params,save_path);
-    end
     if params.plot_inflated
         tmp.pos = sourcemodel_inflated.pos;
         tmp.tri = sourcemodel_inflated.tri;
     end
+    
     for i_peak = 1:length(params.peaks)
-        cfg = [];
-        cfg.method          = 'surface';
-        cfg.funparameter    = 'pow';
-        cfg.funcolormap     = 'jet';    
-        cfg.colorbar        = 'no';
-        cfg.latency         = squidgrad_peak{i_phalange,i_peak}.latency;
-        h = figure;
-        h.Position(3) = round(h.Position(3)*1.2);
-        ft_sourceplot(cfg, tmp)
-        lighting gouraud
-        material dull
-        title(['SQUID-GRAD (FAHM=' num2str(squidgrad_peak{i_phalange,i_peak}.fahm,3) 'cm^2; t=' num2str(round(squidgrad_peak{i_phalange,i_peak}.latency*1e3)) 'ms)'])
-        saveas(h, fullfile(save_path,'figs', [params.sub '_squidgrad_' squidgrad_peak{i_phalange,i_peak}.label '_mne_ph' params.phalange_labels{i_phalange} cov '.jpg']))
-        close all
-    end
+        peak = FullAreaHalfMax(tmp,sourcemodel,params.peaks{i_peak}.peak_latency,params);
+        peak.label = params.peaks{i_peak}.label;
 
+        h = plot_source_distribution(tmp, peak, params); 
+        saveas(h, fullfile(save_path,'figs', [params.sub '_' params.modality '_' peak.label '_mne_trig-' params.trigger_labels{i_trigger} cov '.jpg']))
+        close all  
+
+        squidgrad_peak{i_trigger,i_peak} = peak;
+        clear peak
+    end
     clear tmp
 
     %% OPM
@@ -206,7 +192,7 @@ for i_phalange = 1:length(params.trigger_code)
     cfg.senstype            = 'meg';            % sensor type
     cfg.keepfilter          = 'yes';
     cfg.channel             = '*bz';
-    tmp = ft_sourceanalysis(cfg, opm_timelocked{i_phalange});
+    tmp = ft_sourceanalysis(cfg, opm_timelocked{i_trigger});
     tmp.tri = sourcemodel.tri;
 
     params.modality = 'opm';
@@ -223,55 +209,72 @@ for i_phalange = 1:length(params.trigger_code)
     xlabel('t [msec]')
     ylabel('Field power')
     xlim([-params.pre params.post]*1e3);
-    title([params.modality ' - ' params.phalange_labels{params.i_phalange}])
-    saveas(h, fullfile(save_path, 'figs', [params.sub '_' params.modality '_' params.inv_method '_sourcepow_ph-' params.phalange_labels{params.i_phalange} '.jpg']))
+    title([params.modality ' - ' params.trigger_labels{params.i_trigger}])
+    saveas(h, fullfile(save_path, 'figs', [params.sub '_' params.modality '_' params.inv_method '_sourcepow_trig-' params.trigger_labels{params.i_trigger} '.jpg']))
     close all
     
-    for i_peak = 1:length(params.peaks)
-        opm_peak{i_phalange,i_peak} = FullAreaHalfMax(tmp,sourcemodel,params.peaks{i_peak},params,save_path);
-    end
     if params.plot_inflated
         tmp.pos = sourcemodel_inflated.pos;
         tmp.tri = sourcemodel_inflated.tri;
     end
-    for i_peak = 1:length(params.peaks)  
-        cfg = [];
-        cfg.method          = 'surface';
-        cfg.funparameter    = 'pow';
-        cfg.funcolormap     = 'jet';    
-        cfg.colorbar        = 'no';
-        cfg.latency         = opm_peak{i_phalange,i_peak}.latency;
-        h = figure;
-        h.Position(3) = round(h.Position(3)*1.2);
-        ft_sourceplot(cfg, tmp)
-        lighting gouraud
-        material dull
-        title(['OPM (FAHM=' num2str(opm_peak{i_phalange,i_peak}.fahm,3) 'cm^2; t=' num2str(round(opm_peak{i_phalange,i_peak}.latency*1e3)) 'ms)'])
-        saveas(h, fullfile(save_path,'figs', [params.sub '_opm_' opm_peak{i_phalange,i_peak}.label '_mne_ph' params.phalange_labels{i_phalange} cov '.jpg']))
-        close all
-    end
+    
+    for i_peak = 1:length(params.peaks)
+        peak = FullAreaHalfMax(tmp,sourcemodel,params.peaks{i_peak}.peak_latency,params);
+        peak.label = params.peaks{i_peak}.label;
 
+        h = plot_source_distribution(tmp, peak, params); 
+        saveas(h, fullfile(save_path,'figs', [params.sub '_' params.modality '_' peak.label '_mne_trig-' params.trigger_labels{i_trigger} cov '.jpg']))
+        close all  
+
+        opm_peak{i_trigger,i_peak} = peak;
+        clear peak
+    end
     clear tmp
 
+
     %% Overlaps
-    for i_peak = 1:length(params.peaks)
-        i_vertices = opm_peak{i_phalange,i_peak}.halfmax_distribution & squidmag_peak{i_phalange,i_peak}.halfmax_distribution;
-        [triangles,~] = find(ismember(sourcemodel.tri,i_vertices)); 
-        triangles = sourcemodel.tri(triangles,:);
-        opm_peak{i_phalange,i_peak}.overlap_squidmag = sum(calculateTriangleAreas(sourcemodel.pos, triangles))/3;
-        squidmag_peak{i_phalange,i_peak}.overlap_opm = opm_peak{i_phalange,i_peak}.overlap_squidmag;
-    
-        i_vertices = opm_peak{i_phalange,i_peak}.halfmax_distribution & squidgrad_peak{i_phalange,i_peak}.halfmax_distribution;
-        [triangles,~] = find(ismember(sourcemodel.tri,i_vertices)); 
-        triangles = sourcemodel.tri(triangles,:);
-        opm_peak{i_phalange,i_peak}.overlap_squidgrad = sum(calculateTriangleAreas(sourcemodel.pos, triangles))/3;
-        squidgrad_peak{i_phalange,i_peak}.overlap_opm = opm_peak{i_phalange,i_peak}.overlap_squidgrad;
-    
-        i_vertices = squidmag_peak{i_phalange,i_peak}.halfmax_distribution & squidgrad_peak{i_phalange,i_peak}.halfmax_distribution;
-        [triangles,~] = find(ismember(sourcemodel.tri,i_vertices)); 
-        triangles = sourcemodel.tri(triangles,:);
-        squidmag_peak{i_phalange,i_peak}.overlap_squidgrad = sum(calculateTriangleAreas(sourcemodel.pos, triangles))/3;
-        squidgrad_peak{i_phalange,i_peak}.overlap_squidmag = squidmag_peak{i_phalange,i_peak}.overlap_squidgrad;
+    if size(opm_peak{i_trigger,i_peak}.loc,1) == 2
+        for i_peak = 1:length(params.peaks)
+            for i_hemi = 1:2
+                i_vertices = unique(opm_peak{i_trigger,i_peak}.halfmax_distribution{i_hemi},squidmag_peak{i_trigger,i_peak}.halfmax_distribution{i_hemi});
+                [triangles,~] = find(ismember(sourcemodel.tri,i_vertices)); 
+                triangles = sourcemodel.tri(triangles,:);
+                opm_peak{i_trigger,i_peak}.overlap_squidmag(i_hemi) = sum(calculateTriangleAreas(sourcemodel.pos, triangles))/3;
+                squidmag_peak{i_trigger,i_peak}.overlap_opm(i_hemi) = opm_peak{i_trigger,i_peak}.overlap_squidmag(i_hemi);
+            
+                i_vertices = unique(opm_peak{i_trigger,i_peak}.halfmax_distribution{i_hemi}, squidgrad_peak{i_trigger,i_peak}.halfmax_distribution{i_hemi});
+                [triangles,~] = find(ismember(sourcemodel.tri,i_vertices)); 
+                triangles = sourcemodel.tri(triangles,:);
+                opm_peak{i_trigger,i_peak}.overlap_squidgrad(i_hemi) = sum(calculateTriangleAreas(sourcemodel.pos, triangles))/3;
+                squidgrad_peak{i_trigger,i_peak}.overlap_opm(i_hemi) = opm_peak{i_trigger,i_peak}.overlap_squidgrad(i_hemi);
+            
+                i_vertices = unique(squidmag_peak{i_trigger,i_peak}.halfmax_distribution{i_hemi}, squidgrad_peak{i_trigger,i_peak}.halfmax_distribution{i_hemi});
+                [triangles,~] = find(ismember(sourcemodel.tri,i_vertices)); 
+                triangles = sourcemodel.tri(triangles,:);
+                squidmag_peak{i_trigger,i_peak}.overlap_squidgrad(i_hemi) = sum(calculateTriangleAreas(sourcemodel.pos, triangles))/3;
+                squidgrad_peak{i_trigger,i_peak}.overlap_squidmag(i_hemi) = squidmag_peak{i_trigger,i_peak}.overlap_squidgrad(i_hemi);
+            end
+        end
+    else
+        for i_peak = 1:length(params.peaks)
+            i_vertices = unique(opm_peak{i_trigger,i_peak}.halfmax_distribution,squidmag_peak{i_trigger,i_peak}.halfmax_distribution);
+            [triangles,~] = find(ismember(sourcemodel.tri,i_vertices)); 
+            triangles = sourcemodel.tri(triangles,:);
+            opm_peak{i_trigger,i_peak}.overlap_squidmag = sum(calculateTriangleAreas(sourcemodel.pos, triangles))/3;
+            squidmag_peak{i_trigger,i_peak}.overlap_opm = opm_peak{i_trigger,i_peak}.overlap_squidmag;
+        
+            i_vertices = unique(opm_peak{i_trigger,i_peak}.halfmax_distribution, squidgrad_peak{i_trigger,i_peak}.halfmax_distribution);
+            [triangles,~] = find(ismember(sourcemodel.tri,i_vertices)); 
+            triangles = sourcemodel.tri(triangles,:);
+            opm_peak{i_trigger,i_peak}.overlap_squidgrad = sum(calculateTriangleAreas(sourcemodel.pos, triangles))/3;
+            squidgrad_peak{i_trigger,i_peak}.overlap_opm = opm_peak{i_trigger,i_peak}.overlap_squidgrad;
+        
+            i_vertices = unique(squidmag_peak{i_trigger,i_peak}.halfmax_distribution, squidgrad_peak{i_trigger,i_peak}.halfmax_distribution);
+            [triangles,~] = find(ismember(sourcemodel.tri,i_vertices)); 
+            triangles = sourcemodel.tri(triangles,:);
+            squidmag_peak{i_trigger,i_peak}.overlap_squidgrad = sum(calculateTriangleAreas(sourcemodel.pos, triangles))/3;
+            squidgrad_peak{i_trigger,i_peak}.overlap_squidmag = squidmag_peak{i_trigger,i_peak}.overlap_squidgrad;
+        end
     end
 
 end

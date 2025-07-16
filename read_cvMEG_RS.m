@@ -72,28 +72,28 @@ cfg = [];
 cfg.channel = 'megmag';
 cfg.metric = 'std';
 cfg.threshold = params.squidmag_std_threshold;
-[cfg,badtrls] = ft_badsegment(cfg, squid_cleaned);
+[cfg,~] = ft_badsegment(cfg, squid_cleaned);
 squid_cleaned = ft_rejectartifact(cfg,squid_cleaned);
 
 cfg = [];
 cfg.channel = 'megplanar';
 cfg.metric = 'std';
 cfg.threshold = params.squidgrad_std_threshold;
-[cfg,badtrls] = ft_badsegment(cfg, squid_cleaned);
+[cfg,~] = ft_badsegment(cfg, squid_cleaned);
 squid_cleaned = ft_rejectartifact(cfg,squid_cleaned);
 
 cfg = [];
 cfg.channel = 'megmag';
 cfg.metric = 'range';
 cfg.threshold = params.squidmag_range_threshold;
-[cfg,badtrls] = ft_badsegment(cfg, squid_cleaned);
+[cfg,~] = ft_badsegment(cfg, squid_cleaned);
 squid_cleaned = ft_rejectartifact(cfg,squid_cleaned);
 
 cfg = [];
 cfg.channel = 'megplanar';
 cfg.metric = 'range';
 cfg.threshold = params.squidgrad_range_threshold;
-[cfg,badtrls] = ft_badsegment(cfg, squid_cleaned);
+[cfg,~] = ft_badsegment(cfg, squid_cleaned);
 squid_cleaned = ft_rejectartifact(cfg,squid_cleaned);
 
 %% ICA

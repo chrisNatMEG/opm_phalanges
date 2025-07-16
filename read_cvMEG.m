@@ -17,7 +17,7 @@ trl_squid(:,1) = find(trig)-(params.pre+params.pad)*squid_raw.fsample;
 trl_squid(:,2) = find(trig)+(params.post+params.pad)*squid_raw.fsample;
 trl_squid(:,3) = -(params.pre+params.pad)*squid_raw.fsample;
 trl_squid(:,4) = squid_raw.trial{1}(squid_trig,trig);
-trl_squid(:,1:2) = trl_squid(:,1:2) + floor(0.041*squid_raw.fsample); % adjust for stim delay
+trl_squid(:,1:2) = trl_squid(:,1:2) + floor(params.delay*squid_raw.fsample); % adjust for stim delay
 trl_squid = round(trl_squid);
 
 %% MEG data filter & epoch
@@ -131,10 +131,6 @@ squideeg_cleaned = ft_preprocessing(cfg,squideeg_cleaned);
 % Append ECG/EOG channels
 cfg = [];
 squideeg_cleaned = ft_appenddata(cfg,squideeg_cleaned,exg);
-
-%cfg = [];
-%cfg.channel = setdiff(squideeg_cleaned.label,badchs_opmeeg);
-%squideeg_cleaned = ft_selectdata(cfg, squideeg_cleaned);
 
 % Reject jump trials
 cfg = [];

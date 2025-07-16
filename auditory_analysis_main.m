@@ -9,12 +9,12 @@ if contains(pwd,'/home/chrpfe')
     base_data_path = '/archive/21099_opm/';
     base_save_path = '/home/chrpfe/Documents/21099_opm/Phalanges';
     base_matlab_path = '/home/chrpfe/Documents/MATLAB/';
-    project_scripts_path = '/home/chrpfe/Documents/MATLAB/21099_opm/phalanges';
+    project_scripts_path = '/home/chrpfe/Documents/MATLAB/21099_opm/auditory';
     on_server = true;
 else
     % Laptop:
     base_data_path = '/Volumes/dataarchvie/21099_opm';
-    base_save_path = '/Users/christophpfeiffer/data_local/Benchmarking_phalanges';
+    base_save_path = '/Users/christophpfeiffer/data_local/Benchmarking_auditory';
     base_matlab_path = '/Users/christophpfeiffer/Dropbox/Mac/Documents/MATLAB';
     project_scripts_path = '/Users/christophpfeiffer/opm_phalanges';
     on_server = false;
@@ -32,7 +32,7 @@ ft_default.showcallinfo = 'no';
 %% Overwrite
 overwrite = [];
 if on_server
-    overwrite.preproc = false;
+    overwrite.preproc = true;
     overwrite.coreg = true;
     overwrite.mri = false;
     overwrite.dip = true;
@@ -57,20 +57,21 @@ end
 
 %% Params
 params = [];
-params.paradigm = 'Phalanges';
+
+params.paradigm = 'AudOdd';
 
 % Trials
-params.pre = 0.03; %sec
-params.post = 0.3; %sec
+params.pre = 0.1; %sec
+params.post = 0.5; %sec
 params.pad = 0.2; %sec
-params.delay = 0.041; % Stimulus delay in seconds (e.g., 0.01 for eartubes or 0.041 for membranes).
+params.delay = 0.01; % Stimulus delay in seconds (e.g., 0.01 for eartubes or 0.041 for membranes).
 
 % Filter
 params.filter = [];
-params.filter.hp_freq = 0.3;
-params.filter.lp_freq = 70;
+params.filter.hp_freq = 0.1;
+params.filter.lp_freq = 50;
 params.filter.bp_freq = [];
-params.filter.notch = [50 60 100 120 150]; %[50 60 100 120 150];
+params.filter.notch = [50 60 100]; %[50 60 100 120 150];
 
 % Spatiotemporal filter (OPM-MEG only)
 params.do_hfc = true;
@@ -98,26 +99,26 @@ params.ica_coh = 0.95; % cutoff for EOG/ECG coherence
 
 % Timelocking
 params.ds_freq = 500; % downsample frequency (timelock)
-params.trigger_codes = {2 4 8 16 32};
-params.trigger_labels = {'I3' 'I2' 'I1' 'T1' 'I2b'};
+params.trigger_codes = {1 3 5 11 13};
+params.trigger_labels = {'STD' 'LNG' 'LG' 'HNG' 'HG'};
 params.peaks = {};
 params.peaks{1} = [];
-params.peaks{1}.label = 'M60';
-params.peaks{1}.peak_latency = [0.04 0.08];
+params.peaks{1}.label = 'M100';
+params.peaks{1}.peak_latency = [0.08 0.12];
 
 % HPI coregistration
 params.hpi_freq = 33;
 params.hpi_gof = 0.9;
 
 % Source reconstruction - dipoles
-params.numdipoles = 1;
+params.numdipoles = 2;
 
 % Source reconstruction - distributed
 params.source_fixedori = true; 
 params.use_cov = 'resting_state'; % noise cov to use; default=prestim, alt: 'resting_state', 'all', 'empty_room'
 params.mne_view = 'sides';
 params.plot_inflated = true;
-params.target_region = 'postcentral';
+params.target_region = {'superiortemporal', 'transversetemporal'};
 
 %% Subjects + dates
 subses = {'0005' '240208';
@@ -157,12 +158,9 @@ for i_sub = setdiff(subs_to_run,excl_subs)
     if ~exist(fullfile(save_path,'figs'), 'dir')
        mkdir(fullfile(save_path,'figs'))
     end
-    meg_file = fullfile(raw_path, 'meg', 'PhalangesMEG_proc-tsss+corr98+mc+avgHead_meg.fif');
-    if i_sub == 9
-        meg_file = fullfile(raw_path, 'meg', 'PhalangesMEG_proc-tsss+corr98.fif');
-    end
-    opm_file = fullfile(raw_path, 'osmeg', 'PhalangesOPM_raw.fif');
-    aux_file = fullfile(raw_path, 'meg', 'PhalangesEEG.fif');
+    meg_file = fullfile(raw_path, 'meg', 'AudOddMEG_proc-tsss+corr98+mc+avgHead_meg.fif');
+    opm_file = fullfile(raw_path, 'osmeg', 'AudOddOPM_raw.fif');
+    aux_file = fullfile(raw_path, 'meg', 'AudOddEEG.fif');
     
     %% OPM-MEG 
     if exist(fullfile(save_path, [params.sub '_opmeeg_timelocked.mat']),'file') && exist(fullfile(save_path, [params.sub '_squideeg_timelocked.mat']),'file') && overwrite.preproc==false
@@ -292,10 +290,7 @@ for i_sub = setdiff(subs_to_run,excl_subs)
     if exist(fullfile(save_path, 'headmodels.mat'),'file') && overwrite.mri==false
         disp(['Not overwriting MRI for ' params.sub]);
     else
-        meg_file = fullfile(raw_path, 'meg', 'PhalangesMEG_proc-tsss+corr98+mc+avgHead_meg.fif');
-        if i_sub == 9
-            meg_file = fullfile(raw_path, 'meg', 'PhalangesMEG_proc-tsss+corr98.fif');
-        end
+        meg_file = fullfile(raw_path, 'meg', 'AudOddMEG_proc-tsss+corr98+mc+avgHead_meg.fif');
         mri_file = fullfile(mri_path, 'orig','001.mgz');
         prepare_mri(mri_file,meg_file,save_path);
         close all
@@ -313,10 +308,7 @@ for i_sub = setdiff(subs_to_run,excl_subs)
     if exist(fullfile(save_path, 'opm_trans.mat'),'file') && overwrite.coreg==false
         disp(['Not overwriting OPM transform for ' params.sub]);
     else
-        meg_file = fullfile(raw_path, 'meg', 'PhalangesMEG_proc-tsss+corr98+mc+avgHead_meg.fif');
-        if i_sub == 9
-            meg_file = fullfile(raw_path, 'meg', 'PhalangesMEG_proc-tsss+corr98.fif');
-        end
+        meg_file = fullfile(raw_path, 'meg', 'AudOddMEG_proc-tsss+corr98+mc+avgHead_meg.fif');
         ft_hastoolbox('mne', 1);
         load(fullfile(save_path, [params.sub '_opm_ica_ds']));
         params.include_chs = data_ica_ds.label(find(contains(data_ica_ds.label,'bz')));
@@ -348,10 +340,7 @@ for i_sub = setdiff(subs_to_run,excl_subs)
         squid_timelocked = load(fullfile(save_path, [params.sub '_squid_timelocked.mat'])).timelocked;
 
         % Transform opm & opmeeg data 
-        meg_file = fullfile(raw_path, 'meg', 'PhalangesMEG_proc-tsss+corr98+mc+avgHead_meg.fif');
-        if i_sub == 9
-            meg_file = fullfile(raw_path, 'meg', 'PhalangesMEG_proc-tsss+corr98.fif');
-        end
+        meg_file = fullfile(raw_path, 'meg', 'AudOddMEG_proc-tsss+corr98+mc+avgHead_meg.fif');
         headshape = ft_read_headshape(meg_file);
 
         for i = 1:length(params.trigger_labels)
@@ -572,17 +561,17 @@ for i_sub = setdiff(subs_to_run,excl_subs)
         
         %% MNE fit
         params.inv_method = 'mne';
-        %params.use_cov = 'resting_state'; 
-        %fit_mne(save_path, squid_timelocked, opm_timelockedT, headmodel, sourcemodel, sourcemodel_inflated, params);
+        params.use_cov = ' '; 
+        fit_mne(save_path, squid_timelocked, opm_timelockedT, headmodel, sourcemodel, sourcemodel_inflated, params);
 
         params.use_cov = 'empty_room'; 
         fit_mne(save_path, squid_timelocked, opm_timelockedT, headmodel, sourcemodel, sourcemodel_inflated, params);
 
-        %params.use_cov = 'all'; 
+        %params.use_cov = 'resting_state'; 
         %fit_mne(save_path, squid_timelocked, opm_timelockedT, headmodel, sourcemodel, sourcemodel_inflated, params);
 
-        params.use_cov = ' '; 
-        fit_mne(save_path, squid_timelocked, opm_timelockedT, headmodel, sourcemodel, sourcemodel_inflated, params);
+        %params.use_cov = 'all'; 
+        %fit_mne(save_path, squid_timelocked, opm_timelockedT, headmodel, sourcemodel, sourcemodel_inflated, params);
 
         %% ELORETA fit
         %params.inv_method = 'eloreta';

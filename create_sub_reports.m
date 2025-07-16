@@ -167,20 +167,20 @@ for i_peak = 1:length(params.peaks)
         peak = data.peak;
         
         % Create the table with the required data
-        num_phalanges = length(params.phalange_labels);
-        T = table('Size', [8, num_phalanges], 'VariableTypes', repmat({'double'}, 1, num_phalanges), 'VariableNames', params.phalange_labels);
+        num_phalanges = length(params.trigger_labels);
+        T = table('Size', [8, num_phalanges], 'VariableTypes', repmat({'double'}, 1, num_phalanges), 'VariableNames', params.trigger_labels);
         T.Properties.RowNames = {['peak_amplitude ' fieldUnit], ['max_amplitude ' fieldUnit], ['min_amplitude ' fieldUnit], 'peak_latency [ms]', 'SNR_prestim', 'SNR_stderr', ['std_prestim ' fieldUnit], ['stderr ' fieldUnit]};
         
-        for i_phalange = 1:num_phalanges
-            phalange_data = peak{i_phalange};
-            T{['peak_amplitude ' fieldUnit], params.phalange_labels{i_phalange}} = fieldMultiplier*phalange_data.peak_amplitude;
-            T{['max_amplitude ' fieldUnit], params.phalange_labels{i_phalange}} = fieldMultiplier*phalange_data.max_amplitude;
-            T{['min_amplitude ' fieldUnit], params.phalange_labels{i_phalange}} = fieldMultiplier*phalange_data.min_amplitude;
-            T{'peak_latency [ms]', params.phalange_labels{i_phalange}} = 1e3*phalange_data.peak_latency;
-            T{'SNR_prestim', params.phalange_labels{i_phalange}} = phalange_data.peak_amplitude / phalange_data.prestim_std;
-            T{'SNR_stderr', params.phalange_labels{i_phalange}} = phalange_data.peak_amplitude / phalange_data.std_error;
-            T{['std_prestim ' fieldUnit], params.phalange_labels{i_phalange}} = fieldMultiplier*phalange_data.prestim_std;
-            T{['stderr ' fieldUnit], params.phalange_labels{i_phalange}} = fieldMultiplier*phalange_data.std_error;
+        for i_trigger = 1:num_phalanges
+            data = peak{i_trigger};
+            T{['peak_amplitude ' fieldUnit], params.trigger_labels{i_trigger}} = fieldMultiplier*data.peak_amplitude;
+            T{['max_amplitude ' fieldUnit], params.trigger_labels{i_trigger}} = fieldMultiplier*data.max_amplitude;
+            T{['min_amplitude ' fieldUnit], params.trigger_labels{i_trigger}} = fieldMultiplier*data.min_amplitude;
+            T{'peak_latency [ms]', params.trigger_labels{i_trigger}} = 1e3*data.peak_latency;
+            T{'SNR_prestim', params.trigger_labels{i_trigger}} = data.peak_amplitude / data.prestim_std;
+            T{'SNR_stderr', params.trigger_labels{i_trigger}} = data.peak_amplitude / data.std_error;
+            T{['std_prestim ' fieldUnit], params.trigger_labels{i_trigger}} = fieldMultiplier*data.prestim_std;
+            T{['stderr ' fieldUnit], params.trigger_labels{i_trigger}} = fieldMultiplier*data.std_error;
         end
         
         % Convert the MATLAB table to a DOM table
@@ -190,8 +190,8 @@ for i_peak = 1:length(params.peaks)
         % Add header row
         headerRow = TableRow();
         append(headerRow, TableEntry(' '));
-        for i_phalange = 1:num_phalanges
-            headerEntry = TableEntry(params.phalange_labels{i_phalange});
+        for i_trigger = 1:num_phalanges
+            headerEntry = TableEntry(params.trigger_labels{i_trigger});
             headerEntry.Style = {HAlign('center'), Bold()};
             append(headerRow, headerEntry);
         end
@@ -217,9 +217,9 @@ for i_peak = 1:length(params.peaks)
     end
 
     %% Butterflies
-    for i_phalange = 1:length(params.phalange_labels)
+    for i_trigger = 1:length(params.trigger_labels)
         % Add rows and cells to the table and insert the images
-        section = Section(['Butterfly - phalange: ' params.phalange_labels(i_phalange)]);
+        section = Section(['Butterfly - trigger: ' params.trigger_labels(i_trigger)]);
         section.Numbered = false; % Remove section numbering
         
         tbl = Table();
@@ -228,7 +228,7 @@ for i_peak = 1:length(params.peaks)
             row = TableRow();
             for j = 1:2
                 imgIndex = (j-1)*2 + i;
-                img = Image(fullfile(subjectFolderPath,'figs',['sub_' subStr '_' sections{imgIndex} '_' peak_label '_butterfly_ph-' params.phalange_labels{i_phalange} '.jpg']));
+                img = Image(fullfile(subjectFolderPath,'figs',['sub_' subStr '_' sections{imgIndex} '_' peak_label '_butterfly_trig-' params.trigger_labels{i_trigger} '.jpg']));
                 img.Style = {Width('8cm'), ScaleToFit};
                 entry = TableEntry();
                 append(entry, img);
@@ -244,9 +244,9 @@ for i_peak = 1:length(params.peaks)
     
     
     %% Max channel plots
-    for i_phalange = 1:length(params.phalange_labels)
+    for i_trigger = 1:length(params.trigger_labels)
         % Add rows and cells to the table and insert the images
-        section = Section(['Peak channel - phalange: ' params.phalange_labels(i_phalange)]);
+        section = Section(['Peak channel - trigger: ' params.trigger_labels(i_trigger)]);
         section.Numbered = false; % Remove section numbering
         
         tbl = Table();
@@ -255,7 +255,7 @@ for i_peak = 1:length(params.peaks)
             row = TableRow();
             for j = 1:2
                 imgIndex = (j-1)*2 + i;
-                img = Image(fullfile(subjectFolderPath,'figs',['sub_' subStr '_' sections{imgIndex} '_' peak_label '_evoked_peakchannel_ph-' params.phalange_labels{i_phalange} '.jpg']));
+                img = Image(fullfile(subjectFolderPath,'figs',['sub_' subStr '_' sections{imgIndex} '_' peak_label '_evoked_peakchannel_trig-' params.trigger_labels{i_trigger} '.jpg']));
                 img.Style = {Width('8cm'), ScaleToFit};
                 entry = TableEntry();
                 append(entry, img);
@@ -270,9 +270,9 @@ for i_peak = 1:length(params.peaks)
     end
 
     %% Topo plots
-    for i_phalange = 1:length(params.phalange_labels)
+    for i_trigger = 1:length(params.trigger_labels)
         % Add rows and cells to the table and insert the images
-        section = Section(['Topoplot - phalange: ' params.phalange_labels(i_phalange)]);
+        section = Section(['Topoplot - phalange: ' params.trigger_labels(i_trigger)]);
         section.Numbered = false; % Remove section numbering
         
         tbl = Table();
@@ -281,7 +281,7 @@ for i_peak = 1:length(params.peaks)
             row = TableRow();
             for j = 1:2
                 imgIndex = (j-1)*2 + i;
-                img = Image(fullfile(subjectFolderPath,'figs',['sub_' subStr '_' sections{imgIndex} '_' peak_label '_topo_ph-' params.phalange_labels{i_phalange} '.jpg']));
+                img = Image(fullfile(subjectFolderPath,'figs',['sub_' subStr '_' sections{imgIndex} '_' peak_label '_topo_trig-' params.trigger_labels{i_trigger} '.jpg']));
                 img.Style = {Width('8cm'), ScaleToFit};
                 entry = TableEntry();
                 append(entry, img);
@@ -308,8 +308,8 @@ for i_peak = 1:length(params.peaks)
             row = TableRow();
             for j = 1:2
                 imgIndex = (i-1)*2 + j;
-                if imgIndex <= length(params.phalange_labels)
-                    img = Image(fullfile(subjectFolderPath,'figs',['sub_' subStr '_' peak_label '_dipfit_SQUIDvOPM_ph-' params.phalange_labels{imgIndex} '.jpg']));
+                if imgIndex <= length(params.trigger_labels)
+                    img = Image(fullfile(subjectFolderPath,'figs',['sub_' subStr '_' peak_label '_dipfit_SQUIDvOPM_trig-' params.trigger_labels{imgIndex} '.jpg']));
                     img.Style = {Width('8cm'), ScaleToFit};
                     entry = TableEntry();
                     append(entry, img);
@@ -326,9 +326,9 @@ for i_peak = 1:length(params.peaks)
 
     %% MNE
     if exist(fullfile(subjectFolderPath,'opm_mne_peaks.mat'),'file')
-         for i_phalange = 1:length(params.phalange_labels)
+         for i_trigger = 1:length(params.trigger_labels)
             % Add rows and cells to the table and insert the images
-            section = Section(['MNE - phalange: ' params.phalange_labels(i_phalange)]);
+            section = Section(['MNE - phalange: ' params.trigger_labels(i_trigger)]);
             section.Numbered = false; % Remove section numbering
             
             tbl = Table();
@@ -338,7 +338,7 @@ for i_peak = 1:length(params.peaks)
                 for j = 1:2
                     imgIndex = (j-1)*2 + i;
                     if imgIndex <= length(sections2)
-                        img = Image(fullfile(subjectFolderPath,'figs',['sub_' subStr '_' sections2{imgIndex} '_' peak_label '_mne_ph' params.phalange_labels{i_phalange} '.jpg']));
+                        img = Image(fullfile(subjectFolderPath,'figs',['sub_' subStr '_' sections2{imgIndex} '_' peak_label '_mne_trig' params.trigger_labels{i_trigger} '.jpg']));
                         img.Style = {Width('8cm'), ScaleToFit};
                         entry = TableEntry();
                         append(entry, img);

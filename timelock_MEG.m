@@ -2,7 +2,7 @@ function timelock_MEG(data, save_path, params)
 %UNTITLED2 Summary of this function goes here
 %   Detailed explanation goes here
     
-timelocked = cell(length(params.trigger_code),1);
+timelocked = cell(length(params.trigger_codes),1);
 
 % Downsample
 if params.ds_freq~=1000
@@ -32,46 +32,44 @@ else
     data = ft_selectdata(cfg,data);
 end
 
-cfg = [];
-cfg.demean = 'yes'; %% demean entire trial for whole trial cov
-data2 = ft_preprocessing(cfg,data);
-
-for i_phalange = 1:length(params.trigger_code)
+peak = cell(length(params.trigger_codes),length(params.peaks));
+for i_trigger = 1:length(params.trigger_codes)
+    if isnumeric(params.trigger_codes{i_trigger}) && length(params.trigger_codes{i_trigger})==1 % trigger code
+        trls = find(data.trialinfo==params.trigger_codes{i_trigger});
+    elseif isnumeric(params.trigger_codes{i_trigger}) && length(params.trigger_codes{i_trigger})>1 % list of trials
+        trls = params.trigger_codes{i_trigger};
+    elseif ischar(params.trigger_codes{i_trigger}) && strcmp(params.trigger_codes{i_trigger},'all') %
+        trls = 1:length(data.trial);
+    end
     cfg = [];
     cfg.covariance          = 'yes';
     cfg.covariancewindow    = [-params.pre 0];
-    cfg.trials = find(data.trialinfo==params.trigger_code(i_phalange));
-    timelocked{i_phalange} = ft_timelockanalysis(cfg, data);
+    cfg.trials = trls;
+    timelocked{i_trigger} = ft_timelockanalysis(cfg, data);
     
     cfg = [];
     cfg.covariance          = 'yes';
     cfg.covariancewindow    = 'all';
-    cfg.trials = find(data2.trialinfo==params.trigger_code(i_phalange));
-    tmp = ft_timelockanalysis(cfg, data2);
-    timelocked{i_phalange}.cov_all = tmp.cov;
+    cfg.trials = trls;
+    tmp = ft_timelockanalysis(cfg, data);
+    timelocked{i_trigger}.cov_all = tmp.cov;
     clear tmp
 
     cfg = [];
     cfg.covariance          = 'yes';
     cfg.covariancewindow    = [0 params.post];
-    cfg.trials = find(data.trialinfo==params.trigger_code(i_phalange));
+    cfg.trials = trls;
     tmp = ft_timelockanalysis(cfg, data);
-    timelocked{i_phalange}.sourcecov = tmp.cov;
+    timelocked{i_trigger}.sourcecov = tmp.cov;
     clear tmp
-end
-save(fullfile(save_path, [params.sub '_' params.modality '_timelocked']), 'timelocked', '-v7.3'); 
 
-cfg = [];
-cfg.channel = params.chs;
-data = ft_selectdata(cfg,data);
+    %% Find peaks
+    for i_peak = 1:length(params.peaks)
 
-%% Find peaks
-for i_peak = 1:length(params.peaks)
-    peak = cell(length(params.trigger_code),1);
-    for i_phalange = 1:length(params.trigger_code)
+        %% Find peak latency and channel
         cfg = [];
         cfg.channel = params.chs;
-        dat = ft_selectdata(cfg,timelocked{i_phalange});
+        dat = ft_selectdata(cfg,timelocked{i_trigger});
         [~, peak_interval(1)] = min(abs(dat.time-params.peaks{i_peak}.peak_latency(1))); % find closest time sample
         [~, peak_interval(2)] = min(abs(dat.time-params.peaks{i_peak}.peak_latency(2))); % find closest time sample
         [~, peak_interval(3)] = min(abs(dat.time-0)); % find closest time sample
@@ -101,59 +99,90 @@ for i_peak = 1:length(params.peaks)
         tmp.std_error = sqrt(dat.var(tmp.i_peakch,i_peak_latency));
         
         tmp.label = params.peaks{i_peak}.label;
-        peak{i_phalange} = tmp;
+        peak{i_trigger,i_peak} = tmp;
 
         %% Plot max channel with variation and peak time
         h = figure;
         hold on
-        for i_trl = find(data.trialinfo==params.trigger_code(i_phalange))'
-            plot(data.time{i_trl}*1e3, data.trial{i_trl}(peak{i_phalange}.i_peakch,:)*params.amp_scaler,'Color',[211 211 211]/255)
+        for i_trl = trls'
+            plot(data.time{i_trl}*1e3, data.trial{i_trl}(peak{i_trigger,i_peak}.i_peakch,:)*params.amp_scaler,'Color',[211 211 211]/255)
         end
-        plot(dat.time*1e3, dat.avg(peak{i_phalange}.i_peakch,:)*params.amp_scaler,'Color',[0 0 0]/255)
+        plot(dat.time*1e3, dat.avg(peak{i_trigger,i_peak}.i_peakch,:)*params.amp_scaler,'Color',[0 0 0]/255)
         ylimits = ylim;
-        lat = 1e3*peak{i_phalange}.peak_latency;
+        lat = 1e3*peak{i_trigger,i_peak}.peak_latency;
         plot([lat lat],ylimits,'r--')
         hold off
-        title(['Peak ' params.modality ' channel: ' peak{i_phalange}.peak_channel])
+        title(['Peak ' params.modality ' channel: ' peak{i_trigger,i_peak}.peak_channel])
         ylabel(params.amp_label)
         xlabel('time [ms]')
         xlim([-params.pre params.post]*1e3);
-        saveas(h, fullfile(save_path, 'figs', [params.sub '_' params.modality '_' params.peaks{i_peak}.label '_evoked_peakchannel_ph-' params.phalange_labels{i_phalange} '.jpg']))
+        saveas(h, fullfile(save_path, 'figs', [params.sub '_' params.modality '_' params.peaks{i_peak}.label '_evoked_peakchannel_trig-' params.trigger_labels{i_trigger} '.jpg']))
         close all
 
         %% Plot topography
         cfg = [];
-        cfg.xlim = [peak{i_phalange}.peak_latency-0.005 peak{i_phalange}.peak_latency+0.005];
+        cfg.xlim = [peak{i_trigger,i_peak}.peak_latency-0.005 peak{i_trigger,i_peak}.peak_latency+0.005];
         cfg.layout = params.layout; 
         cfg.parameter = 'avg';
         cfg.channel = params.chs;
         h = figure;
-        ft_topoplotER(cfg, timelocked{i_phalange});
+        ft_topoplotER(cfg, timelocked{i_trigger});
         axis on
         colorbar
-        saveas(h, fullfile(save_path, 'figs', [params.sub '_' params.modality '_' params.peaks{i_peak}.label '_topo_ph-' params.phalange_labels{i_phalange} '.jpg']))
+        saveas(h, fullfile(save_path, 'figs', [params.sub '_' params.modality '_' params.peaks{i_peak}.label '_topo_trig-' params.trigger_labels{i_trigger} '.jpg']))
         close all
 
         %% Plot butterfly
         h = figure;
+        left = 0.1;
+        bottom = 0.1;
+        width = 0.8;
+        gap = 0.10;  % gap between plots
+        height_total = 0.8 - gap;  
+
+        height_top = 3/4 * height_total;
+        height_bottom = 1/4 * height_total;
+        
+        % Butterfly
+        ax1 = axes('Position', [left, bottom + height_bottom + gap, width, height_top]);
         plot(dat.time*1e3,dat.avg*params.amp_scaler)
         hold on
         ylimits = ylim;
-        lat = 1e3*peak{i_phalange}.peak_latency;
+        lat = 1e3*peak{i_trigger,i_peak}.peak_latency;
         plot([lat lat],ylimits,'k--')
         hold off
         xlabel('t [msec]')
         ylabel(params.amp_label)
         xlim([-params.pre params.post]*1e3);
-        title(['Evoked ' params.modality ' - phalange ' params.phalange_labels{i_phalange} ' (n_{trls}=' num2str(length(timelocked{i_phalange}.cfg.trials)) ')'])
-        saveas(h, fullfile(save_path, 'figs', [params.sub '_' params.modality '_' params.peaks{i_peak}.label '_butterfly_ph-' params.phalange_labels{i_phalange} '.jpg']))
+        title(['Evoked ' params.modality ' - ' params.trigger_labels{i_trigger} ' (n_{trls}=' num2str(length(timelocked{i_trigger}.cfg.trials)) ')'])
+        
+        % GFP
+        ax2 = axes('Position', [left, bottom, width, height_bottom]);
+        plot(dat.time*1e3,std(dat.avg,0,1)*params.amp_scaler,'k')
+        hold on
+        ylimits = ylim;
+        lat = 1e3*peak{i_trigger,i_peak}.peak_latency;
+        plot([lat lat],ylimits,'k--')
+        hold off        
+        ax2.XTickLabel = [];
+        %xlabel('t [msec]')
+        ylabel('GFP')
+        xlim([-params.pre params.post]*1e3);
+        saveas(h, fullfile(save_path, 'figs', [params.sub '_' params.modality '_' params.peaks{i_peak}.label '_butterfly_trig-' params.trigger_labels{i_trigger} '.jpg']))
         close all
 
-        %% Save 
-        save(fullfile(save_path, [params.sub '_' params.modality '_' params.peaks{i_peak}.label]), 'peak', '-v7.3'); 
+        %%
 
         clear dat
     end
+end
+
+%% Save
+save(fullfile(save_path, [params.sub '_' params.modality '_timelocked']), 'timelocked', '-v7.3'); 
+tmp = peak;
+for i_peak = 1:length(params.peaks)
+    peak = tmp(:,i_peak);
+    save(fullfile(save_path, [params.sub '_' params.modality '_' params.peaks{i_peak}.label]), 'peak', '-v7.3'); 
 end
 
 end
