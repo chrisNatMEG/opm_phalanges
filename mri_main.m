@@ -52,7 +52,7 @@ if on_server
 else
     subs_to_run = 2; %1:size(subses,1)
 end
-excl_subs = [];
+excl_subs = [1];
 
 %% Loop over subjects
 for i_sub = setdiff(subs_to_run,excl_subs)
@@ -60,16 +60,18 @@ for i_sub = setdiff(subs_to_run,excl_subs)
 
     %% Paths
     raw_path = fullfile(base_data_path,'MEG',['NatMEG_' subses{i_sub,1}], subses{i_sub,2});
-    mri_path = fullfile(base_data_path,'MRI',['NatMEG_' subses{i_sub,1}],'mri');
+    mri_path = fullfile(base_data_path,'MRI',['NatMEG_' subses{i_sub,1}]);
     save_path_mri = fullfile(base_save_path,'MRI',params.sub);
     
     % Create folders if they do not exist yet
     if ~exist(fullfile(base_save_path,'MRI'), 'dir')
         mkdir(fullfile(base_save_path,'MRI'))
     end
-
+    if ~exist(save_path_mri, 'dir')
+        mkdir(save_path_mri)
+    end
     meg_file = fullfile(raw_path, 'meg', 'AudOddMEG_proc-tsss+corr98+mc+avgHead_meg.fif');
-    mri_file = fullfile(mri_path, 'orig','001.mgz');
-    prepare_mri(mri_file,meg_file,save_path_mri);
+    %mri_file = fullfile(mri_path, 'orig','001.mgz');
+    prepare_mri(mri_path,meg_file,save_path_mri);
     close all
 end

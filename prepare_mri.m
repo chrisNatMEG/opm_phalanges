@@ -3,17 +3,18 @@ function prepare_mri(mri_path,meg_file,save_path)
 %   Detailed explanation goes here
 
     %% Read data
-    mri_file = fullfile(mri_path, 'orig','001.mgz');
+    mri_file = fullfile(mri_path, 'mri', 'orig','001.mgz');
     mri = ft_read_mri(mri_file);
     headshape = ft_read_headshape(meg_file);
 
     %% Align fiducials
-    ft_sourceplot([], mri);
-    mri_coordsys = ft_determine_coordsys(mri);
-    cfg = [];
-    cfg.method   = 'interactive';
-    cfg.coordsys = 'neuromag';
-    mri_realigned_1 = ft_volumerealign(cfg, mri_coordsys);
+    %ft_sourceplot([], mri);
+    %mri = ft_determine_coordsys(mri);
+    mri.coordsys = 'ras';
+    %cfg = [];
+    %cfg.method   = 'interactive';
+    %cfg.coordsys = 'neuromag';
+    %mri = ft_volumerealign(cfg, mri);
 
     %% ICP align
     cfg = [];
@@ -21,19 +22,19 @@ function prepare_mri(mri_path,meg_file,save_path)
     cfg.headshape.headshape = headshape;
     cfg.headshape.icp       = 'yes';
     cfg.headshape.interactive    = 'no';
-    mri_realigned_2 = ft_volumerealign(cfg, mri_realigned_1);
+    mri = ft_volumerealign(cfg, mri);
 
     % Check co-registration
     cfg.headshape.icp       = 'no';        % Do not fit points again
     cfg.headshape.interactive    = 'yes';
-    mri_realigned_2 = ft_volumerealign(cfg, mri_realigned_2);
+    mri = ft_volumerealign(cfg, mri);
     
     %% Reslice MRI
     %cfg = [];
     %cfg.resolution = 1;
     %mri_resliced = ft_volumereslice(cfg, mri_realigned_2);
     %mri_resliced = ft_convert_units(mri_resliced, 'cm');
-    mri_resliced = ft_convert_units(mri_realigned_2, 'cm');
+    mri_resliced = ft_convert_units(mri, 'cm');
     
     save(fullfile(save_path, 'mri_resliced.mat'), 'mri_resliced'); disp('done')
 
@@ -111,9 +112,6 @@ function prepare_mri(mri_path,meg_file,save_path)
     % Read and transform cortical restrained source model
     clear sourcemodel sourcemodel_inflated
     files = dir(fullfile(mri_path,'workbench'));
-    if i_sub ==5
-        files = dir(fullfile(save_path,'wb'));
-    end
     for i = 1:length(files)
         if endsWith(files(i).name,'.L.midthickness.8k_fs_LR.surf.gii')
             filename = fullfile(mri_path,'workbench',files(i).name);
@@ -154,7 +152,6 @@ function prepare_mri(mri_path,meg_file,save_path)
     sourcemodel_inflated.brainstructurelabel = sourcemodel.brainstructurelabel;
     sourcemodel_inflated.brainstructurecolor = sourcemodel.brainstructurecolor;
 
-
-    save(fullfile(save_path, [params.sub '_sourcemodel']), 'sourcemodel', '-v7.3');
-    save(fullfile(save_path, [params.sub '_sourcemodel_inflated']), 'sourcemodel_inflated', '-v7.3');
+    save(fullfile(save_path, 'sourcemodel'), 'sourcemodel', '-v7.3');
+    save(fullfile(save_path, 'sourcemodel_inflated'), 'sourcemodel_inflated', '-v7.3');
 end
