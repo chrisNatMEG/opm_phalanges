@@ -480,9 +480,7 @@ end
 
 %%
 close all
-if on_server
-    clear all
-    exit
-else
-    clear all
-end
+clear all
+% if on_server
+%     exit
+% end
