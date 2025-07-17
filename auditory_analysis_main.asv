@@ -188,11 +188,9 @@ for i_sub = setdiff(subs_to_run,excl_subs)
         % Correct old trigger codes
         if any(opm_cleaned.trialinfo==18)
             old_codes = [1 18 20 10 12];
-            for i_code = 2:length(old_codes)
-                opm_cleaned.trialinfo(opm_cleaned.trialinfo==old_codes(i_code)) = params.trigger_codes{i_code};
-                opmeeg_cleaned.trialinfo(opmeeg_cleaned.trialinfo==old_codes(i_code)) = params.trigger_codes{i_code};
+            for i_code = 2:legnth(old_codes)
+                opm_cleaned.trialinfo(opm_cleaned.trialinfo==old_codes(i_code)) = oöd
             end
-        end
 
         % OPM ICA
         params.modality = 'opm';
@@ -240,15 +238,6 @@ for i_sub = setdiff(subs_to_run,excl_subs)
         % Read data
         [squid_cleaned, squideeg_cleaned] = read_cvMEG(meg_file, save_path, params); % Read data
         
-        % Correct old trigger codes
-        if any(squid_cleaned.trialinfo==18)
-            old_codes = [1 18 20 10 12];
-            for i_code = 1:length(old_codes)
-                squid_cleaned.trialinfo(squid_cleaned.trialinfo==old_codes(i_code)) = params.trigger_codes{i_code};
-                squideeg_cleaned.trialinfo(squideeg_cleaned.trialinfo==old_codes(i_code)) = params.trigger_codes{i_code};
-            end
-        end
-
         % SQUID-MAG ICA
         params.modality = 'squid';
         params.layout = 'neuromag306mag.lay';

@@ -133,9 +133,6 @@ subses = {'0005' '240208';
     '1193' '241029';
     '1194' '241029';
     '1195' '241030'};
-mri_files = {'00000001.dcm' 
-    '/mri/sub-15931_T1w.nii.gz'  
-    '/nifti/anat/sub-15985_T1w.nii.gz'};
 
 if on_server
     subs_to_run = 1:size(subses,1);
