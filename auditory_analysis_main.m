@@ -69,7 +69,7 @@ params.delay = 0.01; % Stimulus delay in seconds (e.g., 0.01 for eartubes or 0.0
 % Filter
 params.filter = [];
 params.filter.hp_freq = 1;
-params.filter.lp_freq = 45;
+params.filter.lp_freq = 20;
 params.filter.bp_freq = [];
 params.filter.notch = [50 60 100]; %[50 60 100 120 150];
 

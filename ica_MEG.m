@@ -124,7 +124,7 @@ end
 cfg = [];
 cfg.method     = 'mtmfft';
 cfg.output     = 'fourier';
-cfg.foilim     = [0 100];
+cfg.foilim     = [0 params.lp_freq];
 cfg.taper      = 'hanning';
 cfg.pad        = 'maxperlen';
 freq = ft_freqanalysis(cfg, comp_ecg);
@@ -236,7 +236,7 @@ end
 cfg = [];
 cfg.method     = 'mtmfft';
 cfg.output     = 'fourier';
-cfg.foilim     = [0 100];
+cfg.foilim     = [0 params.lp_freq];
 cfg.taper      = 'hanning';
 cfg.pad        = 'maxperlen';
 freq = ft_freqanalysis(cfg, comp_eog);
