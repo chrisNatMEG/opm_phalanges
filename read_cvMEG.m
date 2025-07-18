@@ -100,6 +100,7 @@ squid_cleaned = ft_rejectartifact(cfg,squid_cleaned);
 cfg = [];
 cfg.channel = squid_epo.label(find(~contains(squid_epo.label,'MEG')));
 squideeg_cleaned = ft_selectdata(cfg, squid_epo);
+clear squid_epo
 
 cfg = [];
 cfg.channel = {'EOG', 'ECG'};

@@ -62,9 +62,6 @@ if ~isempty(params.filter.hp_freq)
     cfg.hpfilter        = 'yes'; 
     cfg.hpfreq          = params.filter.hp_freq;
     cfg.hpinstabilityfix  = 'reduce';
-    if params.filter.hp_freq<1
-        cfg.hpfilttype = 'firws';
-    end
 end
 aux_epo = ft_preprocessing(cfg, aux_raw);
 
@@ -87,9 +84,6 @@ if ~isempty(params.filter.hp_freq)
     cfg.hpfilter        = 'yes'; 
     cfg.hpfreq          = params.filter.hp_freq;
     cfg.hpinstabilityfix  = 'reduce';
-%     if params.filter.hp_freq<1
-%         cfg.hpfilttype = 'firws';
-%     end
 end
 opm_epo = ft_preprocessing(cfg,opm_raw);
 
@@ -133,6 +127,7 @@ n_smpl = size(aux_epo.trial{1},2);
 for i = 1:length(comb.trial)
     comb.trial{i} = [comb.trial{i}(:,1:n_smpl); aux_epo.trial{i}(include_channels,:)]; 
 end
+clear opm_epo aux_epo
 
 % Flip? 
 chs = find(contains(comb.label,'bz'));
@@ -174,7 +169,7 @@ if params.do_hfc
     cfg.channel = '*bz';
     cfg.order = params.hfc_order;
     cfg.residualcheck = 'no';
-    opm_cleaned = ft_denoise_hfc(cfg, comb);
+    opm_RS_ica = ft_denoise_hfc(cfg, comb);
 elseif params.do_amm
     cfg = [];
     cfg.channel = '*bz';
@@ -184,21 +179,22 @@ elseif params.do_amm
     cfg.amm.order_in = params.amm_in;
     cfg.amm.order_out = params.amm_out;
     cfg.amm.thr = params.amm_thr;
-    opm_cleaned = ft_denoise_amm(cfg, comb);
+    opm_RS_ica = ft_denoise_amm(cfg, comb);
 else
-    opm_cleaned = comb;
+    opm_RS_ica = comb;
 end
 
 % Recombine with ExG channels
-opm_cleaned.label = vertcat(opm_cleaned.label,ExG.label);
-opm_cleaned.hdr = comb.hdr;
-incl = ismember(comb.hdr.label,opm_cleaned.label);
-opm_cleaned.hdr.label = comb.hdr.label(incl);
-opm_cleaned.hdr.chantype = comb.hdr.chantype(incl);
-opm_cleaned.hdr.chanunit = comb.hdr.chanunit (incl);
-for i = 1:length(opm_cleaned.trial)
-    opm_cleaned.trial{i} = vertcat(opm_cleaned.trial{i}, ExG.trial{i}); 
+opm_RS_ica.label = vertcat(opm_RS_ica.label,ExG.label);
+opm_RS_ica.hdr = comb.hdr;
+incl = ismember(comb.hdr.label,opm_RS_ica.label);
+opm_RS_ica.hdr.label = comb.hdr.label(incl);
+opm_RS_ica.hdr.chantype = comb.hdr.chantype(incl);
+opm_RS_ica.hdr.chanunit = comb.hdr.chanunit (incl);
+for i = 1:length(opm_RS_ica.trial)
+    opm_RS_ica.trial{i} = vertcat(opm_RS_ica.trial{i}, ExG.trial{i}); 
 end
+clear comb
 
 % Reject jump trials
 cfg = [];
@@ -208,40 +204,39 @@ cfg.preproc.medianfilter  = 'yes';
 cfg.preproc.medianfiltord  = 9;
 cfg.preproc.absdiff       = 'yes';
 cfg.threshold = params.z_threshold;
-[cfg,~] = ft_badsegment(cfg, opm_cleaned);
-opm_cleaned = ft_rejectartifact(cfg,opm_cleaned);
+[cfg,~] = ft_badsegment(cfg, opm_RS_ica);
+opm_RS_ica = ft_rejectartifact(cfg,opm_RS_ica);
 
 % Reject noisy trials
 cfg = [];
 cfg.channel = {'*bz'};
 cfg.metric = 'std';
 cfg.threshold = params.opm_std_threshold;
-[cfg,~] = ft_badsegment(cfg, opm_cleaned);
-opm_cleaned = ft_rejectartifact(cfg,opm_cleaned);
+[cfg,~] = ft_badsegment(cfg, opm_RS_ica);
+opm_RS_ica = ft_rejectartifact(cfg,opm_RS_ica);
 
 cfg = [];
 cfg.channel = {'*bz'};
 cfg.metric = 'range';
 cfg.threshold = params.opm_range_threshold;
-[cfg,~] = ft_badsegment(cfg, opm_cleaned);
-opm_cleaned = ft_rejectartifact(cfg,opm_cleaned);
+[cfg,~] = ft_badsegment(cfg, opm_RS_ica);
+opm_RS_ica = ft_rejectartifact(cfg,opm_RS_ica);
 
 % Convert grad unit to cm to match TRIUX
-opm_cleaned.grad = ft_convert_units(opm_cleaned.grad,'cm');
+opm_RS_ica.grad = ft_convert_units(opm_RS_ica.grad,'cm');
 
 % Downsample
 if isfield(params,'ds_freq') && ~isempty(params.ds_freq) && params.ds_freq~=1000
     cfg = [];
     cfg.resamplefs = params.ds_freq;
-    opm_cleaned = ft_resampledata(cfg, opm_cleaned);
+    opm_RS_ica = ft_resampledata(cfg, opm_RS_ica);
 end
-
 
 %% ICA
 params.modality = 'opm';
 params.layout = 'fieldlinebeta2bz_helmet.mat';
 params.chs = '*bz';
-opm_RS_ica = ica_MEG(opm_cleaned, save_path, params, 0);
+opm_RS_ica = ica_MEG(opm_RS_ica, save_path, params, 0);
 
 cfg = [];
 cfg.channel = params.chs;

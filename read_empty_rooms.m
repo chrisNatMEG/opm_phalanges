@@ -36,25 +36,25 @@ if ~isempty(params.filter.hp_freq)
     cfg.hpfreq          = params.filter.hp_freq;
     cfg.hpinstabilityfix  = 'reduce';
 end
-data_epo = ft_preprocessing(cfg, data_raw);
+opm_ER_cleaned = ft_preprocessing(cfg, data_raw);
 
 cfg = [];
 cfg.trl = trl;
-data_epo = ft_redefinetrial(cfg,data_epo);
+opm_ER_cleaned = ft_redefinetrial(cfg,opm_ER_cleaned);
 
 cfg = [];
 cfg.dftfilter    = 'yes';        
 cfg.dftfreq      = params.filter.notch;
 cfg.demean          = 'yes';
 cfg.baselinewindow  = [-params.pre 0];
-data_epo = ft_preprocessing(cfg,data_epo);
+opm_ER_cleaned = ft_preprocessing(cfg,opm_ER_cleaned);
 
 % Resample 
 cfg                 = [];
 cfg.method          = 'resample';
 cfg.resamplefs      = 1000;
-data_epo = ft_resampledata(cfg, data_epo);
-data_epo.sampleinfo = round(trl(:,1:2)/5);
+opm_ER_cleaned = ft_resampledata(cfg, opm_ER_cleaned);
+opm_ER_cleaned.sampleinfo = round(trl(:,1:2)/5);
 
 %% Reject bad channels
 cfg = [];
@@ -62,17 +62,18 @@ cfg.trl = trl;
 cfg.z_threshold = params.z_threshold;
 cfg.corr_threshold = params.corr_threshold;
 [~, ~, ~, ~, ~, ~, badtrl_zmax] = opm_badchannels(cfg, data_raw);
+clear data_raw
 
 cfg = [];
-cfg.trials  = setdiff(1:length(data_epo.trial),badtrl_zmax); % remove bad trials
-data_epo = ft_selectdata(cfg, data_epo);
+cfg.trials  = setdiff(1:length(opm_ER_cleaned.trial),badtrl_zmax); % remove bad trials
+opm_ER_cleaned = ft_selectdata(cfg, opm_ER_cleaned);
 
 %% Spatiotemporal filtering
-if any(isnan(data_epo.grad.chanpos),'all') 
-    if isempty(setdiff(opm_chs,data_epo.grad.label))
-        opm_grad.balance = data_epo.grad.balance;
+if any(isnan(opm_ER_cleaned.grad.chanpos),'all') 
+    if isempty(setdiff(opm_chs,opm_ER_cleaned.grad.label))
+        opm_grad.balance = opm_ER_cleaned.grad.balance;
         opm_grad.tra = eye(size(opm_grad.tra,1));
-        data_epo.grad = opm_grad;
+        opm_ER_cleaned.grad = opm_grad;
     else
         warning("OPM empty room: grad error. No covariance saved for %s",params.sub)
         return
@@ -84,7 +85,7 @@ if params.do_hfc
     cfg.channel = '*bz';
     cfg.order = params.hfc_order;
     cfg.residualcheck = 'no';
-    opm_ER_cleaned = ft_denoise_hfc(cfg, data_epo);
+    opm_ER_cleaned = ft_denoise_hfc(cfg, opm_ER_cleaned);
 elseif params.do_amm
     cfg = [];
     cfg.channel = '*bz';
@@ -94,9 +95,9 @@ elseif params.do_amm
     cfg.amm.order_in = params.amm_in;
     cfg.amm.order_out = params.amm_out;
     cfg.amm.thr = params.amm_thr;
-    opm_ER_cleaned = ft_denoise_amm(cfg, data_epo);
+    opm_ER_cleaned = ft_denoise_amm(cfg, opm_ER_cleaned);
 else
-    opm_ER_cleaned = data_epo;
+    opm_ER_cleaned = opm_ER_cleaned;
 end
 
 %% Reject jump trials
@@ -175,7 +176,7 @@ opm_ER_tlk = ft_timelockanalysis(cfg, opm_ER_cleaned);
 
 %% Save
 save(fullfile(save_path, [params.sub '_ER_opm']), 'opm_ER_cleaned', 'opm_ER_tlk',"-v7.3");
-clear data_epo data_raw data_epo
+clear opm_ER_cleaned opm_ER_cleaned
 
 %% SQUID
 ft_hastoolbox('mne', 1);
@@ -205,15 +206,13 @@ if ~isempty(params.filter.hp_freq)
     cfg.hpfilter        = 'yes'; 
     cfg.hpfreq          = params.filter.hp_freq;
     cfg.hpinstabilityfix  = 'reduce';
-%     if params.filter.hp_freq<1
-%         cfg.hpfilttype = 'firws';
-%     end
 end
-data_epo = ft_preprocessing(cfg, data_raw);
+squid_ER_cleaned = ft_preprocessing(cfg, data_raw);
+clear data_raw
 
 cfg = [];
 cfg.trl = trl;
-data_epo = ft_redefinetrial(cfg,data_epo);
+squid_ER_cleaned = ft_redefinetrial(cfg,squid_ER_cleaned);
 clear trl 
 
 cfg = [];
@@ -221,7 +220,7 @@ cfg.dftfilter    = 'yes';
 cfg.dftfreq      = params.filter.notch;
 cfg.demean          = 'yes';
 cfg.baselinewindow  = [-params.pre 0];
-data_epo = ft_preprocessing(cfg,data_epo);
+squid_ER_cleaned = ft_preprocessing(cfg,squid_ER_cleaned);
 
 % Reject jump trials
 cfg = [];
@@ -231,8 +230,8 @@ cfg.preproc.medianfilter  = 'yes';
 cfg.preproc.medianfiltord  = 9;
 cfg.preproc.absdiff       = 'yes';
 cfg.threshold = params.z_threshold;
-[cfg,badtrl_squid_jump] = ft_badsegment(cfg, data_epo);
-squid_ER_cleaned = ft_rejectartifact(cfg,data_epo);
+[cfg,badtrl_squid_jump] = ft_badsegment(cfg, opm_ER_cleaned);
+squid_ER_cleaned = ft_rejectartifact(cfg,opm_ER_cleaned);
 
 % Reject noisy trials
 cfg = [];
@@ -307,5 +306,5 @@ squid_ER_cov = ft_timelockanalysis(cfg, squid_ER_cleaned).cov;
 %% Save
 save(fullfile(save_path, [params.sub '_ER_squid']), 'squid_ER_cleaned', 'squid_ER_cov', "-v7.3");
 
-clear data_epo data_raw data_epo
+clear opm_ER_cleaned data_raw opm_ER_cleaned
 end

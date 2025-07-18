@@ -29,31 +29,29 @@ if ~isempty(params.filter.hp_freq)
     cfg.hpfilter        = 'yes'; 
     cfg.hpfreq          = params.filter.hp_freq;
     cfg.hpinstabilityfix  = 'reduce';
-%     if params.filter.hp_freq<1
-%         cfg.hpfilttype = 'firws';
-%     end
 end
-squid_epo = ft_preprocessing(cfg, squid_raw);
+squid_RS_ica = ft_preprocessing(cfg, squid_raw);
+clear squid_raw
 
 cfg = [];
 cfg.trl = trl_meg;
-squid_epo = ft_redefinetrial(cfg,squid_epo);
+squid_RS_ica = ft_redefinetrial(cfg,squid_RS_ica);
 
 cfg = [];
 cfg.dftfilter    = 'yes';        
 cfg.dftfreq      = params.filter.notch;
 cfg.demean          = 'yes';
 cfg.baselinewindow  = [-params.pre 0];
-squid_epo = ft_preprocessing(cfg,squid_epo);
+squid_RS_ica = ft_preprocessing(cfg,squid_RS_ica);
 
-EOG_channels = find(contains(squid_epo.label,'EOG'));
-ECG_channels = find(contains(squid_epo.label,'ECG'));
-include_channels = [squid_chs; squid_epo.label(EOG_channels); squid_epo.label(ECG_channels)];
+EOG_channels = find(contains(squid_RS_ica.label,'EOG'));
+ECG_channels = find(contains(squid_RS_ica.label,'ECG'));
+include_channels = [squid_chs; squid_RS_ica.label(EOG_channels); squid_RS_ica.label(ECG_channels)];
 
 % Remove all but ExG and meg channel selection
 cfg = [];
 cfg.channel = include_channels;
-squid_epo = ft_selectdata(cfg,squid_epo);
+squid_RS_ica = ft_selectdata(cfg,squid_RS_ica);
 
 % MEG 
 % Reject jump trials
@@ -64,43 +62,43 @@ cfg.preproc.medianfilter  = 'yes';
 cfg.preproc.medianfiltord  = 9;
 cfg.preproc.absdiff       = 'yes';
 cfg.threshold = params.z_threshold;
-[cfg,~] = ft_badsegment(cfg, squid_epo);
-squid_cleaned = ft_rejectartifact(cfg,squid_epo);
+[cfg,~] = ft_badsegment(cfg, squid_RS_ica);
+squid_RS_ica = ft_rejectartifact(cfg,squid_RS_ica);
 
 % Reject noisy trials
 cfg = [];
 cfg.channel = 'megmag';
 cfg.metric = 'std';
 cfg.threshold = params.squidmag_std_threshold;
-[cfg,~] = ft_badsegment(cfg, squid_cleaned);
-squid_cleaned = ft_rejectartifact(cfg,squid_cleaned);
+[cfg,~] = ft_badsegment(cfg, squid_RS_ica);
+squid_RS_ica = ft_rejectartifact(cfg,squid_RS_ica);
 
 cfg = [];
 cfg.channel = 'megplanar';
 cfg.metric = 'std';
 cfg.threshold = params.squidgrad_std_threshold;
-[cfg,~] = ft_badsegment(cfg, squid_cleaned);
-squid_cleaned = ft_rejectartifact(cfg,squid_cleaned);
+[cfg,~] = ft_badsegment(cfg, squid_RS_ica);
+squid_RS_ica = ft_rejectartifact(cfg,squid_RS_ica);
 
 cfg = [];
 cfg.channel = 'megmag';
 cfg.metric = 'range';
 cfg.threshold = params.squidmag_range_threshold;
-[cfg,~] = ft_badsegment(cfg, squid_cleaned);
-squid_cleaned = ft_rejectartifact(cfg,squid_cleaned);
+[cfg,~] = ft_badsegment(cfg, squid_RS_ica);
+squid_RS_ica = ft_rejectartifact(cfg,squid_RS_ica);
 
 cfg = [];
 cfg.channel = 'megplanar';
 cfg.metric = 'range';
 cfg.threshold = params.squidgrad_range_threshold;
-[cfg,~] = ft_badsegment(cfg, squid_cleaned);
-squid_cleaned = ft_rejectartifact(cfg,squid_cleaned);
+[cfg,~] = ft_badsegment(cfg, squid_RS_ica);
+squid_RS_ica = ft_rejectartifact(cfg,squid_RS_ica);
 
 % Downsample
 if isfield(params,'ds_freq') && ~isempty(params.ds_freq) && params.ds_freq~=1000
     cfg = [];
     cfg.resamplefs = params.ds_freq;
-    squid_cleaned = ft_resampledata(cfg, squid_cleaned);
+    squid_RS_ica = ft_resampledata(cfg, squid_RS_ica);
 end
 
 
@@ -108,7 +106,7 @@ end
 params.modality = 'squid';
 params.layout = 'neuromag306mag.lay';
 params.chs = 'meg';
-squid_RS_ica = ica_MEG(squid_cleaned, save_path, params, 0);
+squid_RS_ica = ica_MEG(squid_RS_ica, save_path, params, 0);
 
 cfg = [];
 cfg.channel = 'meg';

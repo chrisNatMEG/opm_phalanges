@@ -140,6 +140,7 @@ n_smpl = size(aux_epo.trial{1},2);
 for i = 1:length(comb.trial)
     comb.trial{i} = [comb.trial{i}(:,1:n_smpl); aux_epo.trial{i}(include_channels,:)]; 
 end
+clear opm_epo aux_epo
 
 %% Flip? 
 chs = find(contains(comb.label,'bz'));
@@ -227,6 +228,7 @@ opm_cleaned.grad = ft_convert_units(opm_cleaned.grad,'cm');
 cfg = [];
 cfg.channel = 'EEG';
 opmeeg_cleaned = ft_selectdata(cfg, comb);
+clear comb
 
 % Interpolate bad chs
 cfg = [];
