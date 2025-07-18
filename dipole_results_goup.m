@@ -31,11 +31,11 @@ for i_peak = 1:length(params.peaks)
             dipole_squidgrad = load(fullfile(save_path, [params.peaks{i_peak}.label '_dipoles'])).squidgrad_dipole;
             dipole_opm = load(fullfile(save_path, [params.peaks{i_peak}.label '_dipoles'])).opm_dipole;
 
-            pos_squidmag = zeros(n_triggers,3);
-            pos_squidgrad = zeros(n_triggers,3);
-            pos_opm = zeros(n_triggers,3);    
+            pos_squidmag = nan(n_triggers,3);
+            pos_squidgrad = nan(n_triggers,3);
+            pos_opm = nan(n_triggers,3);    
         
-            for i_trigger = 1:n_triggerss
+            for i_trigger = 1:n_triggers
                 pos_squidmag(i_trigger,:) = dipole_squidmag{i_trigger}.dip.pos(i_dip,:);
                 pos_squidgrad(i_trigger,:) = dipole_squidgrad{i_trigger}.dip.pos(i_dip,:);
                 pos_opm(i_trigger,:) = dipole_opm{i_trigger}.dip.pos(i_dip,:);

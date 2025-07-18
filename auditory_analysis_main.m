@@ -14,7 +14,7 @@ if contains(pwd,'/home/chrpfe')
 else
     % Laptop:
     base_data_path = '/Volumes/dataarchvie/21099_opm';
-    base_save_path = '/Users/christophpfeiffer/data_local/Benchmarking_auditory';
+    base_save_path = '/Users/christophpfeiffer/data_local/Benchmarking/';
     base_matlab_path = '/Users/christophpfeiffer/Dropbox/Mac/Documents/MATLAB';
     project_scripts_path = '/Users/christophpfeiffer/opm_phalanges';
     on_server = false;
@@ -43,10 +43,10 @@ if on_server
     overwrite.dip_group = true;
     overwrite.mne_group = true;
 else
-    overwrite.preproc = false;
-    overwrite.coreg = false;
+    overwrite.preproc = true;
+    overwrite.coreg = true;
     overwrite.mri = false;
-    overwrite.dip = false;
+    overwrite.dip = true;
     overwrite.empty_room = false;
     overwrite.mne = true;
 
@@ -68,8 +68,8 @@ params.delay = 0.01; % Stimulus delay in seconds (e.g., 0.01 for eartubes or 0.0
 
 % Filter
 params.filter = [];
-params.filter.hp_freq = 0.1;
-params.filter.lp_freq = 30;
+params.filter.hp_freq = 1;
+params.filter.lp_freq = 45;
 params.filter.bp_freq = [];
 params.filter.notch = [50 60 100]; %[50 60 100 120 150];
 
