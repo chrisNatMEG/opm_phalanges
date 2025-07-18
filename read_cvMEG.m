@@ -28,9 +28,6 @@ if ~isempty(params.filter.hp_freq)
     cfg.hpfilter        = 'yes'; 
     cfg.hpfreq          = params.filter.hp_freq;
     cfg.hpinstabilityfix  = 'reduce';
-%     if params.filter.hp_freq<1
-%         cfg.hpfilttype = 'firws';
-%     end
 end
 squid_epo = ft_preprocessing(cfg,squid_raw);
 
@@ -151,50 +148,6 @@ cfg.threshold = params.eeg_std_threshold;
 [cfg, badtrl_squideeg_std] = ft_badsegment(cfg, squideeg_cleaned);
 squideeg_cleaned = ft_rejectartifact(cfg,squideeg_cleaned);
 
-%% Spectra
-cfg = [];
-cfg.channel = 'EEG*';
-cfg.output = 'pow';
-cfg.method = 'mtmfft';
-cfg.taper = 'hanning';
-cfg.foilim = [1 100];
-freq = ft_freqanalysis(cfg, squideeg_cleaned);
-h = figure;
-semilogy(freq.freq,freq.powspctrm)
-xlabel('Frequency (Hz)')
-ylabel('Power (T^2)')
-title('SQUID-EEG spectrum - preICA')
-saveas(h, fullfile(save_path, 'figs', [params.sub '_squideeg_spectrum.jpg']))
-
-cfg = [];
-cfg.channel = 'megmag';
-cfg.output = 'pow';
-cfg.method = 'mtmfft';
-cfg.taper = 'hanning';
-cfg.foilim = [1 100];
-freq = ft_freqanalysis(cfg, squid_cleaned);
-h = figure;
-semilogy(freq.freq,freq.powspctrm)
-xlabel('Frequency (Hz)')
-ylabel('Power (T^2)')
-title('SQUID-MAG spectrum - preICA')
-saveas(h, fullfile(save_path, 'figs', [params.sub '_squidmag_spectrum1.jpg']))
-
-cfg = [];
-cfg.channel = 'meggrad';
-cfg.output = 'pow';
-cfg.method = 'mtmfft';
-cfg.taper = 'hanning';
-cfg.foilim = [1 100];
-freq = ft_freqanalysis(cfg, squid_cleaned);
-h = figure;
-semilogy(freq.freq,freq.powspctrm)
-xlabel('Frequency (Hz)')
-ylabel('Power (T^2)')
-title('SQUID-MAG spectrum - preICA')
-saveas(h, fullfile(save_path, 'figs', [params.sub '_squidgrad_spectrum1.jpg']))
-
-
 %% Save 
 save(fullfile(save_path, [params.sub '_squideeg_badchs']), ...
     'badchs_squideeg_flat', ...
@@ -225,6 +178,16 @@ save(fullfile(save_path, [params.sub '_squideeg_badtrls']), ...
 
 %save(fullfile(save_path, [params.sub '_squid_cleaned']), 'squid_cleaned',"-v7.3");
 %save(fullfile(save_path, [params.sub '_squideeg_cleaned']), 'squideeg_cleaned',"-v7.3"); disp('done');
+
+%% Downsample
+if isfield(params,'ds_freq') && ~isempty(params.ds_freq) && params.ds_freq~=1000
+    cfg = [];
+    cfg.resamplefs = params.ds_freq;
+    squid_cleaned = ft_resampledata(cfg, squid_cleaned);
+    cfg = [];
+    cfg.resamplefs = params.ds_freq;
+    squideeg_cleaned = ft_resampledata(cfg, squideeg_cleaned);
+end
 
 %% Remove padding
 % cfg = [];

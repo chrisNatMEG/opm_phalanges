@@ -69,7 +69,7 @@ params.delay = 0.01; % Stimulus delay in seconds (e.g., 0.01 for eartubes or 0.0
 % Filter
 params.filter = [];
 params.filter.hp_freq = 0.1;
-params.filter.lp_freq = 50;
+params.filter.lp_freq = 30;
 params.filter.bp_freq = [];
 params.filter.notch = [50 60 100]; %[50 60 100 120 150];
 
@@ -104,7 +104,7 @@ params.trigger_labels = {'STD' 'LNG' 'LG' 'HNG' 'HG'};
 params.peaks = {};
 params.peaks{1} = [];
 params.peaks{1}.label = 'M100';
-params.peaks{1}.peak_latency = [0.08 0.12];
+params.peaks{1}.peak_latency = [0.08 0.13];
 
 % HPI coregistration
 params.hpi_freq = 33;
@@ -115,7 +115,7 @@ params.numdipoles = 2;
 
 % Source reconstruction - distributed
 params.source_fixedori = true; 
-params.use_cov = 'resting_state'; % noise cov to use; default=prestim, alt: 'resting_state', 'all', 'empty_room'
+params.covs = {' '};%{'empty_room', ' '}; % noise cov to use; default=prestim, alt: 'resting_state', 'all', 'empty_room' , prestim = ' '
 params.mne_view = 'sides';
 params.plot_inflated = true;
 params.target_region = {'superiortemporal', 'transversetemporal'};
@@ -170,7 +170,7 @@ for i_sub = setdiff(subs_to_run,excl_subs)
     end
 
     meg_file = fullfile(raw_path, 'meg', [params.paradigm 'MEG_proc-tsss+corr98+mc+avgHead_meg.fif']);
-    if exist(meg_file,'file')
+    if ~exist(meg_file,'file')
         meg_file = fullfile(raw_path, 'meg', [params.paradigm 'MEG_proc-tsss+corr98.fif']);
     end
     opm_file = fullfile(raw_path, 'osmeg', [params.paradigm 'OPM_raw.fif']);
@@ -184,6 +184,7 @@ for i_sub = setdiff(subs_to_run,excl_subs)
 
         % Read data
         [opm_cleaned, opmeeg_cleaned] = read_osMEG(opm_file, aux_file, save_path, params); % Read data
+        close all
 
         % Correct old trigger codes
         if any(opm_cleaned.trialinfo==18)
@@ -296,7 +297,6 @@ for i_sub = setdiff(subs_to_run,excl_subs)
     if exist(fullfile(save_path, [params.sub '_resting_state_squid.mat']),'file') && overwrite.empty_room == false
         disp(['Not overwriting MNE source reconstruction for ' params.sub]);
     else
-        clear data_ica
         data_ica = load(fullfile(save_path, [params.sub '_opm_timelocked.mat'])).timelocked{1};
         opm_chs = data_ica.label(contains(data_ica.label,'bz'));
         opm_grad = data_ica.grad;
@@ -424,7 +424,7 @@ for i_sub = setdiff(subs_to_run,excl_subs)
             fit_dipoles(save_path, squid_timelocked, opm_timelockedT, headmodel, mri_resliced, peak_squid, peak_opm, params);
             clear peak_opm peak_squid
         end
-        clear squid_timelocked opm_timelockedT
+        clear squid_timelocked opm_timelockedT mri_resliced headmodel
     end
 
     %% Distributed source models

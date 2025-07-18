@@ -35,9 +35,6 @@ if ~isempty(params.filter.hp_freq)
     cfg.hpfilter        = 'yes'; 
     cfg.hpfreq          = params.filter.hp_freq;
     cfg.hpinstabilityfix  = 'reduce';
-%     if params.filter.hp_freq<1
-%         cfg.hpfilttype = 'firws';
-%     end
 end
 data_epo = ft_preprocessing(cfg, data_raw);
 
@@ -149,13 +146,14 @@ if isfield(params,'flip_sign') && params.flip_sign
     end
 end
 
-%% Timelock
-% Downsample
-if params.ds_freq~=1000
+%% Downsample
+if isfield(params,'ds_freq') && ~isempty(params.ds_freq) && params.ds_freq~=1000
     cfg = [];
     cfg.resamplefs = params.ds_freq;
-    opm_ER_cleaned = ft_resampledata(cfg, opm_ER_cleaned);
+    opm_ER_cleaned = ft_resampledata(cfg, ppm_ER_cleaned);
 end
+
+%% Timelock
 
 % Remove padding
 cfg = [];
@@ -280,14 +278,14 @@ save(fullfile(save_path, [params.sub '_squid_badtrls']), ...
     'badtrl_squid_range', ...
     'badtrl_squid_std',"-v7.3"); 
 
-%% Timelock
-% Downsample
-if params.ds_freq~=1000
+%% Downsample
+if isfield(params,'ds_freq') && ~isempty(params.ds_freq) && params.ds_freq~=1000
     cfg = [];
     cfg.resamplefs = params.ds_freq;
     squid_ER_cleaned = ft_resampledata(cfg, squid_ER_cleaned);
 end
 
+%% Timelock
 % Remove padding
 cfg = [];
 cfg.channel = 'meg';

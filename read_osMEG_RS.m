@@ -54,7 +54,7 @@ if trl_aux(:,4) ~= trl_opm(:,4) % Throw error if trials don't match.
     error('events do not match')
 end
 
-%% AUX data filter & epoch
+% AUX data filter & epoch
 cfg = [];
 cfg.lpfilter        = 'yes';         
 cfg.lpfreq          = params.filter.lp_freq;
@@ -79,7 +79,7 @@ cfg.demean          = 'yes';
 cfg.baselinewindow  = [-params.pre 0];
 aux_epo = ft_preprocessing(cfg,aux_epo);
 
-%% OPM data filter & epoch
+% OPM data filter & epoch
 cfg = [];
 cfg.lpfilter        = 'yes';         
 cfg.lpfreq          = params.filter.lp_freq;
@@ -113,12 +113,9 @@ cfg = [];
 cfg.channel = opm_chs;
 opm_epo = ft_selectdata(cfg, opm_epo);
 
-%% Combine data
+% Combine data
 EOG_channels = find(contains(aux_epo.label,'EOG'));
 ECG_channels = find(contains(aux_epo.label,'ECG'));
-% EEG_channels = find(contains(aux_epo.label,'EEG'));
-% MISC_channels = find(contains(aux_epo.label,'MISC'));
-% TRIG_channels = find(contains(aux_epo.label,'STI101'));
 include_channels = [EOG_channels; ECG_channels]; %; EEG_channels; MISC_channels; TRIG_channels];
 
 comb = opm_epo; 
@@ -137,7 +134,7 @@ for i = 1:length(comb.trial)
     comb.trial{i} = [comb.trial{i}(:,1:n_smpl); aux_epo.trial{i}(include_channels,:)]; 
 end
 
-%% Flip? 
+% Flip? 
 chs = find(contains(comb.label,'bz'));
 if isfield(params,'flip_sign') && params.flip_sign
     for i = 1:length(comb.trial)
@@ -145,7 +142,7 @@ if isfield(params,'flip_sign') && params.flip_sign
     end
 end
 
-%% Reject bad channels
+% Reject bad channels
 cfg = [];
 cfg.trl = trl_opm;
 cfg.z_threshold = params.z_threshold;
@@ -160,7 +157,7 @@ cfg = []; % separate ExG channels
 cfg.channel = {'EOG*', 'ECG*'};
 ExG = ft_selectdata(cfg,comb);
 
-%% Spatiotemporal filtering
+% Spatiotemporal filtering
 if any(isnan(comb.grad.chanpos),'all')
     if isempty(setdiff(opm_chs,comb.grad.label))
         opm_grad.balance = comb.grad.balance;
@@ -192,7 +189,7 @@ else
     opm_cleaned = comb;
 end
 
-%% Recombine with ExG channels
+% Recombine with ExG channels
 opm_cleaned.label = vertcat(opm_cleaned.label,ExG.label);
 opm_cleaned.hdr = comb.hdr;
 incl = ismember(comb.hdr.label,opm_cleaned.label);
@@ -203,7 +200,7 @@ for i = 1:length(opm_cleaned.trial)
     opm_cleaned.trial{i} = vertcat(opm_cleaned.trial{i}, ExG.trial{i}); 
 end
 
-%% Reject jump trials
+% Reject jump trials
 cfg = [];
 cfg.channel = {'*bz'};
 cfg.metric = 'maxzvalue';
@@ -214,7 +211,7 @@ cfg.threshold = params.z_threshold;
 [cfg,~] = ft_badsegment(cfg, opm_cleaned);
 opm_cleaned = ft_rejectartifact(cfg,opm_cleaned);
 
-%% Reject noisy trials
+% Reject noisy trials
 cfg = [];
 cfg.channel = {'*bz'};
 cfg.metric = 'std';
@@ -229,8 +226,16 @@ cfg.threshold = params.opm_range_threshold;
 [cfg,~] = ft_badsegment(cfg, opm_cleaned);
 opm_cleaned = ft_rejectartifact(cfg,opm_cleaned);
 
-%% Convert grad unit to cm to match TRIUX
+% Convert grad unit to cm to match TRIUX
 opm_cleaned.grad = ft_convert_units(opm_cleaned.grad,'cm');
+
+% Downsample
+if isfield(params,'ds_freq') && ~isempty(params.ds_freq) && params.ds_freq~=1000
+    cfg = [];
+    cfg.resamplefs = params.ds_freq;
+    opm_cleaned = ft_resampledata(cfg, opm_cleaned);
+end
+
 
 %% ICA
 params.modality = 'opm';
@@ -243,13 +248,6 @@ cfg.channel = params.chs;
 opm_RS_ica = ft_selectdata(cfg,opm_RS_ica);
 
 %% Timelock
-% Downsample
-if params.ds_freq~=1000
-    cfg = [];
-    cfg.resamplefs = params.ds_freq;
-    opm_RS_ica = ft_resampledata(cfg, opm_RS_ica);
-end
-
 % Remove padding
 cfg = [];
 cfg.latency = [-params.pre params.post];

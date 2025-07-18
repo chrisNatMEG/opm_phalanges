@@ -89,9 +89,6 @@ if ~isempty(params.filter.hp_freq)
     cfg.hpfilter        = 'yes'; 
     cfg.hpfreq          = params.filter.hp_freq;
     cfg.hpinstabilityfix  = 'reduce';
-%     if params.filter.hp_freq<1
-%         cfg.hpfilttype = 'firws';
-%     end
 end
 opm_epo = ft_preprocessing(cfg, opm_raw);
 
@@ -160,40 +157,6 @@ cfg.channel = setdiff(comb.label,badchs_opm);
 cfg.trials  = setdiff(1:length(comb.trial),badtrl_opm_zmax); % remove bad trials
 comb = ft_selectdata(cfg, comb);
 
-tmp = comb;
-cfg = [];
-cfg.demean          = 'yes';
-cfg.baselinewindow  = [-params.pre 0];
-tmp = ft_preprocessing(cfg,tmp);
-cfg = [];
-cfg.channel = '*bz';
-cfg.output = 'pow';
-cfg.method = 'mtmfft';
-cfg.taper = 'hanning';
-cfg.foilim = [1 100];
-freq = ft_freqanalysis(cfg, tmp);
-clear tmp
-h = figure;
-semilogy(freq.freq,freq.powspctrm)
-xlabel('Frequency (Hz)')
-ylabel('Power (T^2)')
-title('OPM spectrum - pre')
-saveas(h, fullfile(save_path, 'figs', [params.sub '_opm_spectrum_filt.jpg']))
-close all
-
-% HFC
-% i_chs = find(contains(op_cleaned.label,'bz'));
-% chs = opm_cleaned.label(i_chs);
-% ori = zeros(length(chs),3);
-% for i = 1:length(chs)
-%     ori(i,:) = opm_cleaned.grad.chanori(find(strcmp(opm_cleaned.grad.label,chs{i})),:);
-%     i_chs_grad(i) = find(strcmp(opm_cleaned.grad.label,chs{i}));
-% end
-% opm_cleaned.grad.M = eye(size(ori,1)) - ori*pinv(ori);
-% for i = 1:length(opm_cleaned.trial)
-%     opm_cleaned.trial{i}(i_chs,:) = params.sign * opm_cleaned.grad.M*opm_cleaned.trial{i}(i_chs,:);
-% end
-% opm_cleaned.grad.tra(i_chs_grad,i_chs_grad) = opm_cleaned.grad.M * opm_cleaned.grad.tra(i_chs_grad,i_chs_grad); % update grad
 cfg = []; % separate ExG channels
 cfg.channel = {'EOG*', 'ECG*'};
 ExG = ft_selectdata(cfg,comb);
@@ -205,28 +168,6 @@ if params.do_hfc
     cfg.order = params.hfc_order;
     cfg.residualcheck = 'no';
     opm_cleaned = ft_denoise_hfc(cfg, comb);
-    
-    tmp = opm_cleaned;
-    cfg = [];
-    cfg.demean          = 'yes';
-    cfg.baselinewindow  = [-params.pre 0];
-    tmp = ft_preprocessing(cfg,tmp);
-    cfg = [];
-    cfg.channel = '*bz';
-    cfg.output = 'pow';
-    cfg.method = 'mtmfft';
-    cfg.taper = 'hanning';
-    cfg.foilim = [1 100];
-    freq = ft_freqanalysis(cfg, tmp);
-    clear tmp
-    h = figure;
-    semilogy(freq.freq,freq.powspctrm)
-    xlabel('Frequency (Hz)')
-    ylabel('Power (T^2)')
-    title('OPM spectrum - postHFC')
-    saveas(h, fullfile(save_path, 'figs', [params.sub '_opm_spectrum_HFC.jpg']))
-    close all
-
 elseif params.do_amm
     cfg = [];
     cfg.channel = '*bz';
@@ -237,27 +178,6 @@ elseif params.do_amm
     cfg.amm.order_out = params.amm_out;
     cfg.amm.thr = params.amm_thr;
     opm_cleaned = ft_denoise_amm(cfg, comb);
-    
-    tmp = opm_cleaned;
-    cfg = [];
-    cfg.demean          = 'yes';
-    cfg.baselinewindow  = [-params.pre 0];
-    tmp = ft_preprocessing(cfg,tmp);
-    cfg = [];
-    cfg.channel = '*bz';
-    cfg.output = 'pow';
-    cfg.method = 'mtmfft';
-    cfg.taper = 'hanning';
-    cfg.foilim = [1 100];
-    freq = ft_freqanalysis(cfg, tmp);
-    clear tmp
-    h = figure;
-    semilogy(freq.freq,freq.powspctrm)
-    xlabel('Frequency (Hz)')
-    ylabel('Power (T^2)')
-    title('OPM spectrum - postAMM')
-    saveas(h, fullfile(save_path, 'figs', [params.sub '_opm_spectrum_AMM.jpg']))
-    close all
 else
     opm_cleaned = comb;
 end
@@ -353,37 +273,6 @@ cfg.threshold = params.eeg_std_threshold;
 [cfg, badtrl_opmeeg_std] = ft_badsegment(cfg, opmeeg_cleaned);
 opmeeg_cleaned = ft_rejectartifact(cfg,opmeeg_cleaned);
 
-%% Spectra
-cfg = [];
-cfg.channel = 'EEG*';
-cfg.output = 'pow';
-cfg.method = 'mtmfft';
-cfg.taper = 'hanning';
-cfg.foilim = [1 100];
-freq = ft_freqanalysis(cfg, opmeeg_cleaned);
-h = figure;
-semilogy(freq.freq,freq.powspctrm)
-xlabel('Frequency (Hz)')
-ylabel('Power (T^2)')
-title('OPM-EEG spectrum - preICA')
-saveas(h, fullfile(save_path, 'figs', [params.sub '_opmeeg_spectrum_preICA.jpg']))
-close all
-
-cfg = [];
-cfg.channel = '*bz';
-cfg.output = 'pow';
-cfg.method = 'mtmfft';
-cfg.taper = 'hanning';
-cfg.foilim = [1 100];
-freq = ft_freqanalysis(cfg, opm_cleaned);
-h = figure;
-semilogy(freq.freq,freq.powspctrm)
-xlabel('Frequency (Hz)')
-ylabel('Power (T^2)')
-title('OPM spectrum - preICA')
-saveas(h, fullfile(save_path, 'figs', [params.sub '_opm_spectrum_preICA.jpg']))
-close all
-
 %% Save 
 save(fullfile(save_path, [params.sub '_opm_badchs']), ...
     'badchs_opm_flat', ...
@@ -418,5 +307,16 @@ save(fullfile(save_path, [params.sub '_opmeeg_badtrls']), ...
 
 %save(fullfile(save_path, [params.sub '_opm_cleaned']), 'opm_cleaned',"-v7.3");
 %save(fullfile(save_path, [params.sub '_opmeeg_cleaned']), 'opmeeg_cleaned',"-v7.3"); disp('done');
+
+%% Downsample
+if isfield(params,'ds_freq') && ~isempty(params.ds_freq) && params.ds_freq~=1000
+    cfg = [];
+    cfg.resamplefs = params.ds_freq;
+    opm_cleaned = ft_resampledata(cfg, opm_cleaned);
+    cfg = [];
+    cfg.resamplefs = params.ds_freq;
+    opmeeg_cleaned = ft_resampledata(cfg, opmeeg_cleaned);
+end
+
 
 end

@@ -21,7 +21,7 @@ trl_meg(:,2) = trig(1) + n_smpl*(1:n_trl)' - 1;
 trl_meg(:,3) = -(params.pad+params.pre)*squid_raw.fsample;
 trl_meg(:,4) = ones(length(trl_meg(:,1)),1);
 
-%% MEG data filter & epoch
+% MEG data filter & epoch
 cfg = [];
 cfg.lpfilter        = 'yes';         
 cfg.lpfreq          = params.filter.lp_freq;
@@ -55,7 +55,7 @@ cfg = [];
 cfg.channel = include_channels;
 squid_epo = ft_selectdata(cfg,squid_epo);
 
-%% MEG 
+% MEG 
 % Reject jump trials
 cfg = [];
 cfg.channel = 'meg';
@@ -96,6 +96,14 @@ cfg.threshold = params.squidgrad_range_threshold;
 [cfg,~] = ft_badsegment(cfg, squid_cleaned);
 squid_cleaned = ft_rejectartifact(cfg,squid_cleaned);
 
+% Downsample
+if isfield(params,'ds_freq') && ~isempty(params.ds_freq) && params.ds_freq~=1000
+    cfg = [];
+    cfg.resamplefs = params.ds_freq;
+    squid_cleaned = ft_resampledata(cfg, squid_cleaned);
+end
+
+
 %% ICA
 params.modality = 'squid';
 params.layout = 'neuromag306mag.lay';
@@ -107,13 +115,6 @@ cfg.channel = 'meg';
 squid_RS_ica = ft_selectdata(cfg,squid_RS_ica);
 
 %% Timelock
-% Downsample
-if params.ds_freq~=1000
-    cfg = [];
-    cfg.resamplefs = params.ds_freq;
-    squid_RS_ica = ft_resampledata(cfg, squid_RS_ica);
-end
-
 % Remove padding
 cfg = [];
 cfg.latency = [-params.pre params.post];

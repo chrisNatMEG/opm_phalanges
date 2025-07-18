@@ -4,13 +4,6 @@ function timelock_MEG(data, save_path, params)
     
 timelocked = cell(length(params.trigger_codes),1);
 
-% Downsample
-if params.ds_freq~=1000
-    cfg = [];
-    cfg.resamplefs = params.ds_freq;
-    data = ft_resampledata(cfg, data);
-end
-
 % Remove padding
 cfg = [];
 cfg.toilim = [-params.pre params.post];
@@ -75,7 +68,7 @@ for i_trigger = 1:length(params.trigger_codes)
         [~, peak_interval(3)] = min(abs(dat.time-0)); % find closest time sample
         tmp = [];
         t_int = peak_interval(1):peak_interval(2);
-        [~, i_peak_latency] = findpeaks(max(dat.avg(:,t_int),[],1)-min(dat.avg(:,t_int),[],1),'SortStr','descend');
+        [~, i_peak_latency] = findpeaks(std(dat.avg(:,t_int),0,1),'SortStr','descend');
         if isempty(i_peak_latency)
             i_peak_latency = round((peak_interval(2)-peak_interval(1))/2);
             tmp.nopeak = true;

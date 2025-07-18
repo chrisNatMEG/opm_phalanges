@@ -114,7 +114,7 @@ params.numdipoles = 1;
 
 % Source reconstruction - distributed
 params.source_fixedori = true; 
-params.covs = {'empty_room', ' '}; % noise cov to use; default=prestim, alt: 'resting_state', 'all', 'empty_room' , prestim = ' '
+params.covs = {' '};%{'empty_room', ' '}; % noise cov to use; default=prestim, alt: 'resting_state', 'all', 'empty_room' , prestim = ' '
 params.mne_view = 'sides';
 params.plot_inflated = true;
 params.target_region = 'postcentral';
@@ -169,7 +169,7 @@ for i_sub = setdiff(subs_to_run,excl_subs)
     end
 
     meg_file = fullfile(raw_path, 'meg', [params.paradigm 'MEG_proc-tsss+corr98+mc+avgHead_meg.fif']);
-    if exist(meg_file,'file')
+    if ~exist(meg_file,'file')
         meg_file = fullfile(raw_path, 'meg', [params.paradigm 'MEG_proc-tsss+corr98.fif']);
     end
     opm_file = fullfile(raw_path, 'osmeg', [params.paradigm 'OPM_raw.fif']);
@@ -183,7 +183,8 @@ for i_sub = setdiff(subs_to_run,excl_subs)
 
         % Read data
         [opm_cleaned, opmeeg_cleaned] = read_osMEG(opm_file, aux_file, save_path, params); % Read data
-
+        close all
+        
         % OPM ICA
         params.modality = 'opm';
         params.layout = 'fieldlinebeta2bz_helmet.mat';
