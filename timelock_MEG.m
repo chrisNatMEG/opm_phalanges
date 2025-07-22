@@ -57,8 +57,18 @@ for i_trigger = 1:length(params.trigger_codes)
     clear tmp
 
     %% Find peaks
-    for i_peak = 1:length(params.peaks)
+    cfg = [];
+    cfg.channel = params.chs;
+    dat = ft_selectdata(cfg,timelocked{i_trigger});
+    if contains(params.chs,'meg')
+            cfg = [];
+            cfg.channel = params.chs;
+            tmp2 = ft_selectdata(cfg,data);
+    else
+        tmp2 = data;
+    end
 
+    for i_peak = 1:length(params.peaks)
         %% Find peak latency and channel
         cfg = [];
         cfg.channel = params.chs;
@@ -98,7 +108,7 @@ for i_trigger = 1:length(params.trigger_codes)
         h = figure;
         hold on
         for i_trl = trls'
-            plot(data.time{i_trl}*1e3, data.trial{i_trl}(peak{i_trigger,i_peak}.i_peakch,:)*params.amp_scaler,'Color',[211 211 211]/255)
+            plot(tmp2.time{i_trl}*1e3, tmp2.trial{i_trl}(peak{i_trigger,i_peak}.i_peakch,:)*params.amp_scaler,'Color',[211 211 211]/255)
         end
         plot(dat.time*1e3, dat.avg(peak{i_trigger,i_peak}.i_peakch,:)*params.amp_scaler,'Color',[0 0 0]/255)
         ylimits = ylim;
@@ -124,50 +134,49 @@ for i_trigger = 1:length(params.trigger_codes)
         colorbar
         saveas(h, fullfile(save_path, 'figs', [params.sub '_' params.modality '_' params.peaks{i_peak}.label '_topo_trig-' params.trigger_labels{i_trigger} '.jpg']))
         close all
-
-        %% Plot butterfly
-        h = figure;
-        left = 0.1;
-        bottom = 0.1;
-        width = 0.8;
-        gap = 0.10;  % gap between plots
-        height_total = 0.8 - gap;  
-
-        height_top = 3/4 * height_total;
-        height_bottom = 1/4 * height_total;
-        
-        % Butterfly
-        ax1 = axes('Position', [left, bottom + height_bottom + gap, width, height_top]);
-        plot(dat.time*1e3,dat.avg*params.amp_scaler)
-        hold on
-        ylimits = ylim;
-        lat = 1e3*peak{i_trigger,i_peak}.peak_latency;
-        plot([lat lat],ylimits,'k--')
-        hold off
-        xlabel('t [msec]')
-        ylabel(params.amp_label)
-        xlim([-params.pre params.post]*1e3);
-        title(['Evoked ' params.modality ' - ' params.trigger_labels{i_trigger} ' (n_{trls}=' num2str(length(timelocked{i_trigger}.cfg.trials)) ')'])
-        
-        % GFP
-        ax2 = axes('Position', [left, bottom, width, height_bottom]);
-        plot(dat.time*1e3,std(dat.avg,0,1)*params.amp_scaler,'k')
-        hold on
-        ylimits = ylim;
-        lat = 1e3*peak{i_trigger,i_peak}.peak_latency;
-        plot([lat lat],ylimits,'k--')
-        hold off        
-        ax2.XTickLabel = [];
-        %xlabel('t [msec]')
-        ylabel('GFP')
-        xlim([-params.pre params.post]*1e3);
-        saveas(h, fullfile(save_path, 'figs', [params.sub '_' params.modality '_' params.peaks{i_peak}.label '_butterfly_trig-' params.trigger_labels{i_trigger} '.jpg']))
-        close all
-
-        %%
-
-        clear dat
     end
+    clear tmp2
+
+    %% Plot butterfly
+    h = figure;
+    left = 0.1;
+    bottom = 0.1;
+    width = 0.8;
+    gap = 0.10;  % gap between plots
+    height_total = 0.8 - gap;  
+
+    height_top = 3/4 * height_total;
+    height_bottom = 1/4 * height_total;
+    
+    % Butterfly
+    ax1 = axes('Position', [left, bottom + height_bottom + gap, width, height_top]);
+    plot(dat.time*1e3,dat.avg*params.amp_scaler)
+    hold on
+    ylimits = ylim;
+    lat = 1e3*peak{i_trigger,i_peak}.peak_latency;
+    plot([lat lat],ylimits,'k--')
+    hold off
+    xlabel('t [msec]')
+    ylabel(params.amp_label)
+    xlim([-params.pre params.post]*1e3);
+    title(['Evoked ' params.modality ' (n_{trls}=' num2str(length(timelocked{i_trigger}.cfg.trials)) ')'])
+    
+    % GFP
+    ax2 = axes('Position', [left, bottom, width, height_bottom]);
+    plot(dat.time*1e3,std(dat.avg,0,1)*params.amp_scaler,'k')
+    hold on
+    ylimits = ylim;
+    lat = 1e3*peak{i_trigger,i_peak}.peak_latency;
+    plot([lat lat],ylimits,'k--')
+    hold off        
+    ax2.XTickLabel = [];
+    %xlabel('t [msec]')
+    ylabel('GFP')
+    xlim([-params.pre params.post]*1e3);
+    saveas(h, fullfile(save_path, 'figs', [params.sub '_' params.modality '_butterfly_trig-' params.trigger_labels{i_trigger} '.jpg']))
+    close all
+
+    clear dat tmp2
 end
 
 %% Save

@@ -1,5 +1,5 @@
-function addGroupComparisonTables(reportSection, dataCells, triggerLabels, modalityLabels, formatStr)
-    if nargin < 5
+function rptTable = addGroupComparisonTables(dataCells, triggerLabels, modalityLabels, formatStr)
+    if nargin < 4
         formatStr = '%.2f';
     end
 
@@ -31,28 +31,29 @@ function addGroupComparisonTables(reportSection, dataCells, triggerLabels, modal
         tableData{end, end} = sprintf(formatStr, grandMean);
 
         % Add header row and column
-        headerRow = ['Participant/Mean', triggerLabels, {'Mean'}];
-        tableData = [headerRow; [strcat("P", string(1:numParticipants))'; "Mean"], tableData];
+        headerRow = [modalityLabels{i}, triggerLabels, {'Mean'}];
+        tableData = [headerRow; [strcat("sub_", string(1:numParticipants))'; "Mean"], tableData];
 
-        rptTable = FormalTable(tableData);
-        rptTable.Title = sprintf('Modality: %s', modalityLabels{i});
-        rptTable.Header.Style = {Bold(true)};
-        rptTable.Style = {Border('solid'), RowSep('solid'), ColSep('solid')};
-        add(reportSection, rptTable);
+        rptTable{i} = FormalTable(tableData);
+        %rptTable.Title = sprintf('Modality: %s', modalityLabels{i});
+        rptTable{i}.Header.Style = {Bold(true)};
+        rptTable{i}.Style = {Border('solid'), Width('100%'), RowSep('solid'), ColSep('solid')};
     end
 
     % Create comparison table with significance stars
-    comparisonData = zeros(numModalities, numTriggers);
+    comparisonData = zeros(numModalities, numTriggers+1);
     for i = 1:numModalities
-        comparisonData(i, :) = mean(dataCells{i}, 1);
+        comparisonData(i, 1:(end-1)) = mean(dataCells{i}, 1);
+        comparisonData(i, end) = mean(mean(dataCells{i}, 1));
     end
 
-    comparisonTable = cell(numModalities + 1, numTriggers + 1);
-    comparisonTable(1, 2:end) = triggerLabels;
+    comparisonTable = cell(numModalities + 1, numTriggers + 1 +1);
+    comparisonTable(1, 2:end-1) = triggerLabels;
+    comparisonTable(1, end) = {'Mean'};
     comparisonTable(2:end, 1) = modalityLabels(:);
 
     for r = 1:numModalities
-        for c = 1:numTriggers
+        for c = 1:(numTriggers+1)
             val = comparisonData(r, c);
             comparisonTable{r+1, c+1} = sprintf(formatStr, val);
         end
@@ -72,22 +73,42 @@ function addGroupComparisonTables(reportSection, dataCells, triggerLabels, modal
                     elseif p < 0.05
                         stars = stars + "*";
                     else
-                        stars = stars + "";
+                        stars = stars + " ";
                     end
-                    if j < numModalities
-                        stars = stars + "/";
-                    end
+                    stars = stars + "/";
                 end
             end
             if ~isempty(stars)
-                comparisonTable{i+1, c+1} = sprintf('%s %s', comparisonTable{i+1, c+1}, stars);
+                comparisonTable{i+1, c+1} = sprintf('%s %s', comparisonTable{i+1, c+1}, stars{1}(1:end-1));
             end
         end
     end
+    for i = 1:numModalities
+        stars = "";
+        for j = 1:numModalities
+            if i ~= j
+                [~, p] = ttest(mean(dataCells{i}(:, :),2), mean(dataCells{j}(:, :),2));
+                if p < 0.001
+                    stars = stars + "***";
+                elseif p < 0.01
+                    stars = stars + "**";
+                elseif p < 0.05
+                    stars = stars + "*";
+                else
+                    stars = stars + " ";
+                end
+                if j < numModalities
+                    stars = stars + "/";
+                end
+            end
+        end
+        if ~isempty(stars)
+            comparisonTable{i+1, c+2} = sprintf('%s %s', comparisonTable{i+1, c+2}, stars{1}(1:end-1));
+        end
+    end
 
-    rptTable = FormalTable(comparisonTable);
-    rptTable.Title = 'Trigger-wise Means with Significance';
-    rptTable.Header.Style = {Bold(true)};
-    rptTable.Style = {Border('solid'), RowSep('solid'), ColSep('solid')};
-    add(reportSection, rptTable);
+    rptTable{i+1} = FormalTable(comparisonTable);
+    %rptTable.Title = 'Trigger-wise Means with Significance';
+    rptTable{i+1}.Header.Style = {Bold(true)};
+    rptTable{i+1}.Style = {Border('double'), Width('100%'), RowSep('solid'), ColSep('solid')};
 end

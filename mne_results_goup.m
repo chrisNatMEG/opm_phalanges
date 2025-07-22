@@ -42,9 +42,9 @@ for i_peak = 1:length(params.peaks)
             params.sub = ['sub_' num2str(i_sub,'%02d')];
             ft_hastoolbox('mne', 1);
             save_path = fullfile(base_save_path,params.sub);
-            mne_squidmag = load(fullfile(save_path, 'squidmag_mne_peaks.mat')).squidmag_peak; 
-            mne_squidgrad = load(fullfile(save_path, 'squidgrad_mne_peaks.mat')).squidgrad_peak;
-            mne_opm = load(fullfile(save_path, 'opm_mne_peaks.mat')).opm_peak;
+            mne_squidmag = load(fullfile(save_path, 'squidmag_mne_peaks.mat')).peaks; 
+            mne_squidgrad = load(fullfile(save_path, 'squidgrad_mne_peaks.mat')).peaks;
+            mne_opm = load(fullfile(save_path, 'opm_mne_peaks.mat')).peaks;
           
             % Metrics: 
             % - distance between mnes for same phalange different systems

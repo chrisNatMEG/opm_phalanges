@@ -103,7 +103,7 @@ for i_trigger = 1:n_triggers
         ft_plot_headmodel(headmodel,'EdgeAlpha',0,'FaceAlpha',0.3,'FaceColor',[229 194 152]/256,'unit','cm') 
         hold off
         title([params.trigger_labels{i_trigger} ' (SQMAG-OPM = ' num2str(norm(pos_mag-pos_opm)*10,'%.1f') 'mm / SQGRAD-OPM = ' num2str(norm(pos_grad-pos_opm)*10,'%.1f') 'mm)'])
-        saveas(h, fullfile(save_path, 'figs', [params.sub '_' peak_squid{i_trigger}.label '_dipfit_SQUIDvOPM_ph-' params.trigger_labels{i_trigger} '.jpg']))
+        saveas(h, fullfile(save_path, 'figs', [params.sub '_' peak_squid{i_trigger}.label '_dipfit_SQUIDvOPM_trig-' params.trigger_labels{i_trigger} '.jpg']))
         close
     elseif params.numdipoles == 2
         h = figure;
@@ -117,7 +117,7 @@ for i_trigger = 1:n_triggers
         ft_plot_headmodel(headmodel,'EdgeAlpha',0,'FaceAlpha',0.3,'FaceColor',[229 194 152]/256,'unit','cm') 
         hold off
         title([params.trigger_labels{i_trigger} ' (SQMAG-OPM = ' num2str(norm(pos_mag(1,:)-pos_opm(1,:))*10,'%.1f') 'mm / SQGRAD-OPM = ' num2str(norm(pos_grad(1,:)-pos_opm(1,:))*10,'%.1f') 'mm)'])
-        saveas(h, fullfile(save_path, 'figs', [params.sub '_' peak_squid{i_trigger}.label '_dipfit_SQUIDvOPM_ph-' params.trigger_labels{i_trigger} '.jpg']))
+        saveas(h, fullfile(save_path, 'figs', [params.sub '_' peak_squid{i_trigger}.label '_dipfit_SQUIDvOPM_trig-' params.trigger_labels{i_trigger} '.jpg']))
         close
     end
 end
@@ -189,14 +189,14 @@ hold on
 text(0, 0.88, 'SQUID-MAG', 'FontWeight', 'bold');
 if numdipoles == 2
     text(0.28, 0.8, 'dip_L (mm)', 'FontWeight', 'bold');
-    text(0.28 + 0.40, 0.8, 'dip_R (mm)', 'FontWeight', 'bold');
+    text(0.28 + 0.4, 0.8, 'dip_R (mm)', 'FontWeight', 'bold');
 else
     text(0.28, 0.8, ['dip' num2str(i_dip) ' (mm)'], 'FontWeight', 'bold');
 end
 for i_trigger = 1:n_triggers
         text(0, 0.8-(i_trigger*0.05), [params.trigger_labels{i_trigger} ': '], 'FontWeight', 'bold'); 
     for i_dip = 1:numdipoles
-        text(0.28 + (i_dip-1)*0.40, 0.8-(i_trigger*0.05), [num2str(10*pos(((i_trigger-1)*numdipoles)+i_dip,1),'%.1f') ' / ' num2str(10*pos(((i_trigger-1)*numdipoles)+i_dip,2),'%.1f') ' / ' num2str(10*pos(((i_trigger-1)*numdipoles)+i_dip,3),'%.1f')]); 
+        text(0.28 + (i_dip-1)*0.4, 0.8-(i_trigger*0.05), [num2str(10*pos(((i_trigger-1)*numdipoles)+i_dip,1),'%.1f') ' / ' num2str(10*pos(((i_trigger-1)*numdipoles)+i_dip,2),'%.1f') ' / ' num2str(10*pos(((i_trigger-1)*numdipoles)+i_dip,3),'%.1f')]); 
     end
 end
 hold off
@@ -268,14 +268,14 @@ hold on
 text(0, 0.88, 'OPM', 'FontWeight', 'bold');
 if numdipoles == 2
     text(0.28, 0.8, 'dip_L (mm)', 'FontWeight', 'bold');
-    text(0.28 + 0.40, 0.8, 'dip_R (mm)', 'FontWeight', 'bold');
+    text(0.28 + 0.4, 0.8, 'dip_R (mm)', 'FontWeight', 'bold');
 else
     text(0.28, 0.8, ['dip' num2str(i_dip) ' (mm)'], 'FontWeight', 'bold');
 end
 for i_trigger = 1:n_triggers
         text(0, 0.8-(i_trigger*0.05), [params.trigger_labels{i_trigger} ': '], 'FontWeight', 'bold'); 
     for i_dip = 1:numdipoles
-        text(0.28 + (i_dip-1)*0.40, 0.8-(i_trigger*0.05), [num2str(10*pos(((i_trigger-1)*numdipoles)+i_dip,1),'%.1f') ' / ' num2str(10*pos(((i_trigger-1)*numdipoles)+i_dip,2),'%.1f') ' / ' num2str(10*pos(((i_trigger-1)*numdipoles)+i_dip,3),'%.1f')]); 
+        text(0.28 + (i_dip-1)*0.4, 0.8-(i_trigger*0.05), [num2str(10*pos(((i_trigger-1)*numdipoles)+i_dip,1),'%.1f') ' / ' num2str(10*pos(((i_trigger-1)*numdipoles)+i_dip,2),'%.1f') ' / ' num2str(10*pos(((i_trigger-1)*numdipoles)+i_dip,3),'%.1f')]); 
     end
 end
 hold off
@@ -346,15 +346,15 @@ axis off; % Turn off axis
 hold on
 text(0, 0.88, 'SQUID-GRAD', 'FontWeight', 'bold');
 if numdipoles == 2
-    text(0.25, 0.8, 'dip_L (mm)', 'FontWeight', 'bold');
-    text(0.25 + 0.40, 0.8, 'dip_R (mm)', 'FontWeight', 'bold');
+    text(0.28, 0.8, 'dip_L (mm)', 'FontWeight', 'bold');
+    text(0.28 + 0.4, 0.8, 'dip_R (mm)', 'FontWeight', 'bold');
 else
-    text(0.25, 0.8, ['dip' num2str(i_dip) ' (mm)'], 'FontWeight', 'bold');
+    text(0.28, 0.8, ['dip' num2str(i_dip) ' (mm)'], 'FontWeight', 'bold');
 end
 for i_trigger = 1:n_triggers
         text(0, 0.8-(i_trigger*0.05), [params.trigger_labels{i_trigger} ': '], 'FontWeight', 'bold'); 
     for i_dip = 1:numdipoles
-        text(0.25 + (i_dip-1)*0.40, 0.8-(i_trigger*0.05), [num2str(10*pos(((i_trigger-1)*numdipoles)+i_dip,1),'%.1f') ' / ' num2str(10*pos(((i_trigger-1)*numdipoles)+i_dip,2),'%.1f') ' / ' num2str(10*pos(((i_trigger-1)*numdipoles)+i_dip,3),'%.1f')]); 
+        text(0.28 + (i_dip-1)*0.4, 0.8-(i_trigger*0.05), [num2str(10*pos(((i_trigger-1)*numdipoles)+i_dip,1),'%.1f') ' / ' num2str(10*pos(((i_trigger-1)*numdipoles)+i_dip,2),'%.1f') ' / ' num2str(10*pos(((i_trigger-1)*numdipoles)+i_dip,3),'%.1f')]); 
     end
 end
 hold off
@@ -362,6 +362,12 @@ saveas(h, fullfile(save_path, 'figs', [params.sub '_' params.modality '_' peak_s
 close all
 
 %% Save 
-save(fullfile(save_path, [ peak_opm{i_trigger}.label '_dipoles']), 'squidmag_dipole', 'squidgrad_dipole', 'opm_dipole'); disp('done');
+dipoles = squidmag_dipole;
+save(fullfile(save_path, [ 'squidmag_' peak_opm{i_trigger}.label '_dipoles']), 'dipoles'); disp('done');
+dipoles = squidgrad_dipole;
+save(fullfile(save_path, [ 'squidgrad_' peak_opm{i_trigger}.label '_dipoles']), 'dipoles'); disp('done');
+dipoles = opm_dipole;
+save(fullfile(save_path, [ 'opm_' peak_opm{i_trigger}.label '_dipoles']),'dipoles'); disp('done');
+
 
 end

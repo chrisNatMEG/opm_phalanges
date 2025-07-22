@@ -276,9 +276,12 @@ for i_trigger = 1:n_triggers
 end
 
 if ~isempty(squidmag_peak{1,1})
-    save(fullfile(save_path, ['squidmag_mne_peaks' cov]), 'squidmag_peak'); 
-    save(fullfile(save_path, ['squidgrad_mne_peaks' cov]), 'squidgrad_peak'); 
-    save(fullfile(save_path, ['opm_mne_peaks' cov]), 'opm_peak'); 
+    peaks = squidmag_peak;
+    save(fullfile(save_path, ['squidmag_mne_peaks' cov]), 'peaks'); 
+    peaks = squidgrad_peak;
+    save(fullfile(save_path, ['squidgrad_mne_peaks' cov]), 'peaks'); 
+    peaks = opm_peak;
+    save(fullfile(save_path, ['opm_mne_peaks' cov]), 'peaks'); 
 end
 
 end

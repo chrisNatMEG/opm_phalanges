@@ -481,6 +481,15 @@ if overwrite.mne_group
     end
 end
 
+%% Group level report
+if overwrite.mne_group
+    save_path = fullfile(base_save_path,params.paradigm);
+    subs = setdiff(subs_to_run,excl_subs_src);
+    for i_peak = 1:length(params.peaks)
+        create_group_report(save_path, subs, params, i_peak)
+    end
+end
+
 %%
 close all
 clear all
