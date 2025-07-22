@@ -27,9 +27,9 @@ for i_peak = 1:length(params.peaks)
             ft_hastoolbox('mne', 1);
             save_path = fullfile(base_save_path,params.sub);
 
-            dipole_squidmag = load(fullfile(save_path,[params.peaks{i_peak}.label '_dipoles'])).squidmag_dipole;
-            dipole_squidgrad = load(fullfile(save_path, [params.peaks{i_peak}.label '_dipoles'])).squidgrad_dipole;
-            dipole_opm = load(fullfile(save_path, [params.peaks{i_peak}.label '_dipoles'])).opm_dipole;
+            dipole_squidmag = load(fullfile(save_path,['squidmag_' params.peaks{i_peak}.label '_dipoles'])).dipoles;
+            dipole_squidgrad = load(fullfile(save_path, ['squidgrad_' params.peaks{i_peak}.label '_dipoles'])).dipoles;
+            dipole_opm = load(fullfile(save_path, ['opm_' params.peaks{i_peak}.label '_dipoles'])).dipoles;
 
             pos_squidmag = nan(n_triggers,3);
             pos_squidgrad = nan(n_triggers,3);

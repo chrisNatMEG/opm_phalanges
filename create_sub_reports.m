@@ -7,7 +7,7 @@ import mlreportgen.dom.*
 subStr = sprintf('%02d', subs);
 
 % Create the report name
-reportName = ['sub_', subStr, '_sensorlevel'];
+reportName = ['sub_', subStr, '_report'];
 
 % Create a new report
 rpt = Report(fullfile(subjectFolderPath, reportName), 'pdf');
@@ -145,10 +145,40 @@ for i_section = 1:length(sections)
 end
 add(rpt, chapter);
 
+
+%% Butterflies
+chapter = Chapter(['Butterfly plots']);
+chapter.Numbered = false; % Remove chapter numbering
+for i_trigger = 1:length(params.trigger_labels)
+    % Add rows and cells to the table and insert the images
+    section = Section(['Trigger: ' params.trigger_labels(i_trigger)]);
+    section.Numbered = false; % Remove section numbering
+    
+    tbl = Table();
+    tbl.Style = {Border('solid'), Width('100%'), RowSep('solid'), ColSep('solid')};
+    for i = 1:2
+        row = TableRow();
+        for j = 1:2
+            imgIndex = (j-1)*2 + i;
+            img = Image(fullfile(subjectFolderPath,'figs',['sub_' subStr '_' sections{imgIndex} '_butterfly_trig-' params.trigger_labels{i_trigger} '.jpg']));
+            img.Style = {Width('8cm'), ScaleToFit};
+            entry = TableEntry();
+            append(entry, img);
+            append(row, entry);
+        end
+        append(tbl, row);
+    end
+
+    add(section, tbl);
+    add(chapter, section);
+    add(chapter, PageBreak());
+end
+add(rpt, chapter);
+
 for i_peak = 1:length(params.peaks)
     %% chapter
     peak_label = params.peaks{i_peak}.label;
-    chapter = Chapter(peak_label);
+    chapter = Chapter(['Timelocked - ' peak_label]);
     chapter.Numbered = false; % Remove chapter numbering
     for i_section = 1:length(sections)
         section = Section(sections(i_section));
@@ -167,11 +197,11 @@ for i_peak = 1:length(params.peaks)
         peak = data.peak;
         
         % Create the table with the required data
-        num_phalanges = length(params.trigger_labels);
-        T = table('Size', [8, num_phalanges], 'VariableTypes', repmat({'double'}, 1, num_phalanges), 'VariableNames', params.trigger_labels);
+        num_triggers = length(params.trigger_labels);
+        T = table('Size', [8, num_triggers], 'VariableTypes', repmat({'double'}, 1, num_triggers), 'VariableNames', params.trigger_labels);
         T.Properties.RowNames = {['peak_amplitude ' fieldUnit], ['max_amplitude ' fieldUnit], ['min_amplitude ' fieldUnit], 'peak_latency [ms]', 'SNR_prestim', 'SNR_stderr', ['std_prestim ' fieldUnit], ['stderr ' fieldUnit]};
         
-        for i_trigger = 1:num_phalanges
+        for i_trigger = 1:num_triggers
             data = peak{i_trigger};
             T{['peak_amplitude ' fieldUnit], params.trigger_labels{i_trigger}} = fieldMultiplier*data.peak_amplitude;
             T{['max_amplitude ' fieldUnit], params.trigger_labels{i_trigger}} = fieldMultiplier*data.max_amplitude;
@@ -190,7 +220,7 @@ for i_peak = 1:length(params.peaks)
         % Add header row
         headerRow = TableRow();
         append(headerRow, TableEntry(' '));
-        for i_trigger = 1:num_phalanges
+        for i_trigger = 1:num_triggers
             headerEntry = TableEntry(params.trigger_labels{i_trigger});
             headerEntry.Style = {HAlign('center'), Bold()};
             append(headerRow, headerEntry);
@@ -205,7 +235,7 @@ for i_peak = 1:length(params.peaks)
             rowNameEntry = TableEntry(T.Properties.RowNames{i_row});
             rowNameEntry.Style = {Bold()};
             append(row, rowNameEntry);
-            for j = 1:num_phalanges
+            for j = 1:num_triggers
                 entry = TableEntry(num2str(T{i_row, j},formatString{i_row}));
                 entry.Style = {HAlign('right')}; 
                 append(row, entry);
@@ -214,34 +244,7 @@ for i_peak = 1:length(params.peaks)
         end
         add(section,domTable);
         add(chapter,section)
-    end
-
-    %% Butterflies
-    for i_trigger = 1:length(params.trigger_labels)
-        % Add rows and cells to the table and insert the images
-        section = Section(['Butterfly - trigger: ' params.trigger_labels(i_trigger)]);
-        section.Numbered = false; % Remove section numbering
-        
-        tbl = Table();
-        tbl.Style = {Border('solid'), Width('100%'), RowSep('solid'), ColSep('solid')};
-        for i = 1:2
-            row = TableRow();
-            for j = 1:2
-                imgIndex = (j-1)*2 + i;
-                img = Image(fullfile(subjectFolderPath,'figs',['sub_' subStr '_' sections{imgIndex} '_' peak_label '_butterfly_trig-' params.trigger_labels{i_trigger} '.jpg']));
-                img.Style = {Width('8cm'), ScaleToFit};
-                entry = TableEntry();
-                append(entry, img);
-                append(row, entry);
-            end
-            append(tbl, row);
-        end
-    
-        add(section, tbl);
-        add(chapter, section);
-        add(chapter, PageBreak());
-    end
-    
+    end  
     
     %% Max channel plots
     for i_trigger = 1:length(params.trigger_labels)
@@ -294,51 +297,132 @@ for i_peak = 1:length(params.peaks)
         add(chapter, section);
         add(chapter, PageBreak());
     end
-
+    add(rpt, chapter);
 
     %% Dipole plots
     if exist(fullfile(subjectFolderPath,[peak_label '_dipoles.mat']),'file')
         % Add rows and cells to the table and insert the images
-        section = Section(['Dipoles']);
-        section.Numbered = false; % Remove section numbering
+        chapter = Chapter(['Dipoles - ' peak_label]);
+        chapter.Numbered = false; % Remove section numbering
         
-        tbl = Table();
-        tbl.Style = {Border('solid'), Width('100%'), RowSep('solid'), ColSep('solid')};
-        for i = 1:3
-            row = TableRow();
-            for j = 1:2
-                imgIndex = (i-1)*2 + j;
-                if imgIndex <= length(params.trigger_labels)
-                    img = Image(fullfile(subjectFolderPath,'figs',['sub_' subStr '_' peak_label '_dipfit_SQUIDvOPM_trig-' params.trigger_labels{imgIndex} '.jpg']));
-                    img.Style = {Width('8cm'), ScaleToFit};
-                    entry = TableEntry();
-                    append(entry, img);
-                    append(row, entry);
+        for i_section = 1:length(sections2)
+            section = Section(sections2(i_section));
+            section.Numbered = false; % Remove section numbering
+
+            img = Image(fullfile(subjectFolderPath,'figs',['sub_' subStr '_' sections2{i_section} '_' peak_label '_dipfit_mri.jpg']));
+            img.Style = {Width('14cm'), ScaleToFit};
+            add(section, img);
+
+            % Load the .mat file
+            dipoles = load(fullfile(subjectFolderPath,[sections2{i_section} '_' peak_label '_dipoles.mat'])).dipoles;
+            
+            if params.numdipoles == 2
+                % Create the table with the required data
+                num_triggers = length(params.trigger_labels);
+                T = table('Size', [4, num_triggers], 'VariableTypes', repmat({'double'}, 1, num_triggers), 'VariableNames', params.trigger_labels);
+                T.Properties.RowNames = {['Dip_L mom [nAm]'], ['Dip_R mom [nAm]'], ['ResVar_L [%]'], ['ResVar_R [%]']};          
+                for i_trigger = 1:num_triggers
+                    data = dipoles{i_trigger};
+                    T{['Dip_L mom [nAm]'], params.trigger_labels{i_trigger}} = 1e9*1e-4*max(vecnorm(data.dip.mom(1,:),2,1));
+                    T{['Dip_R mom [nAm]'], params.trigger_labels{i_trigger}} = 1e9*1e-4*max(vecnorm(data.dip.mom(2,:),2,1));
+                    T{['ResVar_L [%]'], params.trigger_labels{i_trigger}} = data.dip.rv(1)*100;
+                    T{['ResVar_R [%]'], params.trigger_labels{i_trigger}} = data.dip.rv(2)*100;
+                end
+                
+                % Convert the MATLAB table to a DOM table
+                domTable = Table();
+                domTable.Style = {Border('solid'), Width('100%'), RowSep('solid'), ColSep('solid')};
+                
+                % Add header row
+                headerRow = TableRow();
+                append(headerRow, TableEntry(' '));
+                for i_trigger = 1:num_triggers
+                    headerEntry = TableEntry(params.trigger_labels{i_trigger});
+                    headerEntry.Style = {HAlign('center'), Bold()};
+                    append(headerRow, headerEntry);
+                end
+                append(domTable, headerRow);
+                
+                formatString = {'%.1f','%.1f','%.1f','%.1f'};
+                % Add data rows
+                for i_row = 1:height(T)
+                    row = TableRow();
+                    rowNameEntry = TableEntry(T.Properties.RowNames{i_row});
+                    rowNameEntry.Style = {Bold()};
+                    append(row, rowNameEntry);
+                    for j = 1:num_triggers
+                        entry = TableEntry(num2str(T{i_row, j},formatString{i_row}));
+                        entry.Style = {HAlign('right')}; 
+                        append(row, entry);
+                    end
+                    append(domTable, row);
+                end
+
+            else
+                % Create the table with the required data
+                num_triggers = length(params.trigger_labels);
+                T = table('Size', [2, num_triggers], 'VariableTypes', repmat({'double'}, 1, num_triggers), 'VariableNames', params.trigger_labels);
+                T.Properties.RowNames = {['Dip mom [nAm]'], ['ResVar [%]']};          
+                for i_trigger = 1:num_triggers
+                    data = dipoles{i_trigger};
+                    T{['Dip mom [nAm]'], params.trigger_labels{i_trigger}} = fieldMultiplier*max(vecnorm(data.dip.mom(1,:),2,1));
+                    T{['ResVar [%]'], params.trigger_labels{i_trigger}} = data.dip.rv(1)*100;
+                end
+                
+                % Convert the MATLAB table to a DOM table
+                domTable = Table();
+                domTable.Style = {Border('solid'), Width('100%'), RowSep('solid'), ColSep('solid')};
+                
+                % Add header row
+                headerRow = TableRow();
+                append(headerRow, TableEntry(' '));
+                for i_trigger = 1:num_triggers
+                    headerEntry = TableEntry(params.trigger_labels{i_trigger});
+                    headerEntry.Style = {HAlign('center'), Bold()};
+                    append(headerRow, headerEntry);
+                end
+                append(domTable, headerRow);
+                
+                formatString = {'%.1f','%.1f'};
+    
+                % Add data rows
+                for i_row = 1:height(T)
+                    row = TableRow();
+                    rowNameEntry = TableEntry(T.Properties.RowNames{i_row});
+                    rowNameEntry.Style = {Bold()};
+                    append(row, rowNameEntry);
+                    for j = 1:num_triggers
+                        entry = TableEntry(num2str(T{i_row, j},formatString{i_row}));
+                        entry.Style = {HAlign('right')}; 
+                        append(row, entry);
+                    end
+                    append(domTable, row);
                 end
             end
-            append(tbl, row);
+            add(section,domTable);
+            add(chapter, section);
         end
-    
-        add(section, tbl);
-        add(chapter, section);
         add(chapter, PageBreak());
+        add(rpt,chapter);
     end
 
     %% MNE
     if exist(fullfile(subjectFolderPath,'opm_mne_peaks.mat'),'file')
-         for i_trigger = 1:length(params.trigger_labels)
-            % Add rows and cells to the table and insert the images
-            section = Section(['MNE - phalange: ' params.trigger_labels(i_trigger)]);
+        chapter = Chapter(['MNE - ' peak_label]);
+        chapter.Numbered = false; % Remove section numbering
+        
+        for i_section = 1:length(sections2)
+            section = Section(sections2(i_section));
             section.Numbered = false; % Remove section numbering
-            
+
             tbl = Table();
             tbl.Style = {Border('solid'), Width('100%'), RowSep('solid'), ColSep('solid')};
-            for i = 1:2
+            for i = 1:ceil(length(params.trigger_labels)/2)
                 row = TableRow();
                 for j = 1:2
                     imgIndex = (j-1)*2 + i;
-                    if imgIndex <= length(sections2)
-                        img = Image(fullfile(subjectFolderPath,'figs',['sub_' subStr '_' sections2{imgIndex} '_' peak_label '_mne_trig' params.trigger_labels{i_trigger} '.jpg']));
+                    if imgIndex <= length(params.trigger_labels)
+                        img = Image(fullfile(subjectFolderPath,'figs',['sub_' subStr '_' sections2{i_section} '_' peak_label '_mne_trig-' params.trigger_labels{imgIndex} '.jpg']));
                         img.Style = {Width('8cm'), ScaleToFit};
                         entry = TableEntry();
                         append(entry, img);
@@ -347,14 +431,100 @@ for i_peak = 1:length(params.peaks)
                 end
                 append(tbl, row);
             end
-        
             add(section, tbl);
-            add(chapter, section);
-            add(chapter, PageBreak());
-         end
-    end
 
-    add(rpt, chapter);
+            % Load the .mat file
+            peaks = load(fullfile(subjectFolderPath,[sections2{i_section} '_mne_peaks.mat'])).peaks;
+            
+            if params.numdipoles == 2
+                % Create the table with the required data
+                num_triggers = length(params.trigger_labels);
+                T = table('Size', [4, num_triggers], 'VariableTypes', repmat({'double'}, 1, num_triggers), 'VariableNames', params.trigger_labels);
+                T.Properties.RowNames = {['FAHM_L [cm^2]'], ['FAHM_R [cm^2]'], ['Target region_L [%]'], ['Target region_R [%]']};          
+                for i_trigger = 1:num_triggers
+                    data = peaks{i_trigger};
+                    T{['FAHM_L [cm^2]'], params.trigger_labels{i_trigger}} = data.fahm(1);
+                    T{['FAHM_R [cm^2]'], params.trigger_labels{i_trigger}} = data.fahm(2);
+                    T{['Target region_L [%]'], params.trigger_labels{i_trigger}} = data.target_region(1)*100;
+                    T{['Target region_R [%]'], params.trigger_labels{i_trigger}} = data.target_region(2)*100;
+                end
+                
+                % Convert the MATLAB table to a DOM table
+                domTable = Table();
+                domTable.Style = {Border('solid'), Width('100%'), RowSep('solid'), ColSep('solid')};
+                
+                % Add header row
+                headerRow = TableRow();
+                append(headerRow, TableEntry(' '));
+                for i_trigger = 1:num_triggers
+                    headerEntry = TableEntry(params.trigger_labels{i_trigger});
+                    headerEntry.Style = {HAlign('center'), Bold()};
+                    append(headerRow, headerEntry);
+                end
+                append(domTable, headerRow);
+                
+                formatString = {'%.1f','%.1f','%.1f','%.1f'};
+                % Add data rows
+                for i_row = 1:height(T)
+                    row = TableRow();
+                    rowNameEntry = TableEntry(T.Properties.RowNames{i_row});
+                    rowNameEntry.Style = {Bold()};
+                    append(row, rowNameEntry);
+                    for j = 1:num_triggers
+                        entry = TableEntry(num2str(T{i_row, j},formatString{i_row}));
+                        entry.Style = {HAlign('right')}; 
+                        append(row, entry);
+                    end
+                    append(domTable, row);
+                end
+
+            else
+                % Create the table with the required data
+                num_triggers = length(params.trigger_labels);
+                T = table('Size', [2, num_triggers], 'VariableTypes', repmat({'double'}, 1, num_triggers), 'VariableNames', params.trigger_labels);
+                T.Properties.RowNames = {['FAHM [cm^2]'], ['Target region [%]']};          
+                for i_trigger = 1:num_triggers
+                    data = peaks{i_trigger};
+                    T{['FAHM [cm^2]'], params.trigger_labels{i_trigger}} = data.fahm(1);
+                    T{['Target region [%]'], params.trigger_labels{i_trigger}} = data.target_region(1)*100;
+                end
+                
+                % Convert the MATLAB table to a DOM table
+                domTable = Table();
+                domTable.Style = {Border('solid'), Width('100%'), RowSep('solid'), ColSep('solid')};
+                
+                % Add header row
+                headerRow = TableRow();
+                append(headerRow, TableEntry(' '));
+                for i_trigger = 1:num_triggers
+                    headerEntry = TableEntry(params.trigger_labels{i_trigger});
+                    headerEntry.Style = {HAlign('center'), Bold()};
+                    append(headerRow, headerEntry);
+                end
+                append(domTable, headerRow);
+                
+                formatString = {'%.1f','%.1f'};
+    
+                % Add data rows
+                for i_row = 1:height(T)
+                    row = TableRow();
+                    rowNameEntry = TableEntry(T.Properties.RowNames{i_row});
+                    rowNameEntry.Style = {Bold()};
+                    append(row, rowNameEntry);
+                    for j = 1:num_triggers
+                        entry = TableEntry(num2str(T{i_row, j},formatString{i_row}));
+                        entry.Style = {HAlign('right')}; 
+                        append(row, entry);
+                    end
+                    append(domTable, row);
+                end
+            end
+            add(section,domTable);
+            add(chapter, section);
+        end
+        add(chapter, PageBreak());
+        add(rpt, chapter);   
+    end
 end
 
 %% Close the report
@@ -380,6 +550,10 @@ function processStruct(s, parentName, chapter)
         elseif iscell(fieldValue) && all(cellfun(@ischar, fieldValue))
             % If the field is a cell array of strings, convert it to a comma-separated string
             valueStr = strjoin(fieldValue, ', ');
+            append(chapter, Paragraph([fullName, ': ', valueStr]));
+        elseif iscell(fieldValue) && all(cellfun(@isnumeric, fieldValue))
+            % If the field is a cell array of strings, convert it to a comma-separated string
+            valueStr = strjoin(cellfun(@num2str, fieldValue, 'UniformOutput', false), ', ');
             append(chapter, Paragraph([fullName, ': ', valueStr]));
         elseif isempty(fieldValue)
             % Otherwise, convert the value to a string and append it

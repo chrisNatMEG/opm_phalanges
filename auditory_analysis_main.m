@@ -43,7 +43,7 @@ if on_server
     overwrite.dip_group = true;
     overwrite.mne_group = true;
 else
-    overwrite.preproc = true;
+    overwrite.preproc = false;
     overwrite.coreg = true;
     overwrite.mri = false;
     overwrite.dip = true;
@@ -68,9 +68,8 @@ params.delay = 0.01; % Stimulus delay in seconds (e.g., 0.01 for eartubes or 0.0
 
 % Filter
 params.filter = [];
-params.filter.hp_freq = 1;
-params.filter.lp_freq = 20;
-params.filter.bp_freq = [];
+params.filter.hp_freq = [];
+params.filter.lp_freq = 30;
 params.filter.notch = [50 60 100]; %[50 60 100 120 150];
 
 % Spatiotemporal filter (OPM-MEG only)
@@ -99,12 +98,18 @@ params.ica_coh = 0.95; % cutoff for EOG/ECG coherence
 
 % Timelocking
 params.ds_freq = 500; % downsample frequency (timelock)
-params.trigger_codes = {1 3 5 11 13};
-params.trigger_labels = {'STD' 'LNG' 'LG' 'HNG' 'HG'};
+params.trigger_codes = {1};%{1 3 5 11 13};
+params.trigger_labels = {'STD'}; %{'STD' 'LNG' 'LG' 'HNG' 'HG'};
 params.peaks = {};
 params.peaks{1} = [];
 params.peaks{1}.label = 'M100';
 params.peaks{1}.peak_latency = [0.08 0.13];
+params.peaks{2} = [];
+params.peaks{2}.label = 'M200';
+params.peaks{2}.peak_latency = [0.15 0.25];
+params.peaks{3} = [];
+params.peaks{3}.label = 'M50';
+params.peaks{3}.peak_latency = [0.04 0.08];
 
 % HPI coregistration
 params.hpi_freq = 33;
@@ -115,7 +120,7 @@ params.numdipoles = 2;
 
 % Source reconstruction - distributed
 params.source_fixedori = true; 
-params.covs = {' '};%{'empty_room', ' '}; % noise cov to use; default=prestim, alt: 'resting_state', 'all', 'empty_room' , prestim = ' '
+params.covs = {'prestim'};%{'empty_room', ' '}; % noise cov to use; default=prestim, alt: 'resting_state', 'all', 'empty_room' , prestim = ' '
 params.mne_view = 'sides';
 params.plot_inflated = true;
 params.target_region = {'superiortemporal', 'transversetemporal'};
@@ -465,7 +470,7 @@ close all
 %% Save results in report
 for i_sub = setdiff(subs_to_run,excl_subs)
     params.sub = ['sub_' num2str(i_sub,'%02d')];
-    save_path = fullfile(base_save_path,params.sub);
+    save_path = fullfile(base_save_path,params.paradigm,params.sub);
     create_sub_reports(save_path, i_sub, params);
 end
 

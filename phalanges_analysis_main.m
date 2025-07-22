@@ -457,7 +457,7 @@ if overwrite.sens_group
            mkdir(fullfile(base_save_path,'figs'))
     end
     subs = setdiff(subs_to_run,excl_subs);
-    sensor_results_goup(base_save_path,subs, params)
+    ensor_results_goup(base_save_path,subs, params)
     close all
 end
 
@@ -474,6 +474,17 @@ if overwrite.mne_group
         params.use_cov = params.covs{i_cov}; 
         mne_results_goup(base_save_path, subs, params);
     end
+end
+
+%% Group level report
+%% MNE group analysis
+if overwrite.mne_group
+    save_path = fullfile(base_save_path,params.paradigm);
+    subs = setdiff(subs_to_run,excl_subs_src);
+    for i_peak = 1:length(params.peaks)
+        create_group_report(save_path, params, i_peak)
+    end
+
 end
 
 %%
