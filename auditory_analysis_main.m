@@ -145,7 +145,7 @@ if on_server
 else
     subs_to_run = 2; %1:size(subses,1)
 end
-excl_subs = [3];
+excl_subs = [];
 excl_subs_src = excl_subs;
 
 %% Loop over subjects
@@ -467,42 +467,36 @@ for i_sub = setdiff(subs_to_run,excl_subs)
 end
 close all
 
+%% Save results in report
+for i_sub = setdiff(subs_to_run,excl_subs)
+    params.sub = ['sub_' num2str(i_sub,'%02d')];
+    save_path = fullfile(base_save_path,params.paradigm,params.sub);
+    create_sub_reports(save_path, i_sub, params);
+end
+
 %% Sensor level group analysis
 if overwrite.sens_group
-    save_path = fullfile(base_save_path,params.paradigm);
-    if ~exist(fullfile(save_path,'figs'), 'dir')
-           mkdir(fullfile(save_path,'figs'))
+    if ~exist(fullfile(base_save_path,'figs'), 'dir')
+           mkdir(fullfile(base_save_path,'figs'))
     end
     subs = setdiff(subs_to_run,excl_subs);
-    sensor_results_goup(save_path,subs, params)
+    sensor_results_goup(base_save_path,subs, params)
     close all
 end
 
 %% Dipole group analysis
 if overwrite.dip_group
-    save_path = fullfile(base_save_path,params.paradigm);
     subs = setdiff(subs_to_run,excl_subs_src);
-    dipole_results_goup(save_path,subs, params)
+    dipole_results_goup(base_save_path,subs, params)
 end
 
 %% MNE group analysis
 if overwrite.mne_group
-    save_path = fullfile(base_save_path,params.paradigm);
     subs = setdiff(subs_to_run,excl_subs_src);
     for i_cov = 1:length(params.covs)
         params.use_cov = params.covs{i_cov}; 
-        mne_results_goup(save_path, subs, params);
+        mne_results_goup(base_save_path, subs, params);
     end
-end
-
-%% Group level report
-if overwrite.mne_group
-    save_path = fullfile(base_save_path,params.paradigm);
-    subs = setdiff(subs_to_run,excl_subs_src);
-    for i_peak = 1:length(params.peaks)
-        create_group_report(save_path, subs, params, i_peak)
-    end
-
 end
 
 %%

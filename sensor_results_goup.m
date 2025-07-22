@@ -402,13 +402,14 @@ for i_trigger = 1:n_triggers
     title(['Grand average opm - phalange ' params.trigger_labels{i_trigger}])
     saveas(h, fullfile(base_save_path, 'figs', ['opm_grndAvg_butterfly_trig-' params.trigger_labels{i_trigger} '.jpg']))
     close all
+    
     for i_peak = 1:length(params.peaks)
         peak_label = ['_' params.peaks{i_peak}.label];
         cfg = [];
         cfg.xlim = params.peaks{1}.peak_latency;
         %cfg.zlim = [0 6e-14];
         cfg.layout = 'fieldlinebeta2bz_helmet.mat';
-        h = figure; ft_topoplotER(cfg,grandavg_opm); colorbar; title(['GRAND AVG OPM - ' params.trigger_labels{i_trigger}])
+        h = figure; ft_topoplotER(cfg,grandavg_opm); colorbar; title(['GRAND AVG OPM - ' params.trigger_labels{i_trig}])
         saveas(h, fullfile(base_save_path, 'figs', ['opm' peak_label '_grndAvg_topo_trig-' params.trigger_labels{i_trigger} '.jpg']))
         close all
     end
@@ -426,13 +427,14 @@ for i_trigger = 1:n_triggers
     title(['Grand average squidgrad - phalange ' params.trigger_labels{i_trigger}])
     saveas(h, fullfile(base_save_path, 'figs', ['squidgrad_grndAvg_butterfly_trig-' params.trigger_labels{i_trigger} '.jpg']))
     close all
+
     for i_peak = 1:length(params.peaks)
         peak_label = ['_' params.peaks{i_peak}.label];
         cfg = [];
         cfg.xlim = params.peaks{1}.peak_latency;
         %cfg.zlim = [0 6e-14];
         cfg.layout = 'neuromag306planar.lay';
-        h = figure; ft_topoplotER(cfg,grandavg_squidgrad); colorbar; title(['GRAND AVG SQUID-GRAD - ' params.trigger_labels{i_trigger}])
+        h = figure; ft_topoplotER(cfg,grandavg_squidgrad); colorbar; title(['GRAND AVG SQUID-GRAD - ' params.trigger_labels{i_trig}])
         saveas(h, fullfile(base_save_path, 'figs', ['squidgrad' peak_label '_grndAvg_topo_trig-' params.trigger_labels{i_trigger} '.jpg'])) 
         close all
     end
@@ -450,13 +452,14 @@ for i_trigger = 1:n_triggers
     title(['Grand average squidmag - phalange ' params.trigger_labels{i_trigger}])
     saveas(h, fullfile(base_save_path, 'figs', ['squidmag_grndAvg_butterfly_trig-' params.trigger_labels{i_trigger} '.jpg']))
     close all
+
     for i_peak = 1:length(params.peaks)
         peak_label = ['_' params.peaks{i_peak}.label];
         cfg = [];
         cfg.xlim = params.peaks{1}.peak_latency;
         %cfg.zlim = [0 6e-14];
         cfg.layout = 'neuromag306mag.lay';
-        h = figure; ft_topoplotER(cfg,grandavg_squidmag); colorbar; title(['GRAND AVG SQUID-MAG - ' params.trigger_labels{i_trigger}])
+        h = figure; ft_topoplotER(cfg,grandavg_squidmag); colorbar; title(['GRAND AVG SQUID-MAG - ' params.trigger_labels{i_trig}])
         saveas(h, fullfile(base_save_path, 'figs', ['squidmag' peak_label '_grndAvg_topo_trig-' params.trigger_labels{i_trigger} '.jpg']))
         close all
     end
