@@ -17,7 +17,7 @@ end
 
 for i_peak = 1:length(params.peaks)
     peak_label = params.peaks{i_peak}.label;
-    for i_hemi = 1:numdipoles
+    for i_hemi = 1:params.numdipoles
         n_subs = max(subs);
         n_triggers = length(params.trigger_labels);
         dist_sqmag_opm = nan(n_subs,n_triggers);

@@ -162,7 +162,7 @@ for k=1:n_triggers
     errorbar(k-0.15,mean1(k),err1(1,k),err1(2,k),'k','linestyle','none');
     errorbar(k+0.15,mean2(k),err2(1,k),err2(2,k),'k','linestyle','none');
 end
-p_values = zeros(n_triggers, 5);
+p_values = zeros(1, n_triggers);
 for i = 1:n_triggers
     [~, p_values(i)] = ttest(data1(:, i), data2(:, i));
 end
@@ -202,7 +202,7 @@ for k=1:n_triggers
     errorbar(k-0.15,mean1(k),err1(1,k),err1(2,k),'k','linestyle','none');
     errorbar(k+0.15,mean2(k),err2(1,k),err2(2,k),'k','linestyle','none');
 end
-p_values = zeros(n_triggers, 5);
+p_values = zeros(1, n_triggers);
 for i = 1:n_triggers
     [~, p_values(i)] = ttest(data1(:, i), data2(:, i));
 end
@@ -243,7 +243,7 @@ for k=1:n_triggers
     errorbar(k-0.15,mean1(k),err1(1,k),err1(2,k),'k','linestyle','none');
     errorbar(k+0.15,mean2(k),err2(1,k),err2(2,k),'k','linestyle','none');
 end
-p_values = zeros(n_triggers, 5);
+p_values = zeros(1, n_triggers);
 for i = 1:n_triggers
     [~, p_values(i)] = ttest(data1(:, i), data2(:, i));
 end
@@ -284,7 +284,7 @@ for k=1:n_triggers
     errorbar(k-0.15,mean1(k),err1(1,k),err1(2,k),'k','linestyle','none');
     errorbar(k+0.15,mean2(k),err2(1,k),err2(2,k),'k','linestyle','none');
 end
-p_values = zeros(n_triggers, 5);
+p_values = zeros(1, n_triggers);
 for i = 1:n_triggers
     [~, p_values(i)] = ttest(data1(:, i), data2(:, i));
 end
@@ -325,7 +325,7 @@ for k=1:n_triggers
     errorbar(k-0.15,mean1(k),err1(1,k),err1(2,k),'k','linestyle','none');
     errorbar(k+0.15,mean2(k),err2(1,k),err2(2,k),'k','linestyle','none');
 end
-p_values = zeros(n_triggers, 5);
+p_values = zeros(1, n_triggers);
 for i = 1:n_triggers
     [~, p_values(i)] = ttest(data1(:, i), data2(:, i));
 end
@@ -376,17 +376,17 @@ for i_sub = subs
     squid_timelocked = load(fullfile(save_path, [params.sub '_squid_timelocked'])).timelocked; 
     opm_timelocked = load(fullfile(save_path, [params.sub '_opm_timelocked'])).timelocked; 
 
-    for i_trig = 1:n_triggers
-        squid{i_trig,i_sub} = squid_timelocked{i_trig};
-        opm{i_trig,i_sub} = opm_timelocked{i_trig};
+    for i_trigger = 1:n_triggers
+        squid{i_trigger,i_sub} = squid_timelocked{i_trigger};
+        opm{i_trigger,i_sub} = opm_timelocked{i_trigger};
     end
     clear squid_timelocked opm_timelocked
 end
-for i_trig = 1:n_triggers
+for i_trigger = 1:n_triggers
     % OPM
     cfg = [];
     cfg.channel = '*bz';
-    grandavg_opm = ft_timelockgrandaverage(cfg,opm{i_trig,:});
+    grandavg_opm = ft_timelockgrandaverage(cfg,opm{i_trigger,:});
 
     h = figure; 
     plot(grandavg_opm.time*1e3,grandavg_opm.avg*1e15)
@@ -401,14 +401,14 @@ for i_trig = 1:n_triggers
     cfg.xlim = params.peaks{1}.peak_latency;
     %cfg.zlim = [0 6e-14];
     cfg.layout = 'fieldlinebeta2bz_helmet.mat';
-    h = figure; ft_topoplotER(cfg,grandavg_opm); colorbar; title(['GRAND AVG OPM - ' params.trigger_labels{i_trig}])
+    h = figure; ft_topoplotER(cfg,grandavg_opm); colorbar; title(['GRAND AVG OPM - ' params.trigger_labels{i_trigger}])
     saveas(h, fullfile(base_save_path, 'figs', ['opm_grndAvg_topo_trig-' params.trigger_labels{i_trigger} '.jpg']))
     close all
 
     % SQUID-GRAD
     cfg = [];
     cfg.channel = 'meggrad';
-    grandavg_squidgrad = ft_timelockgrandaverage(cfg,squid{i_trig,:});
+    grandavg_squidgrad = ft_timelockgrandaverage(cfg,squid{i_trigger,:});
 
     h = figure; 
     plot(grandavg_squidgrad.time*1e3,grandavg_squidgrad.avg*1e15)
@@ -423,7 +423,7 @@ for i_trig = 1:n_triggers
     cfg.xlim = params.peaks{1}.peak_latency;
     %cfg.zlim = [0 6e-14];
     cfg.layout = 'neuromag306planar.lay';
-    h = figure; ft_topoplotER(cfg,grandavg_squidgrad); colorbar; title(['GRAND AVG SQUID-GRAD - ' params.trigger_labels{i_trig}])
+    h = figure; ft_topoplotER(cfg,grandavg_squidgrad); colorbar; title(['GRAND AVG SQUID-GRAD - ' params.trigger_labels{i_trigger}])
     saveas(h, fullfile(base_save_path, 'figs', ['squidgrad_grndAvg_topo_trig-' params.trigger_labels{i_trigger} '.jpg']))
     
     close all
@@ -431,7 +431,7 @@ for i_trig = 1:n_triggers
     % SQUID-MAG
     cfg = [];
     cfg.channel = 'megmag';
-    grandavg_squidmag = ft_timelockgrandaverage(cfg,squid{i_trig,:});
+    grandavg_squidmag = ft_timelockgrandaverage(cfg,squid{i_trigger,:});
 
     h = figure; 
     plot(grandavg_squidmag.time*1e3,grandavg_squidmag.avg*1e15)
@@ -446,7 +446,7 @@ for i_trig = 1:n_triggers
     cfg.xlim = params.peaks{1}.peak_latency;
     %cfg.zlim = [0 6e-14];
     cfg.layout = 'neuromag306mag.lay';
-    h = figure; ft_topoplotER(cfg,grandavg_squidmag); colorbar; title(['GRAND AVG SQUID-MAG - ' params.trigger_labels{i_trig}])
+    h = figure; ft_topoplotER(cfg,grandavg_squidmag); colorbar; title(['GRAND AVG SQUID-MAG - ' params.trigger_labels{i_trigger}])
     saveas(h, fullfile(base_save_path, 'figs', ['squidmag_grndAvg_topo_trig-' params.trigger_labels{i_trigger} '.jpg']))
     close all
 

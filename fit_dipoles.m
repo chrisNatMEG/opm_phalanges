@@ -139,7 +139,7 @@ end
 mean_pos = mean(pos,1);
 
 h=figure;
-h.Position = [100 100 800 800];
+h.Position = [100 100 1000 1000];
 set(gca,'LooseInset',get(gca,'TightInset'));
 %010
 subplot(2,2,1)
@@ -182,7 +182,6 @@ for i_trigger = 1:n_triggers
 end
 hold off
 axis equal; axis tight; axis vis3d; axis off
-h.Position = [100 100 800 900];
 % text
 subplot(2,2,4);
 axis off; % Turn off axis
@@ -190,14 +189,14 @@ hold on
 text(0, 0.88, 'SQUID-MAG', 'FontWeight', 'bold');
 if numdipoles == 2
     text(0.28, 0.8, 'dip_L (mm)', 'FontWeight', 'bold');
-    text(0.28 + 0.35, 0.8, 'dip_R (mm)', 'FontWeight', 'bold');
+    text(0.28 + 0.40, 0.8, 'dip_R (mm)', 'FontWeight', 'bold');
 else
     text(0.28, 0.8, ['dip' num2str(i_dip) ' (mm)'], 'FontWeight', 'bold');
 end
 for i_trigger = 1:n_triggers
         text(0, 0.8-(i_trigger*0.05), [params.trigger_labels{i_trigger} ': '], 'FontWeight', 'bold'); 
     for i_dip = 1:numdipoles
-        text(0.28 + (i_dip-1)*0.35, 0.8-(i_trigger*0.05), [num2str(10*pos(((i_trigger-1)*numdipoles)+i_dip,1),'%.1f') ' / ' num2str(10*pos(((i_trigger-1)*numdipoles)+i_dip,2),'%.1f') ' / ' num2str(10*pos(((i_trigger-1)*numdipoles)+i_dip,3),'%.1f')]); 
+        text(0.28 + (i_dip-1)*0.40, 0.8-(i_trigger*0.05), [num2str(10*pos(((i_trigger-1)*numdipoles)+i_dip,1),'%.1f') ' / ' num2str(10*pos(((i_trigger-1)*numdipoles)+i_dip,2),'%.1f') ' / ' num2str(10*pos(((i_trigger-1)*numdipoles)+i_dip,3),'%.1f')]); 
     end
 end
 hold off
@@ -219,7 +218,7 @@ end
 mean_pos = mean(pos,1);
 
 h=figure;
-h.Position = [100 100 800 800];
+h.Position = [100 100 1000 1000];
 set(gca,'LooseInset',get(gca,'TightInset'));
 %010
 subplot(2,2,1)
@@ -262,7 +261,6 @@ for i_trigger = 1:n_triggers
 end
 hold off
 axis equal; axis tight; axis vis3d; axis off
-h.Position = [100 100 800 900];
 % text
 subplot(2,2,4);
 axis off; % Turn off axis
@@ -270,14 +268,14 @@ hold on
 text(0, 0.88, 'OPM', 'FontWeight', 'bold');
 if numdipoles == 2
     text(0.28, 0.8, 'dip_L (mm)', 'FontWeight', 'bold');
-    text(0.28 + 0.35, 0.8, 'dip_R (mm)', 'FontWeight', 'bold');
+    text(0.28 + 0.40, 0.8, 'dip_R (mm)', 'FontWeight', 'bold');
 else
     text(0.28, 0.8, ['dip' num2str(i_dip) ' (mm)'], 'FontWeight', 'bold');
 end
 for i_trigger = 1:n_triggers
         text(0, 0.8-(i_trigger*0.05), [params.trigger_labels{i_trigger} ': '], 'FontWeight', 'bold'); 
     for i_dip = 1:numdipoles
-        text(0.28 + (i_dip-1)*0.35, 0.8-(i_trigger*0.05), [num2str(10*pos(((i_trigger-1)*numdipoles)+i_dip,1),'%.1f') ' / ' num2str(10*pos(((i_trigger-1)*numdipoles)+i_dip,2),'%.1f') ' / ' num2str(10*pos(((i_trigger-1)*numdipoles)+i_dip,3),'%.1f')]); 
+        text(0.28 + (i_dip-1)*0.40, 0.8-(i_trigger*0.05), [num2str(10*pos(((i_trigger-1)*numdipoles)+i_dip,1),'%.1f') ' / ' num2str(10*pos(((i_trigger-1)*numdipoles)+i_dip,2),'%.1f') ' / ' num2str(10*pos(((i_trigger-1)*numdipoles)+i_dip,3),'%.1f')]); 
     end
 end
 hold off
@@ -299,7 +297,7 @@ end
 mean_pos = mean(pos,1);
 
 h=figure;
-h.Position = [100 100 800 800];
+h.Position = [100 100 1000 1000];
 set(gca,'LooseInset',get(gca,'TightInset'));
 %010
 subplot(2,2,1)
@@ -342,7 +340,6 @@ for i_trigger = 1:n_triggers
 end
 hold off
 axis equal; axis tight; axis vis3d; axis off
-h.Position = [100 100 800 900];
 % text
 subplot(2,2,4);
 axis off; % Turn off axis
@@ -350,14 +347,14 @@ hold on
 text(0, 0.88, 'SQUID-GRAD', 'FontWeight', 'bold');
 if numdipoles == 2
     text(0.25, 0.8, 'dip_L (mm)', 'FontWeight', 'bold');
-    text(0.25 + 0.35, 0.8, 'dip_R (mm)', 'FontWeight', 'bold');
+    text(0.25 + 0.40, 0.8, 'dip_R (mm)', 'FontWeight', 'bold');
 else
     text(0.25, 0.8, ['dip' num2str(i_dip) ' (mm)'], 'FontWeight', 'bold');
 end
 for i_trigger = 1:n_triggers
         text(0, 0.8-(i_trigger*0.05), [params.trigger_labels{i_trigger} ': '], 'FontWeight', 'bold'); 
     for i_dip = 1:numdipoles
-        text(0.25 + (i_dip-1)*0.35, 0.8-(i_trigger*0.05), [num2str(10*pos(((i_trigger-1)*numdipoles)+i_dip,1),'%.1f') ' / ' num2str(10*pos(((i_trigger-1)*numdipoles)+i_dip,2),'%.1f') ' / ' num2str(10*pos(((i_trigger-1)*numdipoles)+i_dip,3),'%.1f')]); 
+        text(0.25 + (i_dip-1)*0.40, 0.8-(i_trigger*0.05), [num2str(10*pos(((i_trigger-1)*numdipoles)+i_dip,1),'%.1f') ' / ' num2str(10*pos(((i_trigger-1)*numdipoles)+i_dip,2),'%.1f') ' / ' num2str(10*pos(((i_trigger-1)*numdipoles)+i_dip,3),'%.1f')]); 
     end
 end
 hold off

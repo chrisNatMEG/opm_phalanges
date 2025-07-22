@@ -105,6 +105,9 @@ params.peaks = {};
 params.peaks{1} = [];
 params.peaks{1}.label = 'M100';
 params.peaks{1}.peak_latency = [0.08 0.13];
+params.peaks{1} = [];
+params.peaks{1}.label = 'M200';
+params.peaks{1}.peak_latency = [0.15 0.25];
 
 % HPI coregistration
 params.hpi_freq = 33;
@@ -140,7 +143,7 @@ if on_server
 else
     subs_to_run = 2; %1:size(subses,1)
 end
-excl_subs = [];
+excl_subs = [3];
 excl_subs_src = excl_subs;
 
 %% Loop over subjects
@@ -463,11 +466,11 @@ end
 close all
 
 %% Save results in report
-for i_sub = setdiff(subs_to_run,excl_subs)
-    params.sub = ['sub_' num2str(i_sub,'%02d')];
-    save_path = fullfile(base_save_path,params.sub);
-    create_sub_reports(save_path, i_sub, params);
-end
+% for i_sub = setdiff(subs_to_run,excl_subs)
+%     params.sub = ['sub_' num2str(i_sub,'%02d')];
+%     save_path = fullfile(base_save_path,params.sub);
+%     create_sub_reports(save_path, i_sub, params);
+% end
 
 %% Sensor level group analysis
 if overwrite.sens_group

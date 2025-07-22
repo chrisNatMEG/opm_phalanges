@@ -32,7 +32,7 @@ ft_default.showcallinfo = 'no';
 %% Overwrite
 overwrite = [];
 if on_server
-    overwrite.preproc = false;
+    overwrite.preproc = true;
     overwrite.coreg = true;
     overwrite.mri = false;
     overwrite.dip = true;
@@ -67,7 +67,7 @@ params.delay = 0.041; % Stimulus delay in seconds (e.g., 0.01 for eartubes or 0.
 
 % Filter
 params.filter = [];
-params.filter.hp_freq = 0.3;
+params.filter.hp_freq = [];
 params.filter.lp_freq = 70;
 params.filter.bp_freq = [];
 params.filter.notch = [50 60 100 120 150]; %[50 60 100 120 150];
@@ -114,10 +114,12 @@ params.numdipoles = 1;
 
 % Source reconstruction - distributed
 params.source_fixedori = true; 
-params.covs = {' '};%{'empty_room', ' '}; % noise cov to use; default=prestim, alt: 'resting_state', 'all', 'empty_room' , prestim = ' '
+params.covs = {' ', 'empty_room'};%{'empty_room', ' '}; % noise cov to use; default=prestim, alt: 'resting_state', 'all', 'empty_room' , prestim = ' '
 params.mne_view = 'sides';
 params.plot_inflated = true;
 params.target_region = 'postcentral';
+
+save(fullfile(base_save_path, params.paradigm), 'params', '-v7.3');          
 
 %% Subjects + dates
 subses = {'0005' '240208';
@@ -421,11 +423,11 @@ for i_sub = setdiff(subs_to_run,excl_subs)
         squid_timelocked = load(fullfile(save_path, [params.sub '_squid_timelocked.mat'])).timelocked;
         
         for i = 1:length(params.trigger_codes)
-            if exist(fullfile(save_path, [params.sub '_resting_state_squid.mat']),'file') && exist(fullfile(save_path, [params.sub '_resting_state_opm.mat']),'file')
+            if any(strcmp(params.covs,'resting_state')) && exist(fullfile(save_path, [params.sub '_resting_state_squid.mat']),'file') && exist(fullfile(save_path, [params.sub '_resting_state_opm.mat']),'file')
                 opm_timelockedT{i}.cov_RS = load(fullfile(save_path, [params.sub '_resting_state_opm.mat'])).opm_RS_cov;
                 squid_timelocked{i}.cov_RS = load(fullfile(save_path, [params.sub '_resting_state_squid.mat'])).squid_RS_cov;
             end
-            if exist(fullfile(save_path, [params.sub '_ER_squid.mat']),'file') && exist(fullfile(save_path, [params.sub '_ER_opm.mat']),'file')
+            if any(strcmp(params.covs,'empty_room')) && exist(fullfile(save_path, [params.sub '_ER_squid.mat']),'file') && exist(fullfile(save_path, [params.sub '_ER_opm.mat']),'file')
                 opm_timelockedT{i}.cov_ER = load(fullfile(save_path, [params.sub '_ER_opm.mat'])).opm_ER.cov;
                 squid_timelocked{i}.cov_ER = load(fullfile(save_path, [params.sub '_ER_squid.mat'])).squid_ER.cov;
             end
@@ -445,34 +447,37 @@ end
 close all
 
 %% Save results in report
-for i_sub = setdiff(subs_to_run,excl_subs)
-    params.sub = ['sub_' num2str(i_sub,'%02d')];
-    save_path = fullfile(base_save_path,params.sub);
-    create_sub_reports(save_path, i_sub, params);
-end
+% for i_sub = setdiff(subs_to_run,excl_subs)
+%     params.sub = ['sub_' num2str(i_sub,'%02d')];
+%     save_path = fullfile(base_save_path,params.sub);
+%     create_sub_reports(save_path, i_sub, params);
+% end
 
 %% Sensor level group analysis
 if overwrite.sens_group
-    if ~exist(fullfile(base_save_path,'figs'), 'dir')
-           mkdir(fullfile(base_save_path,'figs'))
+    save_path = fullfile(base_save_path,params.paradigm);
+    if ~exist(fullfile(save_path,'figs'), 'dir')
+           mkdir(fullfile(save_path,'figs'))
     end
     subs = setdiff(subs_to_run,excl_subs);
-    sensor_results_goup(base_save_path,subs, params)
+    sensor_results_goup(save_path,subs, params)
     close all
 end
 
 %% Dipole group analysis
 if overwrite.dip_group
+    save_path = fullfile(base_save_path,params.paradigm);
     subs = setdiff(subs_to_run,excl_subs_src);
-    dipole_results_goup(base_save_path,subs, params)
+    dipole_results_goup(save_path,subs, params)
 end
 
 %% MNE group analysis
 if overwrite.mne_group
+    save_path = fullfile(base_save_path,params.paradigm);
     subs = setdiff(subs_to_run,excl_subs_src);
     for i_cov = 1:length(params.covs)
         params.use_cov = params.covs{i_cov}; 
-        mne_results_goup(base_save_path, subs, params);
+        mne_results_goup(save_path, subs, params);
     end
 end
 
