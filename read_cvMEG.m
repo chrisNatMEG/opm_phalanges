@@ -67,20 +67,22 @@ cfg.threshold = params.z_threshold;
 [cfg,badtrl_squid_jump] = ft_badsegment(cfg, squid_cleaned);
 squid_cleaned = ft_rejectartifact(cfg,squid_cleaned);
 
+badtrl_squidmag_std = zeros(0,2);
+badtrl_squidgrad_std = zeros(0,2);
 % Reject noisy trials
-cfg = [];
-cfg.channel = 'megmag';
-cfg.metric = 'std';
-cfg.threshold = params.squidmag_std_threshold;
-[cfg,badtrl_squidmag_std] = ft_badsegment(cfg, squid_cleaned);
-squid_cleaned = ft_rejectartifact(cfg,squid_cleaned);
-
-cfg = [];
-cfg.channel = 'megplanar';
-cfg.metric = 'std';
-cfg.threshold = params.squidgrad_std_threshold;
-[cfg,badtrl_squidgrad_std] = ft_badsegment(cfg, squid_cleaned);
-squid_cleaned = ft_rejectartifact(cfg,squid_cleaned);
+% cfg = [];
+% cfg.channel = 'megmag';
+% cfg.metric = 'std';
+% cfg.threshold = params.squidmag_std_threshold;
+% [cfg,badtrl_squidmag_std] = ft_badsegment(cfg, squid_cleaned);
+% squid_cleaned = ft_rejectartifact(cfg,squid_cleaned);
+% 
+% cfg = [];
+% cfg.channel = 'megplanar';
+% cfg.metric = 'std';
+% cfg.threshold = params.squidgrad_std_threshold;
+% [cfg,badtrl_squidgrad_std] = ft_badsegment(cfg, squid_cleaned);
+% squid_cleaned = ft_rejectartifact(cfg,squid_cleaned);
 
 cfg = [];
 cfg.channel = 'megmag';
@@ -141,13 +143,14 @@ cfg.threshold = params.z_threshold;
 [cfg, badtrl_squideeg_jump] = ft_badsegment(cfg, squideeg_cleaned);
 squideeg_cleaned = ft_rejectartifact(cfg,squideeg_cleaned);
 
-% Reject noisy trials
-cfg = [];
-cfg.channel = {'EEG*'};
-cfg.metric = 'std';
-cfg.threshold = params.eeg_std_threshold;
-[cfg, badtrl_squideeg_std] = ft_badsegment(cfg, squideeg_cleaned);
-squideeg_cleaned = ft_rejectartifact(cfg,squideeg_cleaned);
+badtrl_squideeg_std = zeros(0,2);
+% % Reject noisy trials
+% cfg = [];
+% cfg.channel = {'EEG*'};
+% cfg.metric = 'std';
+% cfg.threshold = params.eeg_std_threshold;
+% [cfg, badtrl_squideeg_std] = ft_badsegment(cfg, squideeg_cleaned);
+% squideeg_cleaned = ft_rejectartifact(cfg,squideeg_cleaned);
 
 %% Save 
 save(fullfile(save_path, [params.sub '_squideeg_badchs']), ...

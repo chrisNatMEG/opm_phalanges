@@ -43,7 +43,7 @@ if on_server
     overwrite.dip_group = true;
     overwrite.mne_group = true;
 else
-    overwrite.preproc = false;
+    overwrite.preproc = true;
     overwrite.coreg = true;
     overwrite.mri = false;
     overwrite.dip = true;
@@ -68,8 +68,8 @@ params.delay = 0.01; % Stimulus delay in seconds (e.g., 0.01 for eartubes or 0.0
 
 % Filter
 params.filter = [];
-params.filter.hp_freq = [];
-params.filter.lp_freq = 30;
+params.filter.hp_freq = 0.1;
+params.filter.lp_freq = 50;
 params.filter.notch = [50 60 100]; %[50 60 100 120 150];
 
 % Spatiotemporal filter (OPM-MEG only)
@@ -81,15 +81,17 @@ params.amm_out = 3;
 params.amm_thr = 1;
 
 % Bad channel and trial detection thresholds
-params.z_threshold = 20;
-params.corr_threshold = 0.6; % correlation threshold for badchannel neighbors
-params.opm_std_threshold = 5e-12;
-params.squidmag_std_threshold = 2e-12;
-params.squidgrad_std_threshold = 2000e-13;
-params.eeg_std_threshold = 1e-4;
-params.opm_range_threshold = 10e-12;
-params.squidmag_range_threshold = 4e-12;
-params.squidgrad_range_threshold = 4000e-13;
+params.outlier_zscore = 3; % Outliers: how many stddevs above mean
+params.outlier_ratio = 0.5; % Outliers: ratio of frequencies over threshold above which the channel is considered an outlier
+params.corr_threshold = 0.6; % Correlation threshold for badchannei detection based on neighbor correlation
+params.z_threshold = 20; % Zmax threshold for badchannel and trial detection based on jumps
+% params.opm_std_threshold = 5e-12; % Standard deviation threshold for OPM badtrial detection
+% params.squidmag_std_threshold = 2.5e-12; % Standard deviation for SQUID-MAG badtrial detection
+% params.squidgrad_std_threshold = 2000e-13; % Standard deviation for SQUID-GRAD badtrial detection
+% params.eeg_std_threshold = 10e-4; % Standard deviation for EEG badtrial detection
+params.opm_range_threshold = 20e-12; % Range for OPM badtrial detection
+params.squidmag_range_threshold = 10e-12; % Range for SQUID-MAG badtrial detection
+params.squidgrad_range_threshold = 4000e-13; % Range for SQUID-GRAD badtrial detection
 
 % ICA ECG&EOG artifact removal 
 params.n_comp = 40;
@@ -98,18 +100,20 @@ params.ica_coh = 0.95; % cutoff for EOG/ECG coherence
 
 % Timelocking
 params.ds_freq = 500; % downsample frequency (timelock)
-params.trigger_codes = {1};%{1 3 5 11 13};
-params.trigger_labels = {'STD'}; %{'STD' 'LNG' 'LG' 'HNG' 'HG'};
+params.trigger_codes = {1 [3 11] [5 13]}; % combined oddball-nogo and oddball-go
+params.trigger_labels = {'std' 'oddNoGo' 'oddGo'};
+% params.trigger_codes = {1 3 5 11 13};
+% params.trigger_labels = {'STD' 'LNG' 'LG' 'HNG' 'HG'};
 params.peaks = {};
 params.peaks{1} = [];
 params.peaks{1}.label = 'M100';
 params.peaks{1}.peak_latency = [0.08 0.13];
-params.peaks{2} = [];
-params.peaks{2}.label = 'M200';
-params.peaks{2}.peak_latency = [0.15 0.25];
-params.peaks{3} = [];
-params.peaks{3}.label = 'M50';
-params.peaks{3}.peak_latency = [0.04 0.08];
+% params.peaks{2} = [];
+% params.peaks{2}.label = 'M200';
+% params.peaks{2}.peak_latency = [0.15 0.25];
+% params.peaks{3} = [];)
+% params.peaks{3}.label = 'M50';
+% params.peaks{3}.peak_latency = [0.04 0.08];
 
 % HPI coregistration
 params.hpi_freq = 33;

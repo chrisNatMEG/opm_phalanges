@@ -67,7 +67,7 @@ params.delay = 0.041; % Stimulus delay in seconds (e.g., 0.01 for eartubes or 0.
 
 % Filter
 params.filter = [];
-params.filter.hp_freq = [];
+params.filter.hp_freq = 0.1;
 params.filter.lp_freq = 70;
 params.filter.bp_freq = [];
 params.filter.notch = [50 60 100 120 150]; %[50 60 100 120 150];
@@ -81,15 +81,18 @@ params.amm_out = 3;
 params.amm_thr = 1;
 
 % Bad channel and trial detection thresholds
-params.z_threshold = 20;
-params.corr_threshold = 0.6; % correlation threshold for badchannel neighbors
-params.opm_std_threshold = 5e-12;
-params.squidmag_std_threshold = 2e-12;
-params.squidgrad_std_threshold = 2000e-13;
-params.eeg_std_threshold = 1e-4;
-params.opm_range_threshold = 10e-12;
-params.squidmag_range_threshold = 4e-12;
-params.squidgrad_range_threshold = 4000e-13;
+params.outlier_zscore = 3; % Outliers: how many stddevs above mean
+params.outlier_ratio = 0.5; % Outliers: ratio of frequencies over threshold above which the channel is considered an outlier
+params.corr_threshold = 0.6; % Correlation threshold for badchannei detection based on neighbor correlation
+params.z_threshold = 20; % Zmax threshold for badchannel and trial detection based on jumps
+% params.opm_std_threshold = 5e-12; % Standard deviation threshold for OPM badtrial detection
+% params.squidmag_std_threshold = 2.5e-12; % Standard deviation for SQUID-MAG badtrial detection
+% params.squidgrad_std_threshold = 2000e-13; % Standard deviation for SQUID-GRAD badtrial detection
+% params.eeg_std_threshold = 10e-4; % Standard deviation for EEG badtrial detection
+params.opm_range_threshold = 20e-12; % Range for OPM badtrial detection
+params.squidmag_range_threshold = 10e-12; % Range for SQUID-MAG badtrial detection
+params.squidgrad_range_threshold = 4000e-13; % Range for SQUID-GRAD badtrial detection
+
 
 % ICA ECG&EOG artifact removal 
 params.n_comp = 40;
@@ -447,11 +450,11 @@ end
 close all
 
 %% Save results in report
-% for i_sub = setdiff(subs_to_run,excl_subs)
-%     params.sub = ['sub_' num2str(i_sub,'%02d')];
-%     save_path = fullfile(base_save_path,params.sub);
-%     create_sub_reports(save_path, i_sub, params);
-% end
+for i_sub = setdiff(subs_to_run,excl_subs)
+    params.sub = ['sub_' num2str(i_sub,'%02d')];
+    save_path = fullfile(base_save_path,params.paradigm,params.sub);
+    create_sub_reports(save_path, i_sub, params);
+end
 
 %% Sensor level group analysis
 if overwrite.sens_group

@@ -101,11 +101,7 @@ cfg.baselinewindow  = [-params.pre 0];
 opm_epo = ft_preprocessing(cfg, opm_epo);
 
 % Find bad opm channels
-cfg = [];
-cfg.trl = trl_opm;
-cfg.z_threshold = params.z_threshold;
-cfg.corr_threshold = params.corr_threshold;
-[badchs_opm, badchs_opm_flat, badchs_opm_std, badchs_opm_neighbors, badchs_opm_zmax, badchs_outlier, badtrl_opm_zmax] = opm_badchannels(cfg,opm_raw);
+[badchs_opm, badchs_opm_flat, badchs_opm_std, badchs_opm_neighbors, badchs_opm_outlier, badchs_opm_noloc] = opm_badchannels(opm_raw,trl_opm,params,save_path);
 clear opm_raw
 
 %% --- Resample --- 
@@ -145,14 +141,13 @@ if isfield(params,'flip_sign') && params.flip_sign
     for i = 1:length(comb.trial)
         comb.trial{i}(chs,:) = -comb.trial{i}(chs,:);
     end
-    %comb.grad.chanori = -comb.grad.chanori;
-    %comb.grad.coilori = -comb.grad.coilori;
+    comb.grad.chanori = -comb.grad.chanori;
+    comb.grad.coilori = -comb.grad.coilori;
 end
 
 %% OPM 
 cfg = [];
 cfg.channel = setdiff(comb.label,badchs_opm);
-cfg.trials  = setdiff(1:length(comb.trial),badtrl_opm_zmax); % remove bad trials
 comb = ft_selectdata(cfg, comb);
 
 cfg = []; % separate ExG channels
@@ -192,6 +187,8 @@ for i = 1:length(opm_cleaned.trial)
 end
 
 % Reject jump trials
+smplinfo = opm_cleaned.sampleinfo;
+
 cfg = [];
 cfg.channel = {'*bz'};
 cfg.metric = 'maxzvalue';
@@ -202,13 +199,14 @@ cfg.threshold = params.z_threshold;
 [cfg,badtrl_opm_jump] = ft_badsegment(cfg, opm_cleaned);
 opm_cleaned = ft_rejectartifact(cfg,opm_cleaned);
 
-% Reject noisy trials
-cfg = [];
-cfg.channel = {'*bz'};
-cfg.metric = 'std';
-cfg.threshold = params.opm_std_threshold;
-[cfg,badtrl_opm_std] = ft_badsegment(cfg, opm_cleaned);
-opm_cleaned = ft_rejectartifact(cfg,opm_cleaned);
+badtrl_opm_std = zeros(0,2);
+% % Reject noisy trials
+% cfg = [];
+% cfg.channel = {'*bz'};
+% cfg.metric = 'std';
+% cfg.threshold = params.opm_std_threshold;
+% [cfg,badtrl_opm_std] = ft_badsegment(cfg, opm_cleaned);
+% opm_cleaned = ft_rejectartifact(cfg,opm_cleaned);
 
 % Reject noisy trials
 cfg = [];
@@ -220,6 +218,26 @@ opm_cleaned = ft_rejectartifact(cfg,opm_cleaned);
 
 % Convert grad unit to cm to match TRIUX grad
 opm_cleaned.grad = ft_convert_units(opm_cleaned.grad,'cm');
+
+% Save bad channels 
+save(fullfile(save_path, [params.sub '_opm_badchs']), ...
+    'badchs_opm_flat', ...
+    'badchs_opm_std', ...
+    'badchs_opm_neighbors', ...
+    'badchs_opm_outlier' , ...
+    'badchs_opm_noloc',"-v7.3"); 
+
+% Save bad trials
+[~,idx]=ismember(smplinfo,badtrl_opm_jump,'rows');
+badtrl_opm_jump = find(idx);
+[~,idx]=ismember(smplinfo,badtrl_opm_std,'rows');
+badtrl_opm_std = find(idx);
+[~,idx]=ismember(smplinfo,badtrl_opm_range,'rows');
+badtrl_opm_range = find(idx);
+save(fullfile(save_path, [params.sub '_opm_badtrls']), ...
+    'badtrl_opm_jump', ...
+    'badtrl_opm_std', ...
+    'badtrl_opm_range',"-v7.3"); 
 
 %% EEG
 cfg = [];
@@ -253,6 +271,8 @@ for i = 1:length(opmeeg_cleaned.trial)
     opmeeg_cleaned.trial{i} = vertcat(opmeeg_cleaned.trial{i}, ExG.trial{i}); 
 end
 
+smplinfo = opmeeg_cleaned.sampleinfo;
+
 % Reject jump trials
 cfg = [];
 cfg.channel = {'EEG*'};
@@ -264,38 +284,21 @@ cfg.threshold = params.z_threshold;
 [cfg, badtrl_opmeeg_jump] = ft_badsegment(cfg, opmeeg_cleaned);
 opmeeg_cleaned = ft_rejectartifact(cfg,opmeeg_cleaned);
 
-% Reject noisy trials
-cfg = [];
-cfg.channel = {'EEG*'};
-cfg.metric = 'std';
-cfg.threshold = params.eeg_std_threshold;
-[cfg, badtrl_opmeeg_std] = ft_badsegment(cfg, opmeeg_cleaned);
-opmeeg_cleaned = ft_rejectartifact(cfg,opmeeg_cleaned);
+badtrl_opmeeg_std = zeros(0,2);
+% % Reject noisy trials
+% cfg = [];
+% cfg.channel = {'EEG*'};
+% cfg.metric = 'std';
+% cfg.threshold = params.eeg_std_threshold;
+% [cfg, badtrl_opmeeg_std] = ft_badsegment(cfg, opmeeg_cleaned);
+% opmeeg_cleaned = ft_rejectartifact(cfg,opmeeg_cleaned);
 
-%% Save 
-save(fullfile(save_path, [params.sub '_opm_badchs']), ...
-    'badchs_opm_flat', ...
-    'badchs_opm_std', ...
-    'badchs_opm_neighbors', ...
-    'badchs_opm_zmax' , ...
-    'badchs_outlier',"-v7.3"); 
-
+% Save bad channels 
 save(fullfile(save_path, [params.sub '_opmeeg_badchs']), ...
     'badchs_opmeeg_flat', ...
     'badchs_opmeeg_neighbors', "-v7.3"); 
 
-[~,idx]=ismember(opm_cleaned.sampleinfo,badtrl_opm_jump,'rows');
-badtrl_opm_jump = find(idx);
-[~,idx]=ismember(opm_cleaned.sampleinfo,badtrl_opm_std,'rows');
-badtrl_opm_std = find(idx);
-[~,idx]=ismember(opm_cleaned.sampleinfo,badtrl_opm_range,'rows');
-badtrl_opm_range = find(idx);
-save(fullfile(save_path, [params.sub '_opm_badtrls']), ...
-    'badtrl_opm_jump', ...
-    'badtrl_opm_std', ...
-    'badtrl_opm_range', ...
-    'badtrl_opm_zmax' ,"-v7.3"); 
-
+% Save bad trials
 [~,idx]=ismember(opmeeg_cleaned.sampleinfo,badtrl_opmeeg_jump,'rows');
 badtrl_opmeeg_jump = find(idx);
 [~,idx]=ismember(opmeeg_cleaned.sampleinfo,badtrl_opmeeg_std,'rows');
