@@ -107,18 +107,18 @@ img.Style = {Width('14cm'), ScaleToFit};
 add(section, img);
 add(chapter, section);
 
-% %% Ntrl section
-% section = Section('N_{trls}');
-% section.Numbered = false; % Remove section numbering
-% dataCells = {};
-% dataCells{1} = n_trl.squidmag;
-% dataCells{2} = n_trl.opm;
-% addGroupComparisonTables(section, dataCells, params.trigger_labels, {'squid', 'opm'}, '%.1f')
-% img = Image(fullfile(save_path,'figs',['Ntrl_MEG_box.jpg']));
-% img.Style = {Width('14cm'), ScaleToFit};
-% add(section, img);
-% add(chapter, section);
-% 
+%% Ntrl section
+section = Section('N_{trls}');
+section.Numbered = false; % Remove section numbering
+dataCells = {};
+dataCells{1} = n_trl.squidmag;
+dataCells{2} = n_trl.opm;
+addGroupComparisonTables(section, dataCells, params.trigger_labels, {'squid', 'opm'}, '%.1f')
+img = Image(fullfile(save_path,'figs',['Ntrl_MEG_box.jpg']));
+img.Style = {Width('14cm'), ScaleToFit};
+add(section, img);
+add(chapter, section);
+
 add(rpt, chapter);
 
 %% Bad Channels chapter
