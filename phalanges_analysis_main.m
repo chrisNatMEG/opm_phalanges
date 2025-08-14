@@ -117,7 +117,7 @@ params.numdipoles = 1;
 
 % Source reconstruction - distributed
 params.source_fixedori = true; 
-params.covs = {' ', 'empty_room'};%{'empty_room', ' '}; % noise cov to use; default=prestim, alt: 'resting_state', 'all', 'empty_room' , prestim = ' '
+params.covs = {' '};%{'empty_room', ' '}; % noise cov to use; default=prestim, alt: 'resting_state', 'all', 'empty_room' , prestim = ' '
 params.mne_view = 'sides';
 params.plot_inflated = true;
 params.target_region = 'postcentral';

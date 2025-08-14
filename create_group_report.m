@@ -38,6 +38,7 @@ dat = load(fullfile(save_path, ['group_sensor' peak_label]));
 amp = dat.amp;
 latency = dat.latency;
 snr = dat.snr;
+n_trl = dat.n_trl;
 
 %% SNR_error section
 section = Section('SNR_{error}');
@@ -51,7 +52,7 @@ for i = 1:length(rptTable)
     para = Paragraph(" ");
     add(section,para);
 end
-img = Image(fullfile(save_path,'figs',['SNR_error_box.jpg']));
+img = Image(fullfile(save_path,'figs',['SNR_error_box' peak_label '.jpg']));
 img.Style = {Width('14cm'), ScaleToFit};
 add(section, img);
 add(chapter, section);
@@ -68,7 +69,7 @@ for i = 1:length(rptTable)
     para = Paragraph(" ");
     add(section,para);
 end
-img = Image(fullfile(save_path,'figs',['SNR_prestim_box.jpg']));
+img = Image(fullfile(save_path,'figs',['SNR_prestim_box' peak_label '.jpg']));
 img.Style = {Width('14cm'), ScaleToFit};
 add(section, img);
 add(chapter, section);
@@ -85,7 +86,7 @@ for i = 1:length(rptTable)
     para = Paragraph(" ");
     add(section,para);
 end
-img = Image(fullfile(save_path,'figs',['Amplitude_meg_box.jpg']));
+img = Image(fullfile(save_path,'figs',['Amplitude_meg_box' peak_label '.jpg']));
 img.Style = {Width('14cm'), ScaleToFit};
 add(section, img);
 add(chapter, section);
@@ -102,7 +103,7 @@ for i = 1:length(rptTable)
     para = Paragraph(" ");
     add(section,para);
 end
-img = Image(fullfile(save_path,'figs',['Latency_box.jpg']));
+img = Image(fullfile(save_path,'figs',['Latency_box' peak_label '.jpg']));
 img.Style = {Width('14cm'), ScaleToFit};
 add(section, img);
 add(chapter, section);
@@ -113,8 +114,13 @@ section.Numbered = false; % Remove section numbering
 dataCells = {};
 dataCells{1} = n_trl.squidmag;
 dataCells{2} = n_trl.opm;
-addGroupComparisonTables(section, dataCells, params.trigger_labels, {'squid', 'opm'}, '%.1f')
-img = Image(fullfile(save_path,'figs',['Ntrl_MEG_box.jpg']));
+rptTable = addGroupComparisonTables(dataCells, params.trigger_labels, {'squid', 'opm'}, '%.1f');
+for i = 1:length(rptTable)
+    add(section, rptTable{i});
+    para = Paragraph(" ");
+    add(section,para);
+end
+img = Image(fullfile(save_path,'figs',['Ntrl_MEG_box' peak_label '.jpg']));
 img.Style = {Width('14cm'), ScaleToFit};
 add(section, img);
 add(chapter, section);

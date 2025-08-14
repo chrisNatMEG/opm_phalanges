@@ -74,10 +74,10 @@ params.filter.notch = [50 60 100]; %[50 60 100 120 150];
 
 % Spatiotemporal filter (OPM-MEG only)
 params.do_hfc = true;
-params.hfc_order = 1;
+params.hfc_order = 2;
 params.do_amm = false;
 params.amm_in = 12;
-params.amm_out = 3;
+params.amm_out = 2;
 params.amm_thr = 1;
 
 % Bad channel and trial detection thresholds
@@ -198,9 +198,10 @@ for i_sub = setdiff(subs_to_run,excl_subs)
         % Correct old trigger codes
         if any(opm_cleaned.trialinfo==18)
             old_codes = [1 18 20 10 12];
+            new_codes = {1 3 5 11 13};
             for i_code = 2:length(old_codes)
-                opm_cleaned.trialinfo(opm_cleaned.trialinfo==old_codes(i_code)) = params.trigger_codes{i_code};
-                opmeeg_cleaned.trialinfo(opmeeg_cleaned.trialinfo==old_codes(i_code)) = params.trigger_codes{i_code};
+                opm_cleaned.trialinfo(opm_cleaned.trialinfo==old_codes(i_code)) = new_codes{i_code};
+                opmeeg_cleaned.trialinfo(opmeeg_cleaned.trialinfo==old_codes(i_code)) = new_codes{i_code};
             end
         end
 
@@ -253,9 +254,10 @@ for i_sub = setdiff(subs_to_run,excl_subs)
         % Correct old trigger codes
         if any(squid_cleaned.trialinfo==18)
             old_codes = [1 18 20 10 12];
+            new_codes = {1 3 5 11 13};
             for i_code = 1:length(old_codes)
-                squid_cleaned.trialinfo(squid_cleaned.trialinfo==old_codes(i_code)) = params.trigger_codes{i_code};
-                squideeg_cleaned.trialinfo(squideeg_cleaned.trialinfo==old_codes(i_code)) = params.trigger_codes{i_code};
+                squid_cleaned.trialinfo(squid_cleaned.trialinfo==old_codes(i_code)) = new_codes{i_code};
+                squideeg_cleaned.trialinfo(squideeg_cleaned.trialinfo==old_codes(i_code)) = new_codes{i_code};
             end
         end
 
@@ -344,7 +346,7 @@ for i_sub = setdiff(subs_to_run,excl_subs)
         disp(['Not overwriting OPM transform for ' params.sub]);
     else
         meg_file = fullfile(raw_path, 'meg', [params.paradigm 'MEG_proc-tsss+corr98+mc+avgHead_meg.fif']);
-        if i_sub == 9
+        if ~exist(meg_file,'file')
             meg_file = fullfile(raw_path, 'meg', [params.paradigm 'MEG_proc-tsss+corr98.fif']);
         end
         ft_hastoolbox('mne', 1);
@@ -470,6 +472,14 @@ for i_sub = setdiff(subs_to_run,excl_subs)
     end
 end
 close all
+
+%% Save results in report
+for i_sub = setdiff(subs_to_run,excl_subs)
+    params.sub = ['sub_' num2str(i_sub,'%02d')];
+    save_path = fullfile(base_save_path,params.paradigm,params.sub);
+    create_sub_reports(save_path, i_sub, params);
+end
+
 
 %% Sensor level group analysis
 if overwrite.sens_group

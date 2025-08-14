@@ -307,14 +307,14 @@ for i_peak = 1:length(params.peaks)
         xticklabels(params.trigger_labels)
         saveas(h, fullfile(base_save_path, 'figs', ['mne_mom_' peak_label cov hemi_labels{i_hemi} '.jpg']))
         
-        data = {1e9*mom_squidmag, 1e9*mom_opm, 1e9*mom_squidgrad};
+        data = {1e9*1e-4*mom_squidmag, 1e9*1e-4*mom_opm, 1e9*1e-4*1e-2*mom_squidgrad};
         triggerLabels = params.trigger_labels;
         yLabelStr = 'Peak moment [nAm]';
         titleStr = ['Group level ' params.peaks{1}.label ' MNE Peak Moment - SQMAG vs OPM vs SQGRAD'];
         save_path = fullfile(base_save_path, 'figs', ['mne_mom_sqmag_opm_sqgrad' peak_label cov hemi_labels{i_hemi} '_box.jpg']);
         pairedBoxplots(data, triggerLabels, yLabelStr, titleStr, save_path,1);
         
-        data = {1e9*mom_squidmag, 1e9*mom_opm};
+        data = {1e9*1e-4*mom_squidmag, 1e9*1e-4*mom_opm};
         triggerLabels = params.trigger_labels;
         yLabelStr = 'Peak moment [nAm]';
         titleStr = ['Group level ' params.peaks{1}.label ' MNE Peak Moment - SQMAG vs OPM'];

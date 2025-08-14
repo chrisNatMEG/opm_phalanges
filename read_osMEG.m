@@ -246,16 +246,16 @@ opmeeg_cleaned = ft_selectdata(cfg, comb);
 clear comb
 
 % Interpolate bad chs
-cfg = [];
-cfg.method = 'triangulation';
-cfg.senstype = 'EEG';
-neighbors = ft_prepare_neighbours(cfg,opmeeg_cleaned);
-cfg = [];
-cfg.method = 'spline';
-cfg.neighbors = neighbors;
-cfg.badchannel = badchs_opmeeg;
-cfg.senstype = 'EEG';
-opmeeg_cleaned = ft_channelrepair(cfg, opmeeg_cleaned);
+% cfg = [];
+% cfg.method = 'triangulation';
+% cfg.senstype = 'EEG';
+% neighbors = ft_prepare_neighbours(cfg,opmeeg_cleaned);
+% cfg = [];
+% cfg.method = 'spline';
+% cfg.neighbors = neighbors;
+% cfg.badchannel = badchs_opmeeg;
+% cfg.senstype = 'EEG';
+% opmeeg_cleaned = ft_channelrepair(cfg, opmeeg_cleaned);
 
 % Re-reference
 cfg = [];

@@ -191,7 +191,7 @@ for i_peak = 1:length(params.peaks)
         pairedBoxplots(data, triggerLabels, yLabelStr, titleStr, save_path,1);
         
         %% Peak mom
-        data = {1e9*1e-4*mom_squidmag, 1e9*1e-4*mom_opm, 1e9*1e-4*mom_squidgrad};
+        data = {1e9*1e-4*mom_squidmag, 1e9*1e-4*mom_opm, 1e9*1e-4*1e-2*mom_squidgrad};
         triggerLabels = params.trigger_labels;
         yLabelStr = 'Peak moment [nAm]';
         titleStr = ['Group level ' params.peaks{1}.label ' peak dipole moment - SQMAG vs OPM vs SQGRAD'];
