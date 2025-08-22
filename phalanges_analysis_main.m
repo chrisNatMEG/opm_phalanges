@@ -77,7 +77,7 @@ params.do_hfc = true;
 params.hfc_order = 1;
 params.do_amm = false;
 params.amm_in = 12;
-params.amm_out = 3;
+params.amm_out = 2;
 params.amm_thr = 1;
 
 % Bad channel and trial detection thresholds
@@ -137,7 +137,9 @@ subses = {'0005' '240208';
     '1191' '241024';
     '1193' '241029';
     '1194' '241029';
-    '1195' '241030'};
+    '1195' '241030';
+    '1209' '250219';
+    '1215' '250415'};
 
 if on_server
     subs_to_run = 1:size(subses,1);

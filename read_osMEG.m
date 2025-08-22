@@ -146,6 +146,13 @@ if isfield(params,'flip_sign') && params.flip_sign
 end
 
 %% OPM 
+if ~isempty(params.bads)
+    badchs_opm = [badchs_opm; params.bads'];
+    badchs_opm_manual = params.bads';
+else
+    badchs_opm_manual = [];
+end
+
 cfg = [];
 cfg.channel = setdiff(comb.label,badchs_opm);
 comb = ft_selectdata(cfg, comb);
@@ -189,6 +196,13 @@ end
 % Reject jump trials
 smplinfo = opm_cleaned.sampleinfo;
 
+if isfield(params,'debug') && params.debug == 1
+    cfg = [];
+    cfg.method = 'summary';
+    cfg.channel = '*bz';
+    dummy = ft_rejectvisual(cfg,opm_cleaned);
+end
+
 cfg = [];
 cfg.channel = {'*bz'};
 cfg.metric = 'maxzvalue';
@@ -225,6 +239,7 @@ save(fullfile(save_path, [params.sub '_opm_badchs']), ...
     'badchs_opm_std', ...
     'badchs_opm_neighbors', ...
     'badchs_opm_outlier' , ...
+    'badchs_opm_manual' , ...
     'badchs_opm_noloc',"-v7.3"); 
 
 % Save bad trials

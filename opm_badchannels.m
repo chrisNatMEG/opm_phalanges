@@ -14,6 +14,12 @@ cfg = [];
 cfg.channel = '*_b*';
 data = ft_selectdata(cfg, data);
 
+if isfield(params,'bads')
+    cfg = [];
+    cfg.channel = setdiff(data.label,params.bads);
+    data = ft_selectdata(cfg, data);
+end
+
 chs = find(contains(data.label,'_b'));
 
 %% Find channels with flat segments or high std
