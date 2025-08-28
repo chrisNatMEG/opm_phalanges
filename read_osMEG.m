@@ -273,12 +273,20 @@ clear comb
 % opmeeg_cleaned = ft_channelrepair(cfg, opmeeg_cleaned);
 
 % Re-reference
-cfg = [];
-cfg.channel = 'all';
-cfg.refef = 'yes';
-cfg.refmethod = 'avg';
-cfg.reffchannel = 'all';
-opmeeg_cleaned = ft_preprocessing(cfg,opmeeg_cleaned);
+if isfield(params,'eeg_reref') && strcmp(params.eeg_reref,'avg')
+    cfg = [];
+    cfg.channel = 'all';
+    cfg.reref = 'yes';
+    cfg.refchannel = 'all';
+    opmeeg_cleaned = ft_preprocessing(cfg,opmeeg_cleaned);
+elseif isfield(params,'eeg_reref')
+    cfg = [];
+    cfg.channel = 'all';
+    cfg.reref = 'yes';
+    cfg.method = 'bipolar';
+    cfg.refchannel = {params.eeg_reref};
+    opmeeg_cleaned = ft_preprocessing(cfg,opmeeg_cleaned);
+end
 
 % Append ECG/EOG channels
 opmeeg_cleaned.label = vertcat(opmeeg_cleaned.label,ExG.label);

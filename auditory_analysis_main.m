@@ -61,14 +61,17 @@ params = [];
 params.paradigm = 'AudOdd';
 
 % Trials
-params.pre = 0.1; %sec
-params.post = 0.5; %sec
+params.pre = 0.2; %0.1 sec
+params.post = 0.75+0.2; %0.5 sec
 params.pad = 0.2; %sec
 params.delay = 0.01; % Stimulus delay in seconds (e.g., 0.01 for eartubes or 0.041 for membranes).
 
+% EEG
+params.eeg_reref = 'all';%'EEG023';
+
 % Filter
 params.filter = [];
-params.filter.hp_freq = 0.1;
+params.filter.hp_freq = 1;%0.1;
 params.filter.lp_freq = 50;
 params.filter.notch = [50 60 100]; %[50 60 100 120 150];
 
@@ -115,6 +118,8 @@ params.peaks{1}.peak_latency = [0.08 0.13];
 % params.peaks{3}.label = 'M50';
 % params.peaks{3}.peak_latency = [0.04 0.08];
 
+params.tfr = true;
+
 % HPI coregistration
 params.hpi_freq = 33;
 params.hpi_gof = 0.9;
@@ -160,6 +165,8 @@ bads =  {[];
     [];
     [];
     [];
+    [];
+    [];
     []};
 
 if on_server
@@ -171,7 +178,7 @@ excl_subs = [3]; % split file TODO: allow split filex
 excl_subs_src = excl_subs;
 
 %% Loop over subjects
-for i_sub = setdiff(subs_to_run,excl_subs)
+for i_sub = 14%setdiff(subs_to_run,excl_subs)
     params.sub = ['sub_' num2str(i_sub,'%02d')];
     params.bads = bads{i_sub};
     if i_sub <=3 % Flip amplitudes in old recordings
@@ -230,7 +237,6 @@ for i_sub = setdiff(subs_to_run,excl_subs)
         params.chs = '*bz';
         data_ica = ica_MEG(opm_cleaned, save_path, params, 1);
         clear opm_cleaned
-
         % OPM Average
         params.modality = 'opm';
         params.layout = 'fieldlinebeta2bz_helmet.mat';
@@ -252,7 +258,7 @@ for i_sub = setdiff(subs_to_run,excl_subs)
         data_ica = ica_MEG(opmeeg_cleaned, save_path, params, 1);
         close all
         clear opmeeg_cleaned
-
+        % OPM-EEG Average
         params.modality = 'opmeeg';
         params.layout = opmeeg_layout;
         params.chs = 'EEG*';
@@ -261,6 +267,59 @@ for i_sub = setdiff(subs_to_run,excl_subs)
         timelock_MEG(data_ica, save_path, params);
         close all
         clear data_ica
+
+        %%
+        opm_timelocked = load(fullfile(save_path, [params.sub '_opm_timelocked.mat'])).timelocked;
+        opmeeg_timelocked = load(fullfile(save_path, [params.sub '_opmeeg_timelocked.mat'])).timelocked;
+
+        if isfield(params,'tfr') && params.tfr 
+            for i_trig = 1:length(params.trigger_codes)
+
+                params.modality = 'opm';
+                cfg = [];
+                cfg.channel    = 'all';
+                cfg.method     = 'mtmfft';
+                cfg.taper      = 'hanning';
+                cfg.pad = 2;
+                cfg.foi        = 35:1:45;              % the time window "slides" from -0.5 to 1.5 in 0.05 sec steps
+                opm_tfr{i_trig} = ft_freqanalysis(cfg, opm_timelocked{i_trig});    % visual stimuli
+
+                h=figure;
+                plot(opm_tfr{i_trig}.freq,opm_tfr{i_trig}.powspctrm);
+                xlabel('Freq [Hz]')
+                ylabel('Power [T^2/Hz]')
+                title(['FFT: ' params.trigger_labels{i_trig} ' (max = ' num2str(max(max(opm_tfr{i_trig}.powspctrm))) ', SNR=' num2str(max(max(opm_tfr{i_trig}.powspctrm)) /(mean(mean(opm_tfr{i_trig}.powspctrm(:,[1 end])))),'%.1f') ')' ])
+                saveas(h, fullfile(save_path, 'figs', [params.sub '_' params.modality '_FFT_trig-' params.trigger_labels{i_trigger} '.jpg']))
+
+                cfg = [];
+                cfg.layout       = 'fieldlinebeta2bz_helmet.mat';
+                h=figure; ft_topoplotER(cfg, opm_tfr{i_trig});
+                saveas(h, fullfile(save_path, 'figs', [params.sub '_' params.modality '_FFTtopo_trig-' params.trigger_labels{i_trigger} '.jpg']))
+    
+                params.modality = 'opmeeg';
+                cfg = [];
+                cfg.channel    = 'all';
+                cfg.method     = 'mtmfft';
+                cfg.taper      = 'hanning';
+                cfg.pad = 2;
+                cfg.foi        = 35:1:45;             % the time window "slides" from -0.5 to 1.5 in 0.05 sec steps
+                opmeeg_tfr{i_trig} = ft_freqanalysis(cfg, opmeeg_timelocked{i_trig});    % visual stimuli
+    
+                h=figure;
+                plot(opmeeg_tfr{i_trig}.freq,opmeeg_tfr{i_trig}.powspctrm);
+                xlabel('Freq [Hz]')
+                ylabel('Power [V^2/Hz]')
+                title(['FFT: ' params.trigger_labels{i_trig} ' (max = ' num2str(max(max(opmeeg_tfr{i_trig}.powspctrm))) ', SNR=' num2str(max(max(opmeeg_tfr{i_trig}.powspctrm)) /(mean(mean(opmeeg_tfr{i_trig}.powspctrm(:,[1 end])))),'%.1f') ')' ])
+                saveas(h, fullfile(save_path, 'figs', [params.sub '_' params.modality '_FFT_trig-' params.trigger_labels{i_trigger} '.jpg']))
+
+                cfg = [];
+                cfg.baseline = [-0.2 -0.0];
+                cfg.layout       = opmeeg_layout;
+                h=figure; ft_topoplotER(cfg, opmeeg_tfr{i_trig});
+                saveas(h, fullfile(save_path, 'figs', [params.sub '_' params.modality '_FFTtopo_trig-' params.trigger_labels{i_trigger} '.jpg']))
+            end
+        end
+        %%
 
         params = rmfield(params,{'modality', 'layout', 'chs', 'amp_scaler', 'amp_label'}); % remove fields used for picking modality
         
