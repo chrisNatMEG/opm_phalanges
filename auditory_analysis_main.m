@@ -180,7 +180,7 @@ excl_subs_src = excl_subs;
 %% Loop over subjects
 for i_sub = 14%setdiff(subs_to_run,excl_subs)
     params.sub = ['sub_' num2str(i_sub,'%02d')];
-    params.bads = bads{i_sub};
+    params.manual_bads = bads{i_sub}';
     if i_sub <=3 % Flip amplitudes in old recordings
         params.flip_sign  = true;
     else

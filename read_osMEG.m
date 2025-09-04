@@ -146,9 +146,9 @@ if isfield(params,'flip_sign') && params.flip_sign
 end
 
 %% OPM 
-if ~isempty(params.bads)
-    badchs_opm = [badchs_opm; params.bads'];
-    badchs_opm_manual = params.bads';
+if ~isempty(params.manual_bads)
+    badchs_opm = [badchs_opm; params.manual_bads];
+    badchs_opm_manual = params.manual_bads;
 else
     badchs_opm_manual = [];
 end

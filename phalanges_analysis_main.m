@@ -141,6 +141,22 @@ subses = {'0005' '240208';
     '1209' '250219';
     '1215' '250415'};
 
+bads =  {[];
+    [];
+    [];
+    [];
+    [];
+    {'R403_bz', 'R408_bz', 'R409_bz'};
+    {'R403_bz', 'R408_bz', 'R409_bz'};
+    {'L209_bz', 'R209_bz', 'R403_bz', 'R408_bz'};
+    {'L209_bz', 'R408_bz'};
+    [];
+    [];
+    [];
+    [];
+    [];
+    []};
+
 if on_server
     subs_to_run = 1:size(subses,1);
 else
@@ -152,6 +168,7 @@ excl_subs_src = excl_subs;
 %% Loop over subjects
 for i_sub = setdiff(subs_to_run,excl_subs)
     params.sub = ['sub_' num2str(i_sub,'%02d')];
+    params.manual_bads = bads{i_sub}';
     if i_sub <=3 % Flip amplitudes in old recordings
         params.flip_sign  = true;
     else
