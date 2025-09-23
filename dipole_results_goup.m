@@ -190,6 +190,14 @@ for i_peak = 1:length(params.peaks)
         save_path = fullfile(base_save_path, 'figs', ['dipole_spread_sqmag_opm_sqgrad' peak_label dip_labels{i_dip} '_box.jpg']);
         pairedBoxplots(data, triggerLabels, yLabelStr, titleStr, save_path,1);
         
+        %% Dip distance
+        data = {dist_sqmag_opm, dist_sqgrad_opm, dist_sqmag_sqgrad};
+        triggerLabels = params.trigger_labels;
+        yLabelStr = 'Distance [mm]';
+        titleStr = ['Group level ' params.peaks{1}.label ' dipole distance - SQMAG-OPM, SQGRAD-OPM, SQMAG-SQGRAD'];
+        save_path = fullfile(base_save_path, 'figs', ['dipole_dist' peak_label dip_labels{i_dip} '_box.jpg']);
+        pairedBoxplots(data, triggerLabels, yLabelStr, titleStr, save_path,1);
+  
         %% Peak mom
         data = {1e9*1e-4*mom_squidmag, 1e9*1e-4*mom_opm, 1e9*1e-4*1e-2*mom_squidgrad};
         triggerLabels = params.trigger_labels;

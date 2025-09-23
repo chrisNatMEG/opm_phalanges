@@ -69,6 +69,9 @@ for i_peak = 1:length(params.peaks)
             ylabel('B [fT]')
             xlim([-params.pre params.post]*1e3)
             title(['Evoked OPM MAG - ' params.trigger_labels{i_trigger} ' (n_{trls}=' num2str(length(opm_timelocked{i_trigger}.cfg.trials)) ')'])
+            ylims = ylim;
+            subplot(2,1,1)
+            ylim(ylims)
             saveas(h, fullfile(save_path, 'figs', [params.sub '_squidopm_butterfly_trig-' params.trigger_labels{i_trigger} '.jpg']))
             close all
         end

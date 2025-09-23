@@ -67,10 +67,10 @@ params.delay = 0.041; % Stimulus delay in seconds (e.g., 0.01 for eartubes or 0.
 
 % Filter
 params.filter = [];
-params.filter.hp_freq = 0.1;
-params.filter.lp_freq = 70;
-params.filter.bp_freq = [];
-params.filter.notch = [50 60 100 120 150]; %[50 60 100 120 150];
+%params.filter.hp_freq = 1;%0.1;
+%params.filter.lp_freq = 70;
+params.filter.bp_freq = [1 70];
+params.filter.notch = [50 60 100]; %[50 60 100 120 150];
 
 % Spatiotemporal filter (OPM-MEG only)
 params.do_hfc = true;
@@ -79,6 +79,8 @@ params.do_amm = false;
 params.amm_in = 12;
 params.amm_out = 2;
 params.amm_thr = 1;
+params.do_ssp = true;
+params.ssp_n = 5;
 
 % Bad channel and trial detection thresholds
 params.outlier_zscore = 3; % Outliers: how many stddevs above mean
@@ -106,7 +108,7 @@ params.trigger_labels = {'I3' 'I2' 'I1' 'T1' 'I2b'};
 params.peaks = {};
 params.peaks{1} = [];
 params.peaks{1}.label = 'M60';
-params.peaks{1}.peak_latency = [0.04 0.08];
+params.peaks{1}.peak_latency = [0.04 0.09]; % 0.04 0.08
 
 % HPI coregistration
 params.hpi_freq = 33;
@@ -144,8 +146,8 @@ subses = {'0005' '240208';
 bads =  {[];
     [];
     [];
-    [];
-    [];
+    {'R403_bz'};
+    {'L505_bz'};
     {'R403_bz', 'R408_bz', 'R409_bz'};
     {'R403_bz', 'R408_bz', 'R409_bz'};
     {'L209_bz', 'R209_bz', 'R403_bz', 'R408_bz'};
@@ -162,7 +164,7 @@ if on_server
 else
     subs_to_run = 2; %1:size(subses,1)
 end
-excl_subs = [];
+excl_subs = [14 15];
 excl_subs_src = excl_subs;
 
 %% Loop over subjects
@@ -198,6 +200,8 @@ for i_sub = setdiff(subs_to_run,excl_subs)
     end
     opm_file = fullfile(raw_path, 'osmeg', [params.paradigm 'OPM_raw.fif']);
     aux_file = fullfile(raw_path, 'meg', [params.paradigm 'EEG.fif']);
+
+    params.ssp_file = fullfile(raw_path, 'osmeg', 'EmptyRoomOPM_raw.fif');
     
     %% OPM-MEG 
     if exist(fullfile(save_path, [params.sub '_opmeeg_timelocked.mat']),'file') && exist(fullfile(save_path, [params.sub '_squideeg_timelocked.mat']),'file') && overwrite.preproc==false

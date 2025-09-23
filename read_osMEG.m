@@ -51,12 +51,19 @@ end
 
 %% AUX data filter & epoch
 cfg = [];
-cfg.lpfilter        = 'yes';         
-cfg.lpfreq          = params.filter.lp_freq;
-if ~isempty(params.filter.hp_freq)
+if isfield(params.filter,'lp_freq') && ~isempty(params.filter.lp_freq)
+    cfg.lpfilter        = 'yes';         
+    cfg.lpfreq          = params.filter.lp_freq;
+end
+if isfield(params.filter,'hp_freq') && ~isempty(params.filter.hp_freq)
     cfg.hpfilter        = 'yes'; 
     cfg.hpfreq          = params.filter.hp_freq;
     cfg.hpinstabilityfix  = 'reduce';
+end
+if isfield(params.filter,'bp_freq') && ~isempty(params.filter.bp_freq)
+    cfg.bpfilter        = 'yes'; 
+    cfg.bpfreq          = params.filter.bp_freq;
+    cfg.bpinstabilityfix  = 'reduce';
 end
 aux_epo = ft_preprocessing(cfg,aux_raw);
 
@@ -79,13 +86,19 @@ clear aux_raw
 
 %% OPM data filter & epoch
 cfg = [];
-
-cfg.lpfilter        = 'yes';         
-cfg.lpfreq          = params.filter.lp_freq;
+if ~isempty(params.filter.lp_freq)
+    cfg.lpfilter        = 'yes';         
+    cfg.lpfreq          = params.filter.lp_freq;
+end
 if ~isempty(params.filter.hp_freq)
     cfg.hpfilter        = 'yes'; 
     cfg.hpfreq          = params.filter.hp_freq;
     cfg.hpinstabilityfix  = 'reduce';
+end
+if ~isempty(params.filter.bp_freq)
+    cfg.bpfilter        = 'yes'; 
+    cfg.bpfreq          = params.filter.bp_freq;
+    cfg.bpinstabilityfix  = 'reduce';
 end
 opm_epo = ft_preprocessing(cfg, opm_raw);
 
@@ -162,7 +175,32 @@ cfg.channel = {'EOG*', 'ECG*'};
 ExG = ft_selectdata(cfg,comb);
 
 %% Spatiotemporal filtering
-if params.do_hfc
+if params.do_ssp && isfile(params.ssp_file)
+    % Load reference data
+    cfg = [];
+    cfg.datafile        = params.ssp_file;
+    cfg.coordsys        = 'dewar';
+    cfg.coilaccuracy    = 0;
+    refdata = ft_preprocessing(cfg);
+    % Select OPMs present in main data
+    datachans = ft_channelselection('*_b*',comb.label);
+    cfg = [];
+    cfg.channel         = datachans;
+    refdata = ft_selectdata(cfg,refdata);
+    refchans = refdata.label;
+    if ~isempty(setdiff(datachans,refchans))
+        ft_error('SSP error: ref is missing channels present in data.');
+    end
+    % Calculate PCs and construct projector
+    [coeff, ~, ~, ~, ~] = pca(cell2mat(refdata.trial)','NumComponents',params.ssp_n);
+    proj = eye(size(coeff,1)) - coeff*transpose(coeff);
+    % Apply projector
+    opm_cleaned = comb;
+    [~, i_refchans, i_datachans] = intersect(refchans,datachans);
+    for i_trl = 1:length(comb)
+        opm_cleaned.trial{i_trial}(i_datachans,:) = proj * opm_cleaned.trial{i_trial}(i_refchans,:);
+    end
+elseif params.do_hfc
     cfg = [];
     cfg.channel = '*bz';
     cfg.order = params.hfc_order;

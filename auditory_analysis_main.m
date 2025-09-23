@@ -71,13 +71,14 @@ params.eeg_reref = 'all';%'EEG023';
 
 % Filter
 params.filter = [];
-params.filter.hp_freq = 1;%0.1;
-params.filter.lp_freq = 50;
+%params.filter.hp_freq = 1;%0.1;
+%params.filter.lp_freq = 50;
+params.filter.bp_freq = [1 50];
 params.filter.notch = [50 60 100]; %[50 60 100 120 150];
 
 % Spatiotemporal filter (OPM-MEG only)
 params.do_hfc = true;
-params.hfc_order = 2;
+params.hfc_order = 1;
 params.do_amm = false;
 params.amm_in = 12;
 params.amm_out = 2;
@@ -156,8 +157,8 @@ subses = {'0005' '240208';
 bads =  {[];
     [];
     [];
-    [];
-    [];
+    {'R403_bz'};
+    {'L505_bz'};
     {'R403_bz', 'R408_bz', 'R409_bz'};
     {'R403_bz', 'R408_bz', 'R409_bz'};
     {'L209_bz', 'R209_bz', 'R403_bz', 'R408_bz'};
@@ -174,7 +175,7 @@ if on_server
 else
     subs_to_run = 2; %1:size(subses,1)
 end
-excl_subs = [3]; % split file TODO: allow split filex
+excl_subs = [3]; % split file TODO: allow split file
 excl_subs_src = excl_subs;
 
 %% Loop over subjects
@@ -210,6 +211,7 @@ for i_sub = 14%setdiff(subs_to_run,excl_subs)
     end
     opm_file = fullfile(raw_path, 'osmeg', [params.paradigm 'OPM_raw.fif']);
     aux_file = fullfile(raw_path, 'meg', [params.paradigm 'EEG.fif']);
+    params.ssp_file = fullfile(raw_path, 'osmeg', 'EmptyRoomOPM_raw.fif');
     
     %% OPM-MEG 
     if exist(fullfile(save_path, [params.sub '_opmeeg_timelocked.mat']),'file') && exist(fullfile(save_path, [params.sub '_squideeg_timelocked.mat']),'file') && overwrite.preproc==false

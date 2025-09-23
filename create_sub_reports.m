@@ -1,10 +1,10 @@
-function create_sub_reports(subjectFolderPath, subs, params)
+function create_sub_reports(subjectFolderPath, sub, params)
 % Import necessary packages
 import mlreportgen.report.*
 import mlreportgen.dom.*
 
 % Convert subNumber to a two-digit string
-subStr = sprintf('%02d', subs);
+subStr = sprintf('%02d', sub);
 
 % Create the report name
 reportName = ['sub_', subStr, '_report'];

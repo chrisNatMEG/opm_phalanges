@@ -199,14 +199,13 @@ for i_trigger = 1:length(params.trigger_labels)
     % Add rows and cells to the table and insert the images
     section = Section(['Trigger: ' params.trigger_labels(i_trigger)]);
     section.Numbered = false; % Remove section numbering
-    
     tbl = Table();
     tbl.Style = {Border('solid'), Width('100%'), RowSep('solid'), ColSep('solid')};
     for i = 1:2
         row = TableRow();
         for j = 1:2
+            imgIndex = (j-1)*2 + i;
             if imgIndex <= length(sections2)
-                imgIndex = (j-1)*2 + i;
                 img = Image(fullfile(save_path,'figs',[sections2{imgIndex} peak_label '_grndAvg_topo_trig-' params.trigger_labels{i_trigger} '.jpg']));
                 img.Style = {Width('8cm'), ScaleToFit};
                 entry = TableEntry();
