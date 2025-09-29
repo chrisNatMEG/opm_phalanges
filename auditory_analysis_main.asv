@@ -71,9 +71,9 @@ params.eeg_reref = 'all';%'EEG023';
 
 % Filter
 params.filter = [];
-params.filter.hp_freq = 1;%0.1;
-params.filter.lp_freq = 50;
-params.filter.bp_freq = [];
+%params.filter.hp_freq = 1;%0.1;
+%params.filter.lp_freq = 50;
+params.filter.bp_freq = [1 50];
 params.filter.notch = [50 60 100]; %[50 60 100 120 150];
 
 % Spatiotemporal filter (OPM-MEG only)
@@ -110,7 +110,6 @@ params.trigger_codes = {1 [3 11] [5 13]}; % combined oddball-nogo and oddball-go
 params.trigger_labels = {'std' 'oddNoGo' 'oddGo'};
 % params.trigger_codes = {1 3 5 11 13};
 % params.trigger_labels = {'STD' 'LNG' 'LG' 'HNG' 'HG'};
-
 params.peaks = {};
 params.peaks{1} = [];
 params.peaks{1}.label = 'M100';
@@ -173,7 +172,7 @@ bads =  {[];
     [];
     []};
 
-if on_server
+if on_serverowould 
     subs_to_run = 1:size(subses,1);
 else
     subs_to_run = 2; %1:size(subses,1)
@@ -294,12 +293,12 @@ for i_sub = 4%setdiff(subs_to_run,excl_subs)
                 xlabel('Freq [Hz]')
                 ylabel('Power [T^2/Hz]')
                 title(['FFT: ' params.trigger_labels{i_trig} ' (max = ' num2str(max(max(opm_tfr{i_trig}.powspctrm))) ', SNR=' num2str(max(max(opm_tfr{i_trig}.powspctrm)) /(mean(mean(opm_tfr{i_trig}.powspctrm(:,[1 end])))),'%.1f') ')' ])
-                saveas(h, fullfile(save_path, 'figs', [params.sub '_' params.modality '_FFT_trig-' params.trigger_labels{i_trig} '.jpg']))
+                saveas(h, fullfile(save_path, 'figs', [params.sub '_' params.modality '_FFT_trig-' params.trigger_labels{i_trigger} '.jpg']))
 
                 cfg = [];
                 cfg.layout       = 'fieldlinebeta2bz_helmet.mat';
                 h=figure; ft_topoplotER(cfg, opm_tfr{i_trig});
-                saveas(h, fullfile(save_path, 'figs', [params.sub '_' params.modality '_FFTtopo_trig-' params.trigger_labels{i_trig} '.jpg']))
+                saveas(h, fullfile(save_path, 'figs', [params.sub '_' params.modality '_FFTtopo_trig-' params.trigger_labels{i_trigger} '.jpg']))
     
                 params.modality = 'opmeeg';
                 cfg = [];
@@ -315,13 +314,13 @@ for i_sub = 4%setdiff(subs_to_run,excl_subs)
                 xlabel('Freq [Hz]')
                 ylabel('Power [V^2/Hz]')
                 title(['FFT: ' params.trigger_labels{i_trig} ' (max = ' num2str(max(max(opmeeg_tfr{i_trig}.powspctrm))) ', SNR=' num2str(max(max(opmeeg_tfr{i_trig}.powspctrm)) /(mean(mean(opmeeg_tfr{i_trig}.powspctrm(:,[1 end])))),'%.1f') ')' ])
-                saveas(h, fullfile(save_path, 'figs', [params.sub '_' params.modality '_FFT_trig-' params.trigger_labels{i_trig} '.jpg']))
+                saveas(h, fullfile(save_path, 'figs', [params.sub '_' params.modality '_FFT_trig-' params.trigger_labels{i_trigger} '.jpg']))
 
                 cfg = [];
                 cfg.baseline = [-0.2 -0.0];
                 cfg.layout       = opmeeg_layout;
                 h=figure; ft_topoplotER(cfg, opmeeg_tfr{i_trig});
-                saveas(h, fullfile(save_path, 'figs', [params.sub '_' params.modality '_FFTtopo_trig-' params.trigger_labels{i_trig} '.jpg']))
+                saveas(h, fullfile(save_path, 'figs', [params.sub '_' params.modality '_FFTtopo_trig-' params.trigger_labels{i_trigger} '.jpg']))
             end
         end
         %%

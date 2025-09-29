@@ -183,9 +183,9 @@ if params.do_ssp && isfile(params.ssp_file)
     cfg.coordsys        = 'dewar';
     cfg.coilaccuracy    = 0;
     refdata = ft_preprocessing(cfg);
-    % Create trials (same length as main data)
     n_smpl = round((params.pre+params.post+2*params.pad)*refdata.fsample);
     n_trl = floor(refdata.sampleinfo(2)/n_smpl-2);
+    
     trl_ref = zeros(n_trl,4);
     trl_ref(:,1) = refdata.fsample + n_smpl*(0:(n_trl-1))';
     trl_ref(:,2) = refdata.fsample + n_smpl*(1:n_trl)' - 1;
@@ -217,11 +217,6 @@ if params.do_ssp && isfile(params.ssp_file)
     cfg.dftfilter       = 'yes';        
     cfg.dftfreq         = params.filter.notch;
     refdata = ft_preprocessing(cfg, refdata);
-    % Downsample
-    cfg            = [];
-    cfg.resamplefs = comb.fsample;
-    cfg.detrend    = 'no';
-    refdata = ft_resampledata(cfg, refdata);
     % Select OPMs present in main data
     cfg = [];
     cfg.channel         = '*_b*';
@@ -240,7 +235,7 @@ if params.do_ssp && isfile(params.ssp_file)
     proj = eye(size(coeff,1)) - coeff*transpose(coeff);
     % Apply projector
     [~, i_refchans, i_datachans] = intersect(refchans,datachans);
-    for i_trl = 1:length(opm_cleaned.trial)
+    for i_trl = 1:length(comb)
         opm_cleaned.trial{i_trl}(i_datachans,:) = proj * opm_cleaned.trial{i_trl}(i_refchans,:);
     end
 else
