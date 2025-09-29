@@ -59,7 +59,7 @@ end
 params = [];
 params.paradigm = 'Phalanges';
 
-% Trialse
+% Trials
 params.pre = 0.03; %sec
 params.post = 0.3; %sec
 params.pad = 0.2; %sec
@@ -67,9 +67,9 @@ params.delay = 0.041; % Stimulus delay in seconds (e.g., 0.01 for eartubes or 0.
 
 % Filter
 params.filter = [];
-%params.filter.hp_freq = 1;%0.1;
-%params.filter.lp_freq = 70;
-params.filter.bp_freq = [1 70];
+params.filter.hp_freq = 1;%0.1;
+params.filter.lp_freq = 70;
+params.filter.bp_freq = [];
 params.filter.notch = [50 60 100]; %[50 60 100 120 150];
 
 % Spatiotemporal filter (OPM-MEG only)
@@ -79,8 +79,8 @@ params.do_amm = false;
 params.amm_in = 12;
 params.amm_out = 2;
 params.amm_thr = 1;
-params.do_ssp = true;
-params.ssp_n = 5;
+params.do_ssp = false;
+params.ssp_n = 6;
 
 % Bad channel and trial detection thresholds
 params.outlier_zscore = 3; % Outliers: how many stddevs above mean
