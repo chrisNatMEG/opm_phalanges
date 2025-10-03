@@ -79,7 +79,7 @@ params.do_amm = false;
 params.amm_in = 12;
 params.amm_out = 2;
 params.amm_thr = 1;
-params.do_ssp = false;
+params.do_ssp = true;
 params.ssp_n = 6;
 
 % Bad channel and trial detection thresholds
@@ -165,9 +165,10 @@ else
     subs_to_run = 2; %1:size(subses,1)
 end
 excl_subs = [14 15];
-excl_subs_src = excl_subs;
+excl_subs_src = [1 excl_subs];
 
 %% Loop over subjects
+ssp_done = false(size(subs_to_run,2),1);
 for i_sub = setdiff(subs_to_run,excl_subs)
     params.sub = ['sub_' num2str(i_sub,'%02d')];
     params.manual_bads = bads{i_sub}';
@@ -210,7 +211,7 @@ for i_sub = setdiff(subs_to_run,excl_subs)
         ft_hastoolbox('mne', 1);
 
         % Read data
-        [opm_cleaned, opmeeg_cleaned] = read_osMEG(opm_file, aux_file, save_path, params); % Read data
+        [opm_cleaned, opmeeg_cleaned, ssp_done(i_sub)] = read_osMEG(opm_file, aux_file, save_path, params); % Read data
         close all
         
         % OPM ICA

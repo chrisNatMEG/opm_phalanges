@@ -176,13 +176,14 @@ bads =  {[];
 if on_server
     subs_to_run = 1:size(subses,1);
 else
-    subs_to_run = 2; %1:size(subses,1)
+    subs_to_run = 4; %1:size(subses,1)
 end
-excl_subs = [3]; % split file TODO: allow split file
-excl_subs_src = excl_subs;
+excl_subs = [3 14 15]; % split file TODO: allow split file
+excl_subs_src = [1 excl_subs];
 
 %% Loop over subjects
-for i_sub = 4%setdiff(subs_to_run,excl_subs)
+ssp_done = false(size(subs_to_run,2),1);
+for i_sub = setdiff(subs_to_run,excl_subs)
     params.sub = ['sub_' num2str(i_sub,'%02d')];
     params.manual_bads = bads{i_sub}';
     if i_sub <=3 % Flip amplitudes in old recordings
@@ -223,7 +224,7 @@ for i_sub = 4%setdiff(subs_to_run,excl_subs)
         ft_hastoolbox('mne', 1);
 
         % Read data
-        [opm_cleaned, opmeeg_cleaned] = read_osMEG(opm_file, aux_file, save_path, params); % Read data
+        [opm_cleaned, opmeeg_cleaned, ssp_done(i_sub)] = read_osMEG(opm_file, aux_file, save_path, params); % Read data
         close all
 
         % Correct old trigger codes
@@ -274,10 +275,9 @@ for i_sub = 4%setdiff(subs_to_run,excl_subs)
         clear data_ica
 
         %%
-        opm_timelocked = load(fullfile(save_path, [params.sub '_opm_timelocked.mat'])).timelocked;
-        opmeeg_timelocked = load(fullfile(save_path, [params.sub '_opmeeg_timelocked.mat'])).timelocked;
-
         if isfield(params,'tfr') && params.tfr 
+            opm_timelocked = load(fullfile(save_path, [params.sub '_opm_timelocked.mat'])).timelocked;
+            opmeeg_timelocked = load(fullfile(save_path, [params.sub '_opmeeg_timelocked.mat'])).timelocked;
             for i_trig = 1:length(params.trigger_codes)
 
                 params.modality = 'opm';
@@ -322,9 +322,12 @@ for i_sub = 4%setdiff(subs_to_run,excl_subs)
                 cfg.layout       = opmeeg_layout;
                 h=figure; ft_topoplotER(cfg, opmeeg_tfr{i_trig});
                 saveas(h, fullfile(save_path, 'figs', [params.sub '_' params.modality '_FFTtopo_trig-' params.trigger_labels{i_trig} '.jpg']))
+                close all
             end
+            save(fullfile(save_path, [params.sub '_opm_tfr']), 'opm_tfr', '-v7.3'); 
+            save(fullfile(save_path, [params.sub '_opmeeg_tfr']), 'opmeeg_tfr', '-v7.3');
+            clear opm_timelocked opmeeg_timelocked
         end
-        %%
 
         params = rmfield(params,{'modality', 'layout', 'chs', 'amp_scaler', 'amp_label'}); % remove fields used for picking modality
         
@@ -382,6 +385,62 @@ for i_sub = 4%setdiff(subs_to_run,excl_subs)
         timelock_MEG(data_ica, save_path, params);
         close all
         clear data_íca
+
+
+        if isfield(params,'tfr') && params.tfr 
+        squid_timelocked = load(fullfile(save_path, [params.sub '_squid_timelocked.mat'])).timelocked;
+        squideeg_timelocked = load(fullfile(save_path, [params.sub '_squideeg_timelocked.mat'])).timelocked;
+
+            for i_trig = 1:length(params.trigger_codes)
+
+                params.modality = 'squid';
+                cfg = [];
+                cfg.channel    = 'megmag';
+                cfg.method     = 'mtmfft';
+                cfg.taper      = 'hanning';
+                cfg.pad = 2;
+                cfg.foi        = 35:1:45;              % the time window "slides" from -0.5 to 1.5 in 0.05 sec steps
+                squid_tfr{i_trig} = ft_freqanalysis(cfg, squid_timelocked{i_trig});    % visual stimuli
+
+                h=figure;
+                plot(squid_tfr{i_trig}.freq,squid_tfr{i_trig}.powspctrm);
+                xlabel('Freq [Hz]')
+                ylabel('Power [T^2/Hz]')
+                title(['FFT: ' params.trigger_labels{i_trig} ' (max = ' num2str(max(max(squid_tfr{i_trig}.powspctrm))) ', SNR=' num2str(max(max(squid_tfr{i_trig}.powspctrm)) /(mean(mean(squid_tfr{i_trig}.powspctrm(:,[1 end])))),'%.1f') ')' ])
+                saveas(h, fullfile(save_path, 'figs', [params.sub '_' params.modality '_FFT_trig-' params.trigger_labels{i_trig} '.jpg']))
+
+                cfg = [];
+                cfg.layout       = 'neuromag306mag.lay';
+                h=figure; ft_topoplotER(cfg, squid_tfr{i_trig});
+                saveas(h, fullfile(save_path, 'figs', [params.sub '_' params.modality '_FFTtopo_trig-' params.trigger_labels{i_trig} '.jpg']))
+    
+                params.modality = 'squideeg';
+                cfg = [];
+                cfg.channel    = 'all';
+                cfg.method     = 'mtmfft';
+                cfg.taper      = 'hanning';
+                cfg.pad = 2;
+                cfg.foi        = 35:1:45;             % the time window "slides" from -0.5 to 1.5 in 0.05 sec steps
+                squideeg_tfr{i_trig} = ft_freqanalysis(cfg, squideeg_timelocked{i_trig});    % visual stimuli
+    
+                h=figure;
+                plot(squideeg_tfr{i_trig}.freq,squideeg_tfr{i_trig}.powspctrm);
+                xlabel('Freq [Hz]')
+                ylabel('Power [V^2/Hz]')
+                title(['FFT: ' params.trigger_labels{i_trig} ' (max = ' num2str(max(max(squideeg_tfr{i_trig}.powspctrm))) ', SNR=' num2str(max(max(squideeg_tfr{i_trig}.powspctrm)) /(mean(mean(squideeg_tfr{i_trig}.powspctrm(:,[1 end])))),'%.1f') ')' ])
+                saveas(h, fullfile(save_path, 'figs', [params.sub '_' params.modality '_FFT_trig-' params.trigger_labels{i_trig} '.jpg']))
+
+                cfg = [];
+                cfg.baseline = [-0.2 -0.0];
+                cfg.layout       = megeeg_layout;
+                h=figure; ft_topoplotER(cfg, squideeg_tfr{i_trig});
+                saveas(h, fullfile(save_path, 'figs', [params.sub '_' params.modality '_FFTtopo_trig-' params.trigger_labels{i_trig} '.jpg']))
+                close all
+            end
+            save(fullfile(save_path, [params.sub '_squid_tfr']), 'squid_tfr', '-v7.3'); 
+            save(fullfile(save_path, [params.sub '_squideeg_tfr']), 'squideeg_tfr', '-v7.3');
+            clear squid_timelocked squideeg_timelocked
+        end
 
         params = rmfield(params,{'modality', 'layout', 'chs', 'amp_scaler', 'amp_label'}); % remove fields used for picking modality    
     

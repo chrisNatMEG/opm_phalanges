@@ -1,4 +1,4 @@
-function [opm_cleaned, opmeeg_cleaned] = read_osMEG(opm_file, aux_file, save_path, params)
+function [opm_cleaned, opmeeg_cleaned, ssp_done] = read_osMEG(opm_file, aux_file, save_path, params)
 %prprocess_osMEG Read on-scalp MEG data for benchmarking
 % recordings and combine with auxiliary TRIUX data/EEG. 
 % Requires the following arguments:
@@ -235,13 +235,13 @@ if params.do_ssp && isfile(params.ssp_file)
         ft_warning('SSP error: ref is missing channels present in data.');
         ssp_done = false;
     end
+    [~, i_refchans, i_datachans] = intersect(refchans,datachans,'stable');
     % Calculate PCs and construct projector
     [coeff, ~, ~, ~, ~] = pca(cell2mat(refdata.trial)','NumComponents',params.ssp_n);
     proj = eye(size(coeff,1)) - coeff*transpose(coeff);
-    % Apply projector
-    [~, i_refchans, i_datachans] = intersect(refchans,datachans);
+    % Apply projector    
     for i_trl = 1:length(opm_cleaned.trial)
-        opm_cleaned.trial{i_trl}(i_datachans,:) = proj * opm_cleaned.trial{i_trl}(i_refchans,:);
+        opm_cleaned.trial{i_trl}(i_datachans,:) = proj * opm_cleaned.trial{i_trl}(i_datachans,:);
     end
 else
     ssp_done = false;
