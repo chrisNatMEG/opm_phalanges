@@ -1,4 +1,4 @@
-function h = plot_source_distribution(srcdist, peak, params)
+function h = plot_source_distribution(srcdist, peak, params, mark_peak)
 %plot_source_distribution Function for plotting source distributions
 %   3D plot of a source distribution on a sourcemodel. Expects peak to
 %   contain the fields peak.latency (latency at which to display source
@@ -20,6 +20,13 @@ if isfield(params,'mne_view') && isnumeric(params.mne_view) && length(params.mne
     h = figure;
     h.Position(3) = round(h.Position(3)*1.2);
     ft_sourceplot(cfg, srcdist)
+    if mark_peak
+        hold on
+        for i_pk = 1:length(peak.iloc)
+            ft_plot_dipole(srcdist.pos(peak.iloc(i_pk),:),[0 0 0])
+        end
+        hold off
+    end
     lighting gouraud
     material dull
     view(params.mne_view(1),params.mne_view(2))
@@ -41,6 +48,13 @@ elseif isfield(params,'mne_view') && strcmp(params.mne_view,'sides')
     subplot(1,2,1); % right hemisphere
     cfg.figure = h;
     ft_sourceplot(cfg, srcdist)
+    if mark_peak
+        hold on
+        for i_pk = 1:length(peak.iloc)
+            ft_plot_dipole(srcdist.pos(peak.iloc(i_pk),:),[0 0 0])
+        end
+        hold off
+    end
     material dull
     view(viewangles(1),viewangles(2))
     camlight();
@@ -53,6 +67,13 @@ elseif isfield(params,'mne_view') && strcmp(params.mne_view,'sides')
     subplot(1,2,2); % left hemisphere
     cfg.figure = h;
     ft_sourceplot(cfg, srcdist)
+    if mark_peak
+        hold on
+        for i_pk = 1:length(peak.iloc)
+            ft_plot_dipole(srcdist.pos(peak.iloc(i_pk),:),[0 0 0])
+        end
+        hold off
+    end
     material dull
     view(viewangles(3),viewangles(4))
     camlight()
@@ -72,6 +93,13 @@ else
     h = figure;
     h.Position(3) = round(h.Position(3)*1.2);
     ft_sourceplot(cfg, srcdist)
+    if mark_peak
+        hold on
+        for i_pk = 1:length(peak.iloc)
+            ft_plot_dipole(srcdist.pos(peak.iloc(i_pk),:),[0 0 0])
+        end
+        hold off
+    end
     lighting gouraud
     material dull
     if isfield(peak.loc)

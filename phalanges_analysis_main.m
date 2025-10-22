@@ -48,7 +48,7 @@ else
     overwrite.mri = false;
     overwrite.dip = true;
     overwrite.empty_room = false;
-    overwrite.mne = false;
+    overwrite.mne = true;
 
     overwrite.sens_group = false;
     overwrite.dip_group = false;

@@ -286,6 +286,7 @@ colors = [[0 0.4470 0.7410]; % blue
     [0.6350 0.0780 0.1840]]; % light blue
 
 %% SQMAG
+params.modality = 'squidmag';
 peak_label = params.peaks{1}.label;
 tmp = squidmag_mne{1};
 tmp.avg.pow = tmp.avg.pow/n_triggers;
@@ -316,6 +317,7 @@ saveas(h, fullfile(save_path,'figs', [params.sub '_squidmag_' peak_label '_mne' 
 close all 
 
 %% SQGRAD
+params.modality = 'squidgrad';
 tmp = squidgrad_mne{1};
 tmp.avg.pow = tmp.avg.pow/n_triggers;
 peak = squidgrad_peak{1,1};
@@ -344,6 +346,7 @@ saveas(h, fullfile(save_path,'figs', [params.sub '_squidgrad_' peak_label '_mne'
 close all
 
 %% OPM
+params.modality = 'opm';
 tmp = opm_mne{1};
 tmp.avg.pow = tmp.avg.pow/n_triggers;
 peak = opm_peak{1,1};

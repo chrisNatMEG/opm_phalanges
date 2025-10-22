@@ -23,6 +23,7 @@ peak_activation.latency = latency;
 
 if params.numdipoles == 2
     peak_activation.loc = nan(2,3);
+    peak_activation.iloc = nan(2,3);
     peak_activation.pow = nan(2,1);
     peak_activation.mom = nan(2,1);
     peak_activation.fahm = nan(2,1);
@@ -38,6 +39,7 @@ if params.numdipoles == 2
         i_maxsource = vertices(i_maxsource);
         half_max = peak_pow/4;
         peak_loc = sourcemodel.pos(i_maxsource,:);
+        i_peak_loc = i_maxsource;
         peak_mom = norm(sourcedistribution.avg.mom{i_maxsource}(:,i_latency)); % power at max latency and source
     
         % Find triangles that have at least one point with amplitude >= half max
@@ -48,6 +50,7 @@ if params.numdipoles == 2
         i_maxsource = vertices(i_maxsource);
         half_max = peak_mom/2;
         peak_loc = sourcemodel.pos(i_maxsource,:);
+        i_peak_loc = i_maxsource;
         peak_pow = peak_mom.^2; % power at max latency and source
     
         % Find triangles that have at least one point with amplitude >= half max   
@@ -62,6 +65,7 @@ if params.numdipoles == 2
     fahm = sum(calculateTriangleAreas(sourcemodel.pos, triangles))/3;  
 
     peak_activation.loc(1,:) = peak_loc;
+    peak_activation.iloc(1,:) = i_peak_loc;
     peak_activation.pow(1) = peak_pow;
     peak_activation.mom(1) = peak_mom;
     peak_activation.fahm(1) = fahm;
@@ -80,6 +84,7 @@ if params.numdipoles == 2
         i_maxsource = vertices(i_maxsource);
         half_max = peak_pow/4;
         peak_loc = sourcemodel.pos(i_maxsource,:);
+        i_peak_loc = i_maxsource;
         peak_mom = norm(sourcedistribution.avg.mom{i_maxsource}(:,i_latency)); % power at max latency and source
     
         % Find triangles that have at least one point with amplitude >= half max
@@ -90,6 +95,7 @@ if params.numdipoles == 2
         i_maxsource = vertices(i_maxsource);
         half_max = peak_mom/2;
         peak_loc = sourcemodel.pos(i_maxsource,:);
+        i_peak_loc = i_maxsource;
         peak_pow = peak_mom.^2; % power at max latency and source
     
         % Find triangles that have at least one point with amplitude >= half max   
@@ -104,6 +110,7 @@ if params.numdipoles == 2
     fahm = sum(calculateTriangleAreas(sourcemodel.pos, triangles))/3;  
 
     peak_activation.loc(2,:) = peak_loc;
+    peak_activation.iloc(2,:) = i_peak_loc;
     peak_activation.pow(2) = peak_pow;
     peak_activation.mom(2) = peak_mom;
     peak_activation.fahm(2) = fahm;
@@ -120,6 +127,7 @@ else
         [peak_pow, i_maxsource] = max(abs(sourcedistribution.avg.pow(:,i_latency)));
         half_max = peak_pow/4;
         peak_loc = sourcemodel.pos(i_maxsource,:);
+        i_peak_loc = i_maxsource;
         peak_mom = norm(sourcedistribution.avg.mom{i_maxsource}(:,i_latency)); % power at max latency and source
     
         % Find triangles that have at least one point with amplitude >= half max
@@ -129,6 +137,7 @@ else
         [peak_mom, i_maxsource] = max(abs(sourcedistribution.avg.mom(:,i_latency)));
         half_max = peak_mom/2;
         peak_loc = sourcemodel.pos(i_maxsource,:);
+        i_peak_loc = i_maxsource;
         peak_pow = peak_mom.^2; % power at max latency and source
     
         % Find triangles that have at least one point with amplitude >= half max   
@@ -143,6 +152,7 @@ else
     fahm = sum(calculateTriangleAreas(sourcemodel.pos, triangles))/3;  
     
     peak_activation.loc = peak_loc;
+    peak_activation.iloc = i_peak_loc;
     peak_activation.pow = peak_pow;
     peak_activation.mom = peak_mom;
     peak_activation.fahm = fahm;
