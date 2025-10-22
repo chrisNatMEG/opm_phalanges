@@ -29,8 +29,14 @@ peak = cell(length(params.trigger_codes),length(params.peaks));
 for i_trigger = 1:length(params.trigger_codes)
     if isnumeric(params.trigger_codes{i_trigger}) && size(params.trigger_codes{i_trigger},1)==1 % trigger code(s)
         trls = find(ismember(data.trialinfo,params.trigger_codes{i_trigger}));
+        if isfield(params,'maxtrls') && length(trls) > params.maxtrls
+            trls = trls(1:params.maxtrls);
+        end
     elseif isnumeric(params.trigger_codes{i_trigger}) && size(params.trigger_codes{i_trigger},1)>1 && size(params.trigger_codes{i_trigger},2)==1 % list of trials
         trls = params.trigger_codes{i_trigger};
+        if isfield(params,'maxtrls') && length(trls) > params.maxtrls
+            trls = trls(1:param.maxtrls);
+        end
     elseif ischar(params.trigger_codes{i_trigger}) && strcmp(params.trigger_codes{i_trigger},'all') %
         trls = 1:length(data.trial);
     end

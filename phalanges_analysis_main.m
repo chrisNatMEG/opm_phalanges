@@ -67,20 +67,20 @@ params.delay = 0.041; % Stimulus delay in seconds (e.g., 0.01 for eartubes or 0.
 
 % Filter
 params.filter = [];
-params.filter.hp_freq = 1;%0.1;
+params.filter.hp_freq = 0.1;%0.1;
 params.filter.lp_freq = 70;
 params.filter.bp_freq = [];
-params.filter.notch = [50 60 100]; %[50 60 100 120 150];
+params.filter.notch = [50 60]; %[50 60 100 120 150];
 
 % Spatiotemporal filter (OPM-MEG only)
 params.do_hfc = true;
 params.hfc_order = 1;
 params.do_amm = false;
 params.amm_in = 12;
-params.amm_out = 2;
+params.amm_out = 1;
 params.amm_thr = 1;
-params.do_ssp = true;
-params.ssp_n = 6;
+params.do_ssp = false;
+params.ssp_n = 4;
 
 % Bad channel and trial detection thresholds
 params.outlier_zscore = 3; % Outliers: how many stddevs above mean
@@ -95,20 +95,20 @@ params.opm_range_threshold = 20e-12; % Range for OPM badtrial detection
 params.squidmag_range_threshold = 10e-12; % Range for SQUID-MAG badtrial detection
 params.squidgrad_range_threshold = 4000e-13; % Range for SQUID-GRAD badtrial detection
 
-
 % ICA ECG&EOG artifact removal 
 params.n_comp = 40;
 params.ica_cor = 0.8; % cutoff for EOG/ECG coherence
 params.ica_coh = 0.95; % cutoff for EOG/ECG coherence
 
 % Timelocking
-params.ds_freq = 500; % downsample frequency (timelock)
+params.ds_freq = 1000; % downsample frequency (timelock)
 params.trigger_codes = {2 4 8 16 32};
 params.trigger_labels = {'I3' 'I2' 'I1' 'T1' 'I2b'};
 params.peaks = {};
 params.peaks{1} = [];
 params.peaks{1}.label = 'M60';
-params.peaks{1}.peak_latency = [0.04 0.09]; % 0.04 0.08
+params.peaks{1}.peak_latency = [0.04 0.08]; % 0.04 0.09
+params.maxtrls = 300;
 
 % HPI coregistration
 params.hpi_freq = 33;
@@ -125,6 +125,8 @@ params.plot_inflated = true;
 params.target_region = 'postcentral';
 
 save(fullfile(base_save_path, params.paradigm), 'params', '-v7.3');          
+
+%params.debug = 1;
 
 %% Subjects + dates
 subses = {'0005' '240208';
@@ -143,21 +145,21 @@ subses = {'0005' '240208';
     '1209' '250219';
     '1215' '250415'};
 
-bads =  {[];
-    [];
-    [];
-    {'R403_bz', 'R408_bz'};
-    {'L505_bz'};
-    {'R403_bz', 'R408_bz', 'R409_bz'};
-    {'R403_bz', 'R408_bz', 'R409_bz'};
-    {'L209_bz', 'R209_bz', 'R403_bz', 'R408_bz'};
-    {'L209_bz', 'R408_bz'};
-    [];
-    [];
-    [];
-    [];
-    [];
-    []};
+bads =  {[]; %1
+    []; %2
+    {'R403_bz', 'R408_bz', 'R409_bz'}; %3 
+    {'R403_bz', 'R408_bz'}; %4
+    {'R408_bz'}; %5%{'L505_bz', 'R403_bz', 'R408_bz', 'R409_bz'}; %5
+    {'R403_bz', 'R408_bz', 'R409_bz'}; %6
+    {'R403_bz', 'R408_bz', 'R409_bz'}; %7
+    {'L502', 'R209_bz', 'R403_bz', 'R402_bz', 'R409_bz'}; %8
+    {'L209_bz', 'R408_bz'}; %9
+    []; %10
+    []; %11
+    []; %12
+    []; %13
+    []; %14
+    []}; %15
 
 if on_server
     subs_to_run = 1:size(subses,1);
@@ -165,7 +167,7 @@ else
     subs_to_run = 2; %1:size(subses,1)
 end
 excl_subs = [14 15];
-excl_subs_src = [1 excl_subs];
+excl_subs_src = [1 11 excl_subs];
 
 %% Loop over subjects
 ssp_done = false(size(subs_to_run,2),1);
@@ -472,6 +474,9 @@ for i_sub = setdiff(subs_to_run,excl_subs)
     end
 end
 close all
+
+%% save SSP done
+save(fullfile(save_path, [params.sub '_SSP']), 'ssp_done', '-v7.3');
 
 %% Save results in report
 for i_sub = setdiff(subs_to_run,excl_subs)

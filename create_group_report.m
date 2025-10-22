@@ -221,6 +221,99 @@ for i_trigger = 1:length(params.trigger_labels)
 end
 add(rpt, chapter);
 
+%% Dipole level 
+chapter = Chapter('Dipole fits');
+chapter.Numbered = false; % Remove chapter numbering
+
+dat = load(fullfile(save_path, ['group_dip' peak_label]));
+spread = dat.spread;
+mom = dat.mom;
+
+%% Dip-spread section
+section = Section('Dipole spread');
+section.Numbered = false; % Remove section numbering
+dataCells = {};
+dataCells{1} = spread.sqmag;
+dataCells{2} = spread.opm;
+dataCells{3} = spread.sqgrad;
+rptTable = addGroupComparisonTables(dataCells, params.trigger_labels, {'squidmag', 'opm', 'squidgrad'}, '%.1f');
+for i = 1:length(rptTable)
+    add(section, rptTable{i});
+    para = Paragraph(" ");
+    add(section,para);
+end
+img = Image(fullfile(save_path,'figs',['dipole_spread_sqmag_opm_sqgrad' peak_label '_box.jpg']));
+img.Style = {Width('14cm'), ScaleToFit};
+add(section, img);
+add(chapter, section);
+
+add(rpt, chapter);
+
+%% MNE 
+chapter = Chapter('MNE');
+chapter.Numbered = false; % Remove chapter numbering
+
+dat = load(fullfile(save_path, ['group_mne' peak_label]));
+fahm = dat.fahm;
+target = dat.target;
+lat = dat.lat;
+
+%% MNE-FAHM section
+section = Section('MNE FAHM (cm^2)');
+section.Numbered = false; % Remove section numbering
+dataCells = {};
+dataCells{1} = fahm.sqmag;
+dataCells{2} = fahm.opm;
+dataCells{3} = fahm.sqgrad;
+rptTable = addGroupComparisonTables(dataCells, params.trigger_labels, {'squidmag', 'opm', 'squidgrad'}, '%.1f');
+for i = 1:length(rptTable)
+    add(section, rptTable{i});
+    para = Paragraph(" ");
+    add(section,para);
+end
+img = Image(fullfile(save_path,'figs',['mne_fahm_sqmag_opm_sqgrad' peak_label '_box.jpg']));
+img.Style = {Width('14cm'), ScaleToFit};
+add(section, img);
+add(chapter, section);
+
+%% MNE-Latency section
+section = Section('MNE latency (ms)');
+section.Numbered = false; % Remove section numbering
+dataCells = {};
+dataCells{1} = lat.sqmag*1e3;
+dataCells{2} = lat.opm*1e3;
+dataCells{3} = lat.sqgrad*1e3;
+rptTable = addGroupComparisonTables(dataCells, params.trigger_labels, {'squidmag', 'opm', 'squidgrad'}, '%.1f');
+for i = 1:length(rptTable)
+    add(section, rptTable{i});
+    para = Paragraph(" ");
+    add(section,para);
+end
+img = Image(fullfile(save_path,'figs',['mne_lat_sqmag_opm_sqgrad' peak_label '_box.jpg']));
+img.Style = {Width('14cm'), ScaleToFit};
+add(section, img);
+add(chapter, section);
+
+%% MNE-Target section
+section = Section('MNE target region (%)');
+section.Numbered = false; % Remove section numbering
+dataCells = {};
+dataCells{1} = target.sqmag*100;
+dataCells{2} = target.opm*100;
+dataCells{3} = target.sqgrad*100;
+rptTable = addGroupComparisonTables(dataCells, params.trigger_labels, {'squidmag', 'opm', 'squidgrad'}, '%.1f');
+for i = 1:length(rptTable)
+    add(section, rptTable{i});
+    para = Paragraph(" ");
+    add(section,para);
+end
+img = Image(fullfile(save_path,'figs',['mne_target_sqmag_opm_sqgrad' peak_label '_box.jpg']));
+img.Style = {Width('14cm'), ScaleToFit};
+add(section, img);
+add(chapter, section);
+
+add(rpt, chapter);
+
 %% Close the report
 close(rpt);
 

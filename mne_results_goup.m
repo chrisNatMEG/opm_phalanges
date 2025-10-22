@@ -16,13 +16,22 @@ elseif params.numdipoles == 1
 end
 
 for i_peak = 1:length(params.peaks)
-    peak_label = params.peaks{i_peak}.label;
+    peak_label = ['_' params.peaks{i_peak}.label];
     for i_hemi = 1:params.numdipoles
         n_subs = max(subs);
         n_triggers = length(params.trigger_labels);
         dist_sqmag_opm = nan(n_subs,n_triggers);
         dist_sqgrad_opm = nan(n_subs,n_triggers);
         dist_sqmag_sqgrad = nan(n_subs,n_triggers);
+        distX_sqmag_opm = nan(n_subs,n_triggers);
+        distX_sqgrad_opm = nan(n_subs,n_triggers);
+        distX_sqmag_sqgrad = nan(n_subs,n_triggers);
+        distY_sqmag_opm = nan(n_subs,n_triggers);
+        distY_sqgrad_opm = nan(n_subs,n_triggers);
+        distY_sqmag_sqgrad = nan(n_subs,n_triggers);
+        distZ_sqmag_opm = nan(n_subs,n_triggers);
+        distZ_sqgrad_opm = nan(n_subs,n_triggers);
+        distZ_sqmag_sqgrad = nan(n_subs,n_triggers);
         fahm_opm = nan(n_subs,n_triggers);
         fahm_squidmag = nan(n_subs,n_triggers);
         fahm_squidgrad = nan(n_subs,n_triggers);
@@ -38,6 +47,12 @@ for i_peak = 1:length(params.peaks)
         mom_opm = nan(n_subs,n_triggers);
         mom_squidmag = nan(n_subs,n_triggers);
         mom_squidgrad = nan(n_subs,n_triggers);
+        dists_opm = nan(n_triggers,n_triggers,n_subs);
+        dists_sqgrad = nan(n_triggers,n_triggers,n_subs);
+        dists_sqmag = nan(n_triggers,n_triggers,n_subs);
+        vec_opm = nan(n_triggers,n_triggers,n_subs,3);
+        vec_sqmag = nan(n_triggers,n_triggers,n_subs,3);
+        vec_sqgrad = nan(n_triggers,n_triggers,n_subs,3);
         for i_sub = subs
             params.sub = ['sub_' num2str(i_sub,'%02d')];
             ft_hastoolbox('mne', 1);
@@ -58,6 +73,24 @@ for i_peak = 1:length(params.peaks)
                 dist_sqmag_opm(i_sub,i_trigger) = 1e1*norm(pos_squidmag-pos_opm);
                 dist_sqgrad_opm(i_sub,i_trigger) = 1e1*norm(pos_squidgrad-pos_opm);
                 dist_sqmag_sqgrad(i_sub,i_trigger) = 1e1*norm(pos_squidmag-pos_squidgrad);
+                distX_sqmag_opm(i_sub,i_trigger) = 1e1*(pos_squidmag(1)-pos_opm(1));
+                distX_sqgrad_opm(i_sub,i_trigger) = 1e1*(pos_squidgrad(1)-pos_opm(1));
+                distX_sqmag_sqgrad(i_sub,i_trigger) = 1e1*(pos_squidmag(1)-pos_squidgrad(1));
+                distY_sqmag_opm(i_sub,i_trigger) = 1e1*(pos_squidmag(2)-pos_opm(2));
+                distY_sqgrad_opm(i_sub,i_trigger) = 1e1*(pos_squidgrad(2)-pos_opm(2));
+                distY_sqmag_sqgrad(i_sub,i_trigger) = 1e1*(pos_squidmag(2)-pos_squidgrad(2));
+                distZ_sqmag_opm(i_sub,i_trigger) = 1e1*(pos_squidmag(3)-pos_opm(3));
+                distZ_sqgrad_opm(i_sub,i_trigger) = 1e1*(pos_squidgrad(3)-pos_opm(3));
+                distZ_sqmag_sqgrad(i_sub,i_trigger) = 1e1*(pos_squidmag(3)-pos_squidgrad(3));
+
+                for j = 1:n_triggers
+                    dists_opm(i_trigger,j,i_sub) = 1e1*norm(mne_opm{i_trigger,i_peak}.loc(i_hemi,:)-mne_opm{j,i_peak}.loc(i_hemi,:));
+                    dists_sqmag(i_trigger,j,i_sub) = 1e1*norm(mne_squidmag{i_trigger,i_peak}.loc(i_hemi,:)-mne_squidmag{j,i_peak}.loc(i_hemi,:));
+                    dists_sqgrad(i_trigger,j,i_sub) = 1e1*norm(mne_squidgrad{i_trigger,i_peak}.loc(i_hemi,:)-mne_squidgrad{j,i_peak}.loc(i_hemi,:));
+                    vec_opm(i_trigger,j,i_sub,:) = 1e1*(mne_opm{i_trigger,i_peak}.loc(i_hemi,:)-mne_opm{j,i_peak}.loc(i_hemi,:));
+                    vec_sqmag(i_trigger,j,i_sub,:) = 1e1*(mne_squidmag{i_trigger,i_peak}.loc(i_hemi,:)-mne_squidmag{j,i_peak}.loc(i_hemi,:));
+                    vec_sqgrad(i_trigger,j,i_sub,:) = 1e1*(mne_squidgrad{i_trigger,i_peak}.loc(i_hemi,:)-mne_squidgrad{j,i_peak}.loc(i_hemi,:));
+                end
         
                 pow_squidmag(i_sub,i_trigger) = mne_squidmag{i_trigger,i_peak}.pow(i_hemi);
                 pow_squidgrad(i_sub,i_trigger) = mne_squidgrad{i_trigger,i_peak}.pow(i_hemi);
@@ -88,33 +121,67 @@ for i_peak = 1:length(params.peaks)
             end
             clear mne_opm mne_squidmag mne_squidgrad
         end
-        
+
+        %% Save
+        target = [];
+        target.opm = targetregion_opm;
+        target.sqmag = targetregion_squidmag;
+        target.sqgrad = targetregion_squidgrad;
+        fahm = [];
+        fahm.opm = fahm_opm;
+        fahm.sqmag = fahm_squidmag;
+        fahm.sqgrad = fahm_squidgrad;
+        lat = [];
+        lat.opm = lat_opm;
+        lat.sqmag = lat_squidmag;
+        lat.sqgrad = lat_squidgrad;
+        save(fullfile(base_save_path, ['group_mne' peak_label hemi_labels{i_hemi}]),"target","fahm","lat","dist_sqmag_opm","dist_sqgrad_opm","dist_sqmag_sqgrad","-v7.3");
+
+        %%
+        save_path = fullfile(base_save_path, 'figs', ['mne_dist_opm' peak_label hemi_labels{i_hemi} '.jpg']);
+        plotDipDistances(dists_opm,'OPM',params,save_path,0)
+
+        save_path = fullfile(base_save_path, 'figs', ['mne_dist_sqmag' peak_label hemi_labels{i_hemi} '.jpg']);
+        plotDipDistances(dists_sqmag,'SQMAG',params,save_path,0)
+
+        save_path = fullfile(base_save_path, 'figs', ['mne_dist_sqgrad' peak_label hemi_labels{i_hemi} '.jpg']);
+        plotDipDistances(dists_sqgrad,'SQGRAD',params,save_path,0)
+
+        save_path = fullfile(base_save_path, 'figs', ['mne_vec_opm' peak_label hemi_labels{i_hemi} '.jpg']);
+        plotDipDistanceVectors(vec_opm,'OPM',params,save_path,1)
+
+        save_path = fullfile(base_save_path, 'figs', ['mne_vec_sqmag' peak_label hemi_labels{i_hemi} '.jpg']);
+        plotDipDistanceVectors(vec_sqmag,'SQMAG',params,save_path,1)
+
+        save_path = fullfile(base_save_path, 'figs', ['mne_vec_sqgrad' peak_label hemi_labels{i_hemi} '.jpg']);
+        plotDipDistanceVectors(vec_sqgrad,'SQGRAD',params,save_path,1)
+
         %% Plot distances
         h = figure('DefaultAxesFontSize',16);
-        bar(1:length(params.trigger_labels),mean(dist_sqmag_opm,1,'omitnan'));
+        bar(1:length(params.trigger_labels),median(dist_sqmag_opm,1,'omitnan'));
         hold on
-        er = errorbar(1:n_triggers,mean(dist_sqmag_opm,1,'omitnan'), mean(dist_sqmag_opm,1,'omitnan')-min(dist_sqmag_opm,[],1,'omitnan'), mean(dist_sqmag_opm,1,'omitnan')-max(dist_sqmag_opm,[],1,'omitnan'));    
+        er = errorbar(1:n_triggers,median(dist_sqmag_opm,1,'omitnan'), median(dist_sqmag_opm,1,'omitnan')-min(dist_sqmag_opm,[],1,'omitnan'), median(dist_sqmag_opm,1,'omitnan')-max(dist_sqmag_opm,[],1,'omitnan'));    
         er.Color = [0 0 0];                            
         er.LineStyle = 'none';  
         er.LineWidth = 1;
         er.CapSize = 30;
         hold off
-        title(['Dist SQ-MAG to OPM (mean = ' num2str(mean(mean(dist_sqmag_opm,'omitnan'),'omitnan'),'%.1f') 'mm)'])
+        title(['Dist SQ-MAG to OPM (mean = ' num2str(mean(median(dist_sqmag_opm,'omitnan'),'omitnan'),'%.1f') 'mm)'])
         ylabel('Distance [mm]')
         xlabel('Phalange')
         xticklabels(params.trigger_labels)
         saveas(h, fullfile(base_save_path, 'figs', ['mne_squidmag_to_opm_dist_' peak_label cov hemi_labels{i_hemi} '.jpg']))
         
         h = figure('DefaultAxesFontSize',16);
-        bar(1:length(params.trigger_labels),mean(dist_sqgrad_opm,1,'omitnan'));
+        bar(1:length(params.trigger_labels),median(dist_sqgrad_opm,1,'omitnan'));
         hold on
-        er = errorbar(1:n_triggers,mean(dist_sqgrad_opm,1,'omitnan'), mean(dist_sqgrad_opm,1,'omitnan')-min(dist_sqgrad_opm,[],1,'omitnan'), mean(dist_sqgrad_opm,1,'omitnan')-max(dist_sqgrad_opm,[],1,'omitnan'));    
+        er = errorbar(1:n_triggers,median(dist_sqgrad_opm,1,'omitnan'), median(dist_sqgrad_opm,1,'omitnan')-min(dist_sqgrad_opm,[],1,'omitnan'), median(dist_sqgrad_opm,1,'omitnan')-max(dist_sqgrad_opm,[],1,'omitnan'));    
         er.Color = [0 0 0];                            
         er.LineStyle = 'none';  
         er.LineWidth = 1;
         er.CapSize = 30;
         hold off
-        title(['Dist SQ-GRAD to OPM (mean = ' num2str(mean(mean(dist_sqgrad_opm,'omitnan'),'omitnan'),'%.1f') 'mm)'])
+        title(['Dist SQ-GRAD to OPM (mean = ' num2str(mean(median(dist_sqgrad_opm,'omitnan'),'omitnan'),'%.1f') 'mm)'])
         ylabel('Distance [mm]')
         xlabel('Phalange')
         xticklabels(params.trigger_labels)
@@ -122,15 +189,15 @@ for i_peak = 1:length(params.peaks)
         close
         
         h = figure('DefaultAxesFontSize',16);
-        bar(1:length(params.trigger_labels),mean(dist_sqmag_sqgrad,1,'omitnan'));
+        bar(1:length(params.trigger_labels),median(dist_sqmag_sqgrad,1,'omitnan'));
         hold on
-        er = errorbar(1:n_triggers,mean(dist_sqmag_sqgrad,1,'omitnan'), mean(dist_sqmag_sqgrad,1,'omitnan')-min(dist_sqmag_sqgrad,[],1,'omitnan'), mean(dist_sqmag_sqgrad,1,'omitnan')-max(dist_sqmag_sqgrad,[],1,'omitnan'));    
+        er = errorbar(1:n_triggers,median(dist_sqmag_sqgrad,1,'omitnan'), median(dist_sqmag_sqgrad,1,'omitnan')-min(dist_sqmag_sqgrad,[],1,'omitnan'), median(dist_sqmag_sqgrad,1,'omitnan')-max(dist_sqmag_sqgrad,[],1,'omitnan'));    
         er.Color = [0 0 0];                            
         er.LineStyle = 'none';  
         er.LineWidth = 1;
         er.CapSize = 30;
         hold off
-        title(['Dist SQ-MAG to SQ-GRAD (mean = ' num2str(mean(mean(dist_sqmag_sqgrad,'omitnan'),'omitnan'),'%.1f') 'mm)'])
+        title(['Dist SQ-MAG to SQ-GRAD (mean = ' num2str(mean(median(dist_sqmag_sqgrad,'omitnan'),'omitnan'),'%.1f') 'mm)'])
         ylabel('Distance [mm]')
         xlabel('Phalange')
         xticklabels(params.trigger_labels)
@@ -192,13 +259,14 @@ for i_peak = 1:length(params.peaks)
         end
         
         hold off
-        title('MNE: Group level FAHM')
+        title(['MNE: Group level FAHM (mean: ' num2str(mean(median(fahm_squidmag,1,'omitnan')),'%.1f') ', ' num2str(mean(median(fahm_opm,1,'omitnan')),'%.1f') ', ' num2str(mean(median(fahm_squidgrad,1,'omitnan')),'%.1f') ')'])
         ylabel('M60 FAHM [cm^2]')
         xlabel('Phalange')
         legend({'squidmag','opm','squidgrad'},'Location','eastoutside');
         xticklabels(params.trigger_labels)
         saveas(h, fullfile(base_save_path, 'figs', ['mne_fahm_' peak_label cov hemi_labels{i_hemi} '.jpg']))
-        
+        close all
+
         data = {fahm_squidmag, fahm_opm, fahm_squidgrad};
         triggerLabels = params.trigger_labels;
         yLabelStr = 'FAHM [cm^2]';
@@ -418,6 +486,30 @@ for i_peak = 1:length(params.peaks)
         yLabelStr = 'Peak distances [mm]';
         titleStr = ['Group level ' params.peaks{1}.label ' MNE Peak distances - SM-O vs SG-O vs SM-SG'];
         save_path = fullfile(base_save_path, 'figs', ['mne_dist_sqmag_opm_sqgrad' peak_label cov hemi_labels{i_hemi} '_box.jpg']);
+        pairedBoxplots(data, triggerLabels, yLabelStr, titleStr, save_path,1);     
+        close all    
+
+        data = {distX_sqmag_opm, distX_sqgrad_opm, distX_sqmag_sqgrad};
+        triggerLabels = params.trigger_labels;
+        yLabelStr = 'Peak distances [mm]';
+        titleStr = ['Group level ' params.peaks{1}.label ' MNE Peak distances X - SM-O vs SG-O vs SM-SG'];
+        save_path = fullfile(base_save_path, 'figs', ['mne_distX_sqmag_opm_sqgrad' peak_label cov hemi_labels{i_hemi} '_box.jpg']);
+        pairedBoxplots(data, triggerLabels, yLabelStr, titleStr, save_path,1);     
+        close all    
+
+        data = {distY_sqmag_opm, distY_sqgrad_opm, distY_sqmag_sqgrad};
+        triggerLabels = params.trigger_labels;
+        yLabelStr = 'Peak distances [mm]';
+        titleStr = ['Group level ' params.peaks{1}.label ' MNE Peak distances Y - SM-O vs SG-O vs SM-SG'];
+        save_path = fullfile(base_save_path, 'figs', ['mne_distY_sqmag_opm_sqgrad' peak_label cov hemi_labels{i_hemi} '_box.jpg']);
+        pairedBoxplots(data, triggerLabels, yLabelStr, titleStr, save_path,1);     
+        close all    
+
+        data = {distZ_sqmag_opm, distZ_sqgrad_opm, distZ_sqmag_sqgrad};
+        triggerLabels = params.trigger_labels;
+        yLabelStr = 'Peak distances [mm]';
+        titleStr = ['Group level ' params.peaks{1}.label ' MNE Peak distances Z - SM-O vs SG-O vs SM-SG'];
+        save_path = fullfile(base_save_path, 'figs', ['mne_distZ_sqmag_opm_sqgrad' peak_label cov hemi_labels{i_hemi} '_box.jpg']);
         pairedBoxplots(data, triggerLabels, yLabelStr, titleStr, save_path,1);     
         close all    
     

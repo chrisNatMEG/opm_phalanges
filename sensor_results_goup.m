@@ -3,14 +3,40 @@ function sensor_results_goup(base_save_path, subs, params)
 %   Detailed explanation goes here
 
 n_triggers = length(params.trigger_labels);
-
+n_subs = max(subs);
 for i_peak = 1:length(params.peaks)
     peak_label = ['_' params.peaks{i_peak}.label];
     
     peak_ratio = [];
+    peak_ratio.meg = nan(n_subs,n_triggers);
+    peak_ratio.eeg = nan(n_subs,n_triggers);
     snr = [];
+    snr.error_opm = nan(n_subs,n_triggers);
+    snr.error_squidmag = nan(n_subs,n_triggers);
+    snr.error_squideeg = nan(n_subs,n_triggers);
+    snr.error_opmeeg = nan(n_subs,n_triggers);
+    snr.prestim_opm = nan(n_subs,n_triggers);
+    snr.prestim_squidmag = nan(n_subs,n_triggers);
+    snr.prestim_opmeeg = nan(n_subs,n_triggers);
+    snr.prestim_squideeg = nan(n_subs,n_triggers);
+    snr.ratio_error = nan(n_subs,n_triggers);
+    snr.ratio_prestim = nan(n_subs,n_triggers);
     latency = [];
+    latency.opm = nan(n_subs,n_triggers);
+    latency.squidmag = nan(n_subs,n_triggers);
+    latency.opmeeg = nan(n_subs,n_triggers);
+    latency.squideeg = nan(n_subs,n_triggers);
+    amp = [];
+    amp.opm = nan(n_subs,n_triggers);
+    amp.squidmag = nan(n_subs,n_triggers);
+    amp.opmeeg = nan(n_subs,n_triggers);
+    amp.squideeg = nan(n_subs,n_triggers);
     n_trl = [];
+    n_trl.opm = nan(n_subs,n_triggers);
+    n_trl.squidmag = nan(n_subs,n_triggers);
+    n_trl.opmeeg = nan(n_subs,n_triggers);
+    n_trl.squideeg = nan(n_subs,n_triggers);
+
     for i_sub = subs
         params.sub = ['sub_' num2str(i_sub,'%02d')];
         ft_hastoolbox('mne', 1);
@@ -123,6 +149,11 @@ for i_peak = 1:length(params.peaks)
     er.LineStyle = 'none';  
     er.LineWidth = 1;
     er.CapSize = 30;
+    p_values = zeros(1,n_triggers);
+    for i = 1:n_triggers
+        [~, p_values(i)] = ttest(snr.ratio_error(:, i)-1);
+    end
+    sigstar(arrayfun(@(x) [x, x], 1:n_triggers, 'UniformOutput', false), p_values);
     hold off
     title([params.peaks{1}.label ' SNR_{stderror} ratio (mean = ' num2str(mean(mean(snr.ratio_error,'omitnan'),'omitnan'),'%.2f') ')'])
     ylabel('OPM/SQUID')
@@ -140,6 +171,11 @@ for i_peak = 1:length(params.peaks)
     er.LineStyle = 'none';  
     er.LineWidth = 1;
     er.CapSize = 30;
+    p_values = zeros(1,n_triggers);
+    for i = 1:n_triggers
+        [~, p_values(i)] = ttest(snr.ratio_prestim(:, i)-1);
+    end
+    sigstar(arrayfun(@(x) [x, x], 1:n_triggers, 'UniformOutput', false), p_values);
     hold off
     title([params.peaks{1}.label ' SNR_{prestim} ratio (mean = ' num2str(mean(mean(snr.ratio_prestim,'omitnan'),'omitnan'),'%.2f') ')'])
     ylabel('OPM/SQUID')
@@ -310,9 +346,36 @@ for i_peak = 1:length(params.peaks)
     yLabelStr = 'SNR';
     titleStr = ['Group level ' params.peaks{1}.label ' SNR_{stderror}'];
     save_path = fullfile(base_save_path, 'figs', ['SNR_error_box' peak_label '.jpg']);
-    pairedBoxplots(data, triggerLabels, yLabelStr, titleStr, save_path,1);
+    pairedBoxplots(data, triggerLabels, yLabelStr, titleStr, save_path,1);  
     
+    %% difference
+    data1 = snr.error_opm - snr.error_squidmag;
+    mean1 = mean(data1,1,'omitnan');
+    min1 = min(data1,[],1,'omitnan');
+    max1 = max(data1,[],1,'omitnan');
+    err1 = [mean1-min1; max1-mean1];
     
+    h = figure('DefaultAxesFontSize',16);
+    bar(1:n_triggers,[mean1]','grouped');
+    hold on
+    for k=1:n_triggers
+        errorbar(k,mean1(k),err1(1,k),err1(2,k),'k','linestyle','none');
+    end
+    p_values = zeros(1,n_triggers);
+    for i = 1:n_triggers
+        [~, p_values(i)] = ttest(data1(:, i));
+    end
+    sigstar(arrayfun(@(x) [x, x], 1:n_triggers, 'UniformOutput', false), p_values);
+    hold off
+    title('Group level SNR_{stderror}')
+    ylabel('SNR')
+    xlabel('Trigger')
+    legend({'squidmag','opm'});
+    xticklabels(params.trigger_labels)
+    saveas(h, fullfile(base_save_path, 'figs', ['SNR_error_difference' peak_label '.jpg']))
+    close all
+
+
     %% Plot SNR - prestim
     data1 = snr.prestim_squidmag;
     data2 = snr.prestim_opm;
@@ -404,6 +467,9 @@ for i_trigger = 1:n_triggers
     ylabel('B [fT]')
     xlim([-params.pre params.post]*1e3);
     title(['Grand average opm - phalange ' params.trigger_labels{i_trigger}])
+    ylimits = ylim;
+    ylimits = [-max(abs(ylimits)) max(abs(ylimits))]; % make the yaxis symmetric
+    ylim(ylimits)
     saveas(h, fullfile(base_save_path, 'figs', ['opm_grndAvg_butterfly_trig-' params.trigger_labels{i_trigger} '.jpg']))
     close all
     
@@ -413,6 +479,7 @@ for i_trigger = 1:n_triggers
         cfg.xlim = params.peaks{1}.peak_latency;
         %cfg.zlim = [0 6e-14];
         cfg.layout = 'fieldlinebeta2bz_helmet.mat';
+        cfg.comment = 'no';
         h = figure; ft_topoplotER(cfg,grandavg_opm); colorbar; title(['GRAND AVG OPM - ' params.trigger_labels{i_trigger}])
         saveas(h, fullfile(base_save_path, 'figs', ['opm' peak_label '_grndAvg_topo_trig-' params.trigger_labels{i_trigger} '.jpg']))
         close all
@@ -438,6 +505,7 @@ for i_trigger = 1:n_triggers
         cfg.xlim = params.peaks{1}.peak_latency;
         %cfg.zlim = [0 6e-14];
         cfg.layout = 'neuromag306planar.lay';
+        cfg.comment = 'no';
         h = figure; ft_topoplotER(cfg,grandavg_squidgrad); colorbar; title(['GRAND AVG SQUID-GRAD - ' params.trigger_labels{i_trigger}])
         saveas(h, fullfile(base_save_path, 'figs', ['squidgrad' peak_label '_grndAvg_topo_trig-' params.trigger_labels{i_trigger} '.jpg'])) 
         close all
@@ -454,6 +522,7 @@ for i_trigger = 1:n_triggers
     ylabel('B [fT]')
     xlim([-params.pre params.post]*1e3);
     title(['Grand average squidmag - phalange ' params.trigger_labels{i_trigger}])
+    ylim(ylimits)
     saveas(h, fullfile(base_save_path, 'figs', ['squidmag_grndAvg_butterfly_trig-' params.trigger_labels{i_trigger} '.jpg']))
     close all
 
@@ -463,6 +532,7 @@ for i_trigger = 1:n_triggers
         cfg.xlim = params.peaks{1}.peak_latency;
         %cfg.zlim = [0 6e-14];
         cfg.layout = 'neuromag306mag.lay';
+        cfg.comment = 'no';
         h = figure; ft_topoplotER(cfg,grandavg_squidmag); colorbar; title(['GRAND AVG SQUID-MAG - ' params.trigger_labels{i_trigger}])
         saveas(h, fullfile(base_save_path, 'figs', ['squidmag' peak_label '_grndAvg_topo_trig-' params.trigger_labels{i_trigger} '.jpg']))
         close all

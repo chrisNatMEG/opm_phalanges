@@ -16,12 +16,31 @@ for i_peak = 1:length(params.peaks)
         dist_sqmag_opm = nan(n_subs,n_triggers);
         dist_sqgrad_opm = nan(n_subs,n_triggers);
         dist_sqmag_sqgrad = nan(n_subs,n_triggers);
+        distX_sqmag_opm = nan(n_subs,n_triggers);
+        distX_sqgrad_opm = nan(n_subs,n_triggers);
+        distX_sqmag_sqgrad = nan(n_subs,n_triggers);
+        distY_sqmag_opm = nan(n_subs,n_triggers);
+        distY_sqgrad_opm = nan(n_subs,n_triggers);
+        distY_sqmag_sqgrad = nan(n_subs,n_triggers);
+        distZ_sqmag_opm = nan(n_subs,n_triggers);
+        distZ_sqgrad_opm = nan(n_subs,n_triggers);
+        distZ_sqmag_sqgrad = nan(n_subs,n_triggers);
         spread_opm = nan(n_subs,n_triggers);
         spread_squidmag = nan(n_subs,n_triggers);
         spread_squidgrad = nan(n_subs,n_triggers);
         mom_squidmag = nan(n_subs,n_triggers);
         mom_squidgrad = nan(n_subs,n_triggers);
         mom_opm = nan(n_subs,n_triggers);
+        dists_opm = nan(n_triggers,n_triggers,n_subs);
+        dists_sqgrad = nan(n_triggers,n_triggers,n_subs);
+        dists_sqmag = nan(n_triggers,n_triggers,n_subs);
+        
+        vec_sqmag_opm = nan(n_triggers,n_subs,3);
+        vec_sqgrad_opm = nan(n_triggers,n_subs,3);
+        vec_sqmag_sqgrad = nan(n_triggers,n_subs,3);
+        vec_opm = nan(n_triggers,n_triggers,n_subs,3);
+        vec_sqmag = nan(n_triggers,n_triggers,n_subs,3);
+        vec_sqgrad = nan(n_triggers,n_triggers,n_subs,3);
         for i_sub = subs
             params.sub = ['sub_' num2str(i_sub,'%02d')];
             ft_hastoolbox('mne', 1);
@@ -47,63 +66,86 @@ for i_peak = 1:length(params.peaks)
                 dist_sqmag_opm(i_sub,i_trigger) = 1e1*norm(pos_squidmag(i_trigger,:)-pos_opm(i_trigger,:));
                 dist_sqgrad_opm(i_sub,i_trigger) = 1e1*norm(pos_squidgrad(i_trigger,:)-pos_opm(i_trigger,:));
                 dist_sqmag_sqgrad(i_sub,i_trigger) = 1e1*norm(pos_squidmag(i_trigger,:)-pos_squidgrad(i_trigger,:));
+                distX_sqmag_opm(i_sub,i_trigger) = 1e1*(pos_squidmag(i_trigger,1)-pos_opm(i_trigger,1));
+                distX_sqgrad_opm(i_sub,i_trigger) = 1e1*(pos_squidgrad(i_trigger,1)-pos_opm(i_trigger,1));
+                distX_sqmag_sqgrad(i_sub,i_trigger) = 1e1*(pos_squidmag(i_trigger,1)-pos_squidgrad(i_trigger,1));
+                distY_sqmag_opm(i_sub,i_trigger) = 1e1*(pos_squidmag(i_trigger,2)-pos_opm(i_trigger,2));
+                distY_sqgrad_opm(i_sub,i_trigger) = 1e1*(pos_squidgrad(i_trigger,2)-pos_opm(i_trigger,2));
+                distY_sqmag_sqgrad(i_sub,i_trigger) = 1e1*(pos_squidmag(i_trigger,2)-pos_squidgrad(i_trigger,2));
+                distZ_sqmag_opm(i_sub,i_trigger) = 1e1*(pos_squidmag(i_trigger,3)-pos_opm(i_trigger,3));
+                distZ_sqgrad_opm(i_sub,i_trigger) = 1e1*(pos_squidgrad(i_trigger,3)-pos_opm(i_trigger,3));
+                distZ_sqmag_sqgrad(i_sub,i_trigger) = 1e1*(pos_squidmag(i_trigger,3)-pos_squidgrad(i_trigger,3));
+
+                vec_sqmag_opm(i_trigger,i_sub,:) = 1e1*(pos_squidmag(i_trigger,:)-pos_opm(i_trigger,:));
+                vec_sqgrad_opm(i_trigger,i_sub,:) = 1e1*(pos_squidgrad(i_trigger,:)-pos_opm(i_trigger,:));
+                vec_sqmag_sqgrad(i_trigger,i_sub,:) = 1e1*(pos_squidmag(i_trigger,:)-pos_squidgrad(i_trigger,:));
+                
+                for j = 1:n_triggers
+                    dists_opm(i_trigger,j,i_sub) = 1e1*norm(dipole_opm{i_trigger}.dip.pos(i_dip,:)-dipole_opm{j}.dip.pos(i_dip,:));
+                    dists_sqmag(i_trigger,j,i_sub) = 1e1*norm(dipole_squidmag{i_trigger}.dip.pos(i_dip,:)-dipole_squidmag{j}.dip.pos(i_dip,:));
+                    dists_sqgrad(i_trigger,j,i_sub) = 1e1*norm(dipole_squidgrad{i_trigger}.dip.pos(i_dip,:)-dipole_squidgrad{j}.dip.pos(i_dip,:));
+                    vec_opm(i_trigger,j,i_sub,:) = 1e1*(dipole_opm{i_trigger}.dip.pos(i_dip,:)-dipole_opm{j}.dip.pos(i_dip,:));
+                    vec_sqmag(i_trigger,j,i_sub,:) = 1e1*(dipole_squidmag{i_trigger}.dip.pos(i_dip,:)-dipole_squidmag{j}.dip.pos(i_dip,:));
+                    vec_sqgrad(i_trigger,j,i_sub,:) = 1e1*(dipole_squidgrad{i_trigger}.dip.pos(i_dip,:)-dipole_squidgrad{j}.dip.pos(i_dip,:));
+                end
             end
             clear squidmag_dipole squidgrad_dipole opm_dipole
 
-            D = pdist2(pos_opm,pos_opm);
-            goods = ~any(D<50&D>0,2);
-            if sum(goods)>=3 % remove up to 2 outliers
-                center = mean(pos_opm(goods,:),1);
-            else
-                center = mean(pos_opm,1);
-            end
+            center = mean(pos_opm,1);
             spread_opm(i_sub,:) = 1e1*vecnorm(pos_opm-center,2,2)';
         
-            D = pdist2(pos_squidmag,pos_squidmag);
-            goods = ~any(D<50&D>0,2);
-            if sum(goods)>=3 % remove up to 2 outliers
-                center = mean(pos_squidmag(goods,:),1);
-            else
-                center = mean(pos_squidmag,1);
-            end
-            spread_squidmag(i_sub,:) = 1e1*vecnorm(pos_opm-center,2,2)'; % mean distance from center of phalanges
+            center = mean(pos_squidmag,1);
+            spread_squidmag(i_sub,:) = 1e1*vecnorm(pos_squidmag-center,2,2)'; % mean distance from center of phalanges
             
-            D = pdist2(pos_squidgrad,pos_squidgrad);
-            goods = ~any(D<50&D>0,2);
-            if sum(goods)>=3 % remove up to 2 outliers 
-                center = mean(pos_squidgrad(goods,:),1);
-            else
-                center = mean(pos_squidgrad,1);
-            end
-            spread_squidgrad(i_sub,:) = 1e1*vecnorm(pos_opm-center,2,2)'; % mean distance from center of phalanges
+            center = mean(pos_squidgrad,1);
+            spread_squidgrad(i_sub,:) = 1e1*vecnorm(pos_squidgrad-center,2,2)'; % mean distance from center of phalanges
         end
+
+        %%
+        save_path = fullfile(base_save_path, 'figs', ['dipole_dist_opm' peak_label dip_labels{i_dip} '.jpg']);
+        plotDipDistances(dists_opm,'OPM',params,save_path,0)
+
+        save_path = fullfile(base_save_path, 'figs', ['dipole_dist_sqmag' peak_label dip_labels{i_dip} '.jpg']);
+        plotDipDistances(dists_sqmag,'SQMAG',params,save_path,0)
+
+        save_path = fullfile(base_save_path, 'figs', ['dipole_dist_sqgrad' peak_label dip_labels{i_dip} '.jpg']);
+        plotDipDistances(dists_sqgrad,'SQGRAD',params,save_path,0)
         
+        save_path = fullfile(base_save_path, 'figs', ['dipole_vec_opm' peak_label dip_labels{i_dip} '.jpg']);
+        plotDipDistanceVectors(vec_opm,'OPM',params,save_path,1)
+
+        save_path = fullfile(base_save_path, 'figs', ['dipole_vec_sqmag' peak_label dip_labels{i_dip} '.jpg']);
+        plotDipDistanceVectors(vec_sqmag,'SQMAG',params,save_path,1)
+
+        save_path = fullfile(base_save_path, 'figs', ['dipole_vec_sqgrad' peak_label dip_labels{i_dip} '.jpg']);
+        plotDipDistanceVectors(vec_sqgrad,'SQGRAD',params,save_path,1)
+
         %% Plot distances
         h = figure('DefaultAxesFontSize',16);
-        bar(1:length(params.trigger_labels),mean(dist_sqmag_opm,1,'omitnan'));
+        bar(1:length(params.trigger_labels),median(dist_sqmag_opm,1,'omitnan'));
         hold on
-        er = errorbar(1:n_triggers,mean(dist_sqmag_opm,1,'omitnan'), mean(dist_sqmag_opm,1,'omitnan')-min(dist_sqmag_opm,[],1,'omitnan'), mean(dist_sqmag_opm,1,'omitnan')-max(dist_sqmag_opm,[],1,'omitnan'));    
+        er = errorbar(1:n_triggers,median(dist_sqmag_opm,1,'omitnan'), median(dist_sqmag_opm,1,'omitnan')-min(dist_sqmag_opm,[],1,'omitnan'), median(dist_sqmag_opm,1,'omitnan')-max(dist_sqmag_opm,[],1,'omitnan'));    
         er.Color = [0 0 0];                            
         er.LineStyle = 'none';  
         er.LineWidth = 1;
         er.CapSize = 30;
         hold off
-        title(['Dist SQMAG to OPM (mean = ' num2str(mean(mean(dist_sqmag_opm,'omitnan'),'omitnan'),'%.1f') 'mm)'])
+        title(['Dist SQMAG to OPM (mean = ' num2str(mean(median(dist_sqmag_opm,'omitnan'),'omitnan'),'%.1f') 'mm)'])
         ylabel('Distance [mm]')
         xlabel('Phalange')
         xticklabels(params.trigger_labels)
         saveas(h, fullfile(base_save_path, 'figs', ['dipole_squidmag_to_opm_dist' peak_label dip_labels{i_dip} '.jpg']))
         
         h = figure('DefaultAxesFontSize',16);
-        bar(1:length(params.trigger_labels),mean(dist_sqgrad_opm,1,'omitnan'));
+        bar(1:length(params.trigger_labels),median(dist_sqgrad_opm,1,'omitnan'));
         hold on
-        er = errorbar(1:n_triggers,mean(dist_sqgrad_opm,1,'omitnan'), mean(dist_sqgrad_opm,1,'omitnan')-min(dist_sqgrad_opm,[],1,'omitnan'), mean(dist_sqgrad_opm,1,'omitnan')-max(dist_sqgrad_opm,[],1,'omitnan'));    
+        er = errorbar(1:n_triggers,median(dist_sqgrad_opm,1,'omitnan'), median(dist_sqgrad_opm,1,'omitnan')-min(dist_sqgrad_opm,[],1,'omitnan'), median(dist_sqgrad_opm,1,'omitnan')-max(dist_sqgrad_opm,[],1,'omitnan'));    
         er.Color = [0 0 0];                            
         er.LineStyle = 'none';  
         er.LineWidth = 1;
         er.CapSize = 30;
         hold off
-        title(['Dist SQGRAD to OPM (mean = ' num2str(mean(mean(dist_sqgrad_opm,'omitnan'),'omitnan'),'%.1f') 'mm)'])
+        title(['Dist SQGRAD to OPM (mean = ' num2str(mean(median(dist_sqgrad_opm,'omitnan'),'omitnan'),'%.1f') 'mm)'])
         ylabel('Distance [mm]')
         xlabel('Phalange')
         xticklabels(params.trigger_labels)
@@ -111,15 +153,15 @@ for i_peak = 1:length(params.peaks)
         close
         
         h = figure('DefaultAxesFontSize',16);
-        bar(1:length(params.trigger_labels),mean(dist_sqmag_sqgrad,1,'omitnan'));
+        bar(1:length(params.trigger_labels),median(dist_sqmag_sqgrad,1,'omitnan'));
         hold on
-        er = errorbar(1:n_triggers,mean(dist_sqmag_sqgrad,1,'omitnan'), mean(dist_sqmag_sqgrad,1,'omitnan')-min(dist_sqmag_sqgrad,[],1,'omitnan'), mean(dist_sqmag_sqgrad,1,'omitnan')-max(dist_sqmag_sqgrad,[],1,'omitnan'));    
+        er = errorbar(1:n_triggers,median(dist_sqmag_sqgrad,1,'omitnan'), median(dist_sqmag_sqgrad,1,'omitnan')-min(dist_sqmag_sqgrad,[],1,'omitnan'), median(dist_sqmag_sqgrad,1,'omitnan')-max(dist_sqmag_sqgrad,[],1,'omitnan'));    
         er.Color = [0 0 0];                            
         er.LineStyle = 'none';  
         er.LineWidth = 1;
         er.CapSize = 30;
         hold off
-        title(['Dist SQMAG to SQGRAD (mean = ' num2str(mean(mean(dist_sqmag_sqgrad,'omitnan'),'omitnan'),'%.1f') 'mm)'])
+        title(['Dist SQMAG to SQGRAD (mean = ' num2str(mean(median(dist_sqmag_sqgrad,'omitnan'),'omitnan'),'%.1f') 'mm)'])
         ylabel('Distance [mm]')
         xlabel('Phalange')
         xticklabels(params.trigger_labels)
@@ -177,7 +219,7 @@ for i_peak = 1:length(params.peaks)
             sigstar({[i-0.22, i+0.22]}, p_values(i,3));
         end
         hold off
-        title('Group level M60 dipole spread')
+        title(['Group level dipole spread (mean: ' num2str(mean(median(spread_squidmag,1,'omitnan')),'%.1f') ', ' num2str(mean(median(spread_opm,1,'omitnan')),'%.1f') ', ' num2str(mean(median(spread_squidgrad,1,'omitnan')),'%.1f') ')'])
         ylabel('Dipoles spread [mm]')
         legend({'squidmag','opm','squidgrad'},'Location','eastoutside');
         saveas(h, fullfile(base_save_path, 'figs', ['dipole_spread' peak_label dip_labels{i_dip} '.jpg']))
@@ -197,6 +239,27 @@ for i_peak = 1:length(params.peaks)
         titleStr = ['Group level ' params.peaks{1}.label ' dipole distance - SQMAG-OPM, SQGRAD-OPM, SQMAG-SQGRAD'];
         save_path = fullfile(base_save_path, 'figs', ['dipole_dist' peak_label dip_labels{i_dip} '_box.jpg']);
         pairedBoxplots(data, triggerLabels, yLabelStr, titleStr, save_path,1);
+
+        data = {distX_sqmag_opm, distX_sqgrad_opm, distX_sqmag_sqgrad};
+        triggerLabels = params.trigger_labels;
+        yLabelStr = 'Distance [mm]';
+        titleStr = ['Group level ' params.peaks{1}.label ' dipole distance X - SQMAG-OPM, SQGRAD-OPM, SQMAG-SQGRAD'];
+        save_path = fullfile(base_save_path, 'figs', ['dipole_distX' peak_label dip_labels{i_dip} '_box.jpg']);
+        pairedBoxplots(data, triggerLabels, yLabelStr, titleStr, save_path,1);
+
+        data = {distY_sqmag_opm, distY_sqgrad_opm, distY_sqmag_sqgrad};
+        triggerLabels = params.trigger_labels;
+        yLabelStr = 'Distance [mm]';
+        titleStr = ['Group level ' params.peaks{1}.label ' dipole distance Y - SQMAG-OPM, SQGRAD-OPM, SQMAG-SQGRAD'];
+        save_path = fullfile(base_save_path, 'figs', ['dipole_distY' peak_label dip_labels{i_dip} '_box.jpg']);
+        pairedBoxplots(data, triggerLabels, yLabelStr, titleStr, save_path,1);
+
+        data = {distZ_sqmag_opm, distZ_sqgrad_opm, distZ_sqmag_sqgrad};
+        triggerLabels = params.trigger_labels;
+        yLabelStr = 'Distance [mm]';
+        titleStr = ['Group level ' params.peaks{1}.label ' dipole distance Z - SQMAG-OPM, SQGRAD-OPM, SQMAG-SQGRAD'];
+        save_path = fullfile(base_save_path, 'figs', ['dipole_distZ' peak_label dip_labels{i_dip} '_box.jpg']);
+        pairedBoxplots(data, triggerLabels, yLabelStr, titleStr, save_path,1);
   
         %% Peak mom
         data = {1e9*1e-4*mom_squidmag, 1e9*1e-4*mom_opm, 1e9*1e-4*1e-2*mom_squidgrad};
@@ -212,6 +275,19 @@ for i_peak = 1:length(params.peaks)
         titleStr = ['Group level ' params.peaks{1}.label ' peak dipole moment - SQMAG vs OPM'];
         save_path = fullfile(base_save_path, 'figs', ['dipole_mom_sqmag_opm' peak_label dip_labels{i_dip} '_box.jpg']);
         pairedBoxplots(data, triggerLabels, yLabelStr, titleStr, save_path,1);
+
+        %% Save
+        mom = [];
+        mom.opm = mom_opm;
+        mom.sqmag = mom_squidmag;
+        mom.sqgrad = mom_squidgrad;
+        spread = [];
+        spread.opm = spread_opm;
+        spread.sqmag = spread_squidmag;
+        spread.sqgrad = spread_squidgrad;
+        save(fullfile(base_save_path, ['group_dip' peak_label dip_labels{i_dip}]),"dist_sqmag_opm","dist_sqgrad_opm","dist_sqmag_sqgrad","mom","spread","-v7.3");
+    
+        close all
     end
 end
 disp('done')

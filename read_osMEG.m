@@ -24,10 +24,20 @@ trl_opm(:,4) = opm_raw.trial{1}(opm_trig,trig);
 trl_opm(:,1:2) = trl_opm(:,1:2) + floor(params.delay*opm_raw.fsample); % adjust for stim delay
 trl_opm = round(trl_opm);
 
+%% Flip? 
+chs = find(contains(opm_raw.label,'_bz'));
+if isfield(params,'flip_sign') && params.flip_sign
+    for i = 1:length(opm_raw.trial)
+        opm_raw.trial{i}(chs,:) = -opm_raw.trial{i}(chs,:);
+    end
+    opm_raw.grad.chanori = -opm_raw.grad.chanori;
+    opm_raw.grad.coilori = -opm_raw.grad.coilori;
+end
+
 % AUX
 trl_aux=[];
 cfg = [];
-cfg.datafile        = aux_file;
+cfg.datafile = aux_file;
 aux_raw = ft_preprocessing(cfg);
 aux_trig = find(contains(aux_raw.label,'STI101'));
 trig = aux_raw.trial{1}(aux_trig,:)>0.5;
@@ -85,78 +95,68 @@ cfg.corr_threshold = params.corr_threshold;
 clear aux_raw
 
 %% OPM data filter & epoch
-cfg = [];
-if isfield(params.filter,'lp_freq') && ~isempty(params.filter.lp_freq)
-    cfg.lpfilter        = 'yes';         
-    cfg.lpfreq          = params.filter.lp_freq;
-end
-if isfield(params.filter,'hp_freq') && ~isempty(params.filter.hp_freq)
-    cfg.hpfilter        = 'yes'; 
-    cfg.hpfreq          = params.filter.hp_freq;
-    cfg.hpinstabilityfix  = 'reduce';
-end
-if isfield(params.filter,'bp_freq') && ~isempty(params.filter.bp_freq)
-    cfg.bpfilter        = 'yes'; 
-    cfg.bpfreq          = params.filter.bp_freq;
-    cfg.bpinstabilityfix  = 'reduce';
-end
-opm_epo = ft_preprocessing(cfg, opm_raw);
-
-cfg = [];
-cfg.trl             = trl_opm;
-opm_epo = ft_redefinetrial(cfg,opm_epo);
-
-cfg = [];
-cfg.dftfilter       = 'yes';        
-cfg.dftfreq         = params.filter.notch;
-cfg.demean          = 'yes';
-cfg.baselinewindow  = [-params.pre 0];
-opm_epo = ft_preprocessing(cfg, opm_epo);
-
 % Find bad opm channels
 [badchs_opm, badchs_opm_flat, badchs_opm_std, badchs_opm_neighbors, badchs_opm_outlier, badchs_opm_noloc] = opm_badchannels(opm_raw,trl_opm,params,save_path);
-clear opm_raw
+%clear opm_raw
 
-%% --- Resample --- 
-cfg            = [];
-cfg.time = aux_epo.time;
-cfg.detrend    = 'no';
-opm_epo = ft_resampledata(cfg, opm_epo);
+% cfg = [];
+% if isfield(params.filter,'lp_freq') && ~isempty(params.filter.lp_freq)
+%     cfg.lpfilter        = 'yes';         
+%     cfg.lpfreq          = params.filter.lp_freq;
+% end
+% if isfield(params.filter,'hp_freq') && ~isempty(params.filter.hp_freq)
+%     cfg.hpfilter        = 'yes'; 
+%     cfg.hpfreq          = params.filter.hp_freq;
+%     cfg.hpinstabilityfix  = 'reduce';
+% end
+% if isfield(params.filter,'bp_freq') && ~isempty(params.filter.bp_freq)
+%     cfg.bpfilter        = 'yes'; 
+%     cfg.bpfreq          = params.filter.bp_freq;
+%     cfg.bpinstabilityfix  = 'reduce';
+% end
+% opm_epo = ft_preprocessing(cfg, opm_raw);
+% 
+% cfg = [];
+% cfg.trl             = trl_opm;
+% opm_epo = ft_redefinetrial(cfg,opm_epo);
+% 
+% cfg = [];
+% cfg.dftfilter       = 'yes';        
+% cfg.dftfreq         = params.filter.notch;
+% %cfg.demean          = 'yes';
+% %cfg.baselinewindow  = [-params.pre 0];
+% opm_epo = ft_preprocessing(cfg, opm_epo);
+% 
+% % Resample 
+% cfg            = [];
+% cfg.time = aux_epo.time;
+% cfg.detrend    = 'no';
+% opm_epo = ft_resampledata(cfg, opm_epo);
 
-%% Combine data
-EOG_channels = find(contains(aux_epo.label,'EOG'));
-ECG_channels = find(contains(aux_epo.label,'ECG'));
-EEG_channels = find(contains(aux_epo.label,'EEG'));
-MISC_channels = find(contains(aux_epo.label,'MISC'));
-TRIG_channels = find(contains(aux_epo.label,'STI101'));
-include_channels = [EOG_channels; ECG_channels; EEG_channels; MISC_channels; TRIG_channels];
-
-comb = opm_epo; 
-comb.elec = aux_epo.elec;
-comb.time = aux_epo.time;
-comb.label = [opm_epo.label; aux_epo.label(include_channels)];
-comb.hdr = aux_epo.hdr;
-comb.hdr.label = comb.label;
-comb.hdr.nChans = length(comb.label);
-comb.hdr.chantype = [opm_epo.hdr.chantype; aux_epo.hdr.chantype(include_channels)];
-comb.hdr.chanunit = [opm_epo.hdr.chanunit; aux_epo.hdr.chanunit(include_channels)];
-comb.sampleinfo = aux_epo.sampleinfo;
-comb.trialinfo = aux_epo.trialinfo;
-n_smpl = size(aux_epo.trial{1},2);
-for i = 1:length(comb.trial)
-    comb.trial{i} = [comb.trial{i}(:,1:n_smpl); aux_epo.trial{i}(include_channels,:)]; 
-end
-clear opm_epo aux_epo
-
-%% Flip? 
-chs = find(contains(comb.label,'bz'));
-if isfield(params,'flip_sign') && params.flip_sign
-    for i = 1:length(comb.trial)
-        comb.trial{i}(chs,:) = -comb.trial{i}(chs,:);
-    end
-    comb.grad.chanori = -comb.grad.chanori;
-    comb.grad.coilori = -comb.grad.coilori;
-end
+% %% Combine data
+% EOG_channels = find(contains(aux_epo.label,'EOG'));
+% ECG_channels = find(contains(aux_epo.label,'ECG'));
+% EEG_channels = find(contains(aux_epo.label,'EEG'));
+% MISC_channels = find(contains(aux_epo.label,'MISC'));
+% TRIG_channels = find(contains(aux_epo.label,'STI101'));
+% include_channels = [EOG_channels; ECG_channels; EEG_channels; MISC_channels; TRIG_channels];
+% 
+% comb = opm_epo; 
+% comb.elec = aux_epo.elec;
+% comb.time = aux_epo.time;
+% comb.label = [opm_epo.label; aux_epo.label(include_channels)];
+% comb.hdr = aux_epo.hdr;
+% comb.hdr.label = comb.label;
+% comb.hdr.nChans = length(comb.label);
+% comb.hdr.chantype = [opm_epo.hdr.chantype; aux_epo.hdr.chantype(include_channels)];
+% comb.hdr.chanunit = [opm_epo.hdr.chanunit; aux_epo.hdr.chanunit(include_channels)];
+% comb.sampleinfo = aux_epo.sampleinfo;
+% comb.trialinfo = aux_epo.trialinfo;
+% n_smpl = size(aux_epo.trial{1},2);
+% for i = 1:length(comb.trial)
+%     comb.trial{i} = [comb.trial{i}(:,1:n_smpl); aux_epo.trial{i}(include_channels,:)]; 
+% end
+% clear opm_epo aux_epo
 
 %% OPM 
 if ~isempty(params.manual_bads)
@@ -167,12 +167,12 @@ else
 end
 
 cfg = [];
-cfg.channel = setdiff(comb.label,badchs_opm);
-comb = ft_selectdata(cfg, comb);
+cfg.channel = setdiff(opm_raw.label,badchs_opm);
+opm_raw = ft_selectdata(cfg, opm_raw);
 
-cfg = []; % separate ExG channels
-cfg.channel = {'EOG*', 'ECG*'};
-ExG = ft_selectdata(cfg,comb);
+% cfg = []; % separate ExG channels
+% cfg.channel = {'EOG*', 'ECG*'};
+% ExG = ft_selectdata(cfg,comb);
 
 %% Spatiotemporal filtering
 if params.do_ssp && isfile(params.ssp_file)
@@ -192,40 +192,40 @@ if params.do_ssp && isfile(params.ssp_file)
     trl_ref(:,3) = -(params.pad+params.pre)*refdata.fsample;
     trl_ref(:,4) = ones(length(trl_ref(:,1)),1);
     % Filter data (same as OPM data)
-    cfg = [];
-    if isfield(params.filter,'lp_freq') && ~isempty(params.filter.lp_freq)
-        cfg.lpfilter        = 'yes';         
-        cfg.lpfreq          = params.filter.lp_freq;
-    end
-    if isfield(params.filter,'hp_freq') && ~isempty(params.filter.hp_freq)
-        cfg.hpfilter        = 'yes'; 
-        cfg.hpfreq          = params.filter.hp_freq;
-        cfg.hpinstabilityfix  = 'reduce';
-    end
-    if isfield(params.filter,'bp_freq') && ~isempty(params.filter.bp_freq)
-        cfg.bpfilter        = 'yes'; 
-        cfg.bpfreq          = params.filter.bp_freq;
-        cfg.bpinstabilityfix  = 'reduce';
-    end
-    refdata = ft_preprocessing(cfg, refdata);
+%     cfg = [];
+%     if isfield(params.filter,'lp_freq') && ~isempty(params.filter.lp_freq)
+%         cfg.lpfilter        = 'yes';         
+%         cfg.lpfreq          = params.filter.lp_freq;
+%     end
+%     if isfield(params.filter,'hp_freq') && ~isempty(params.filter.hp_freq)
+%         cfg.hpfilter        = 'yes'; 
+%         cfg.hpfreq          = params.filter.hp_freq;
+%         cfg.hpinstabilityfix  = 'reduce';
+%     end
+%     if isfield(params.filter,'bp_freq') && ~isempty(params.filter.bp_freq)
+%         cfg.bpfilter        = 'yes'; 
+%         cfg.bpfreq          = params.filter.bp_freq;
+%         cfg.bpinstabilityfix  = 'reduce';
+%     end
+%     refdata = ft_preprocessing(cfg, refdata);
     % Segment
     cfg = [];
     cfg.trl             = trl_ref;
     refdata = ft_redefinetrial(cfg,refdata);
-    % Notch filter
-    cfg = [];
-    cfg.dftfilter       = 'yes';        
-    cfg.dftfreq         = params.filter.notch;
-    refdata = ft_preprocessing(cfg, refdata);
-    % Downsample
-    cfg            = [];
-    cfg.resamplefs = comb.fsample;
-    cfg.detrend    = 'no';
-    refdata = ft_resampledata(cfg, refdata);
+%     % Notch filter
+%     cfg = [];
+%     cfg.dftfilter       = 'yes';        
+%     cfg.dftfreq         = params.filter.notch;
+%     refdata = ft_preprocessing(cfg, refdata);
+%     % Downsample
+%     cfg            = [];
+%     cfg.resamplefs = comb.fsample;
+%     cfg.detrend    = 'no';
+%     refdata = ft_resampledata(cfg, refdata);
     % Select OPMs present in main data
     cfg = [];
     cfg.channel         = '*_b*';
-    opm_cleaned = ft_selectdata(cfg,comb);
+    opm_cleaned = ft_selectdata(cfg,opm_raw);
     datachans = opm_cleaned.label;
     cfg = [];
     cfg.channel         = datachans;
@@ -251,7 +251,7 @@ if params.do_hfc && ~ssp_done
     cfg.channel = '*_b*';
     cfg.order = params.hfc_order;
     cfg.residualcheck = 'no';
-    opm_cleaned = ft_denoise_hfc(cfg, comb);
+    opm_cleaned = ft_denoise_hfc(cfg, opm_raw);
 elseif params.do_amm && ~ssp_done
     cfg = [];
     cfg.channel = '*_b*';
@@ -261,36 +261,100 @@ elseif params.do_amm && ~ssp_done
     cfg.amm.order_in = params.amm_in;
     cfg.amm.order_out = params.amm_out;
     cfg.amm.thr = params.amm_thr;
-    opm_cleaned = ft_denoise_amm(cfg, comb);
+    opm_cleaned = ft_denoise_amm(cfg, opm_raw);
 elseif ssp_done
     disp('SSP successuful');
 else
     cfg = [];
     cfg.channel         = '*_b*';
-    opm_cleaned = ft_selectdata(cfg,comb);
+    opm_cleaned = ft_selectdata(cfg,opm_raw);
 end
+
+% Resample 
+cfg            = [];
+cfg.resamplefs = 1000;
+cfg.detrend    = 'no';
+opm_epo = ft_resampledata(cfg, opm_cleaned);
+opm_epo.fsample = 1000;
+trl_opm(:,1:3) = ceil(trl_opm(:,1:3)/5);
+
+cfg = [];
+if isfield(params.filter,'lp_freq') && ~isempty(params.filter.lp_freq)
+    cfg.lpfilter        = 'yes';         
+    cfg.lpfreq          = params.filter.lp_freq;
+end
+if isfield(params.filter,'hp_freq') && ~isempty(params.filter.hp_freq)
+    cfg.hpfilter        = 'yes'; 
+    cfg.hpfreq          = params.filter.hp_freq;
+    cfg.hpinstabilityfix  = 'reduce';
+end
+if isfield(params.filter,'bp_freq') && ~isempty(params.filter.bp_freq)
+    cfg.bpfilter        = 'yes'; 
+    cfg.bpfreq          = params.filter.bp_freq;
+    cfg.bpinstabilityfix  = 'reduce';
+end
+opm_epo = ft_preprocessing(cfg, opm_epo);
+
+cfg = [];
+cfg.trl             = trl_opm;
+opm_epo = ft_redefinetrial(cfg,opm_epo);
+
+cfg = [];
+cfg.dftfilter       = 'yes';        
+cfg.dftfreq         = params.filter.notch;
+%cfg.demean          = 'yes';
+%cfg.baselinewindow  = [-params.pre 0];
+opm_epo = ft_preprocessing(cfg, opm_epo);
 
 %% Recombine with ExG channels
-opm_cleaned.label = vertcat(opm_cleaned.label,ExG.label);
-opm_cleaned.hdr = comb.hdr;
-incl = ismember(comb.hdr.label,opm_cleaned.label);
-opm_cleaned.hdr.label = comb.hdr.label(incl);
-opm_cleaned.hdr.chantype = comb.hdr.chantype(incl);
-opm_cleaned.hdr.chanunit = comb.hdr.chanunit (incl);
-for i = 1:length(opm_cleaned.trial)
-    opm_cleaned.trial{i} = vertcat(opm_cleaned.trial{i}, ExG.trial{i}); 
-end
+% opm_cleaned.label = vertcat(opm_cleaned.label,ExG.label);
+% opm_cleaned.hdr = comb.hdr;
+% incl = ismember(comb.hdr.label,opm_cleaned.label);
+% opm_cleaned.hdr.label = comb.hdr.label(incl);
+% opm_cleaned.hdr.chantype = comb.hdr.chantype(incl);
+% opm_cleaned.hdr.chanunit = comb.hdr.chanunit (incl);
+% for i = 1:length(opm_cleaned.trial)
+%     opm_epo.trial{i} = vertcat(opm_cleaned.trial{i}, ExG.trial{i}); 
+% end
 
 % Reject jump trials
-smplinfo = opm_cleaned.sampleinfo;
 
 if isfield(params,'debug') && params.debug == 1
     cfg = [];
     cfg.method = 'summary';
     cfg.channel = '*bz';
-    dummy = ft_rejectvisual(cfg,opm_cleaned);
+    dummy = ft_rejectvisual(cfg,opm_epo);
 end
 
+%% Combine data
+EOG_channels = find(contains(aux_epo.label,'EOG'));
+ECG_channels = find(contains(aux_epo.label,'ECG'));
+EEG_channels = find(contains(aux_epo.label,'EEG'));
+MISC_channels = find(contains(aux_epo.label,'MISC'));
+TRIG_channels = find(contains(aux_epo.label,'STI101'));
+include_channels = [EOG_channels; ECG_channels; EEG_channels; MISC_channels; TRIG_channels];
+
+comb = opm_epo; 
+comb.elec = aux_epo.elec;
+comb.time = aux_epo.time;
+comb.label = [opm_epo.label; aux_epo.label(include_channels)];
+comb.hdr = aux_epo.hdr;
+comb.hdr.label = comb.label;
+comb.hdr.nChans = length(comb.label);
+comb.hdr.chantype = [opm_epo.hdr.chantype; aux_epo.hdr.chantype(include_channels)];
+comb.hdr.chanunit = [opm_epo.hdr.chanunit; aux_epo.hdr.chanunit(include_channels)];
+comb.sampleinfo = aux_epo.sampleinfo;
+comb.trialinfo = aux_epo.trialinfo;
+n_smpl = size(aux_epo.trial{1},2);
+for i = 1:length(comb.trial)
+    comb.trial{i} = [comb.trial{i}(:,1:n_smpl); aux_epo.trial{i}(include_channels,:)]; 
+end
+comb.fsample = aux_epo.fsample;
+clear opm_epo opm_cleaned
+
+opm_cleaned = comb;
+
+%% Bad trials
 cfg = [];
 cfg.channel = {'*bz'};
 cfg.metric = 'maxzvalue';
@@ -331,11 +395,11 @@ save(fullfile(save_path, [params.sub '_opm_badchs']), ...
     'badchs_opm_noloc',"-v7.3"); 
 
 % Save bad trials
-[~,idx]=ismember(smplinfo,badtrl_opm_jump,'rows');
+[~,idx]=ismember(opm_cleaned.sampleinfo,badtrl_opm_jump,'rows');
 badtrl_opm_jump = find(idx);
-[~,idx]=ismember(smplinfo,badtrl_opm_std,'rows');
+[~,idx]=ismember(opm_cleaned.sampleinfo,badtrl_opm_std,'rows');
 badtrl_opm_std = find(idx);
-[~,idx]=ismember(smplinfo,badtrl_opm_range,'rows');
+[~,idx]=ismember(opm_cleaned.sampleinfo,badtrl_opm_range,'rows');
 badtrl_opm_range = find(idx);
 save(fullfile(save_path, [params.sub '_opm_badtrls']), ...
     'badtrl_opm_jump', ...
@@ -345,8 +409,12 @@ save(fullfile(save_path, [params.sub '_opm_badtrls']), ...
 %% EEG
 cfg = [];
 cfg.channel = 'EEG';
-opmeeg_cleaned = ft_selectdata(cfg, comb);
-clear comb
+opmeeg_cleaned = ft_selectdata(cfg, aux_epo);
+
+cfg = []; % separate ExG channels
+cfg.channel = {'EOG*', 'ECG*'};
+ExG = ft_selectdata(cfg,aux_epo);
+clear aux_epo
 
 % Interpolate bad chs
 % cfg = [];

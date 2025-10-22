@@ -84,5 +84,5 @@ function pairedBoxplots(data, triggerLabels, yLabelStr, titleStr, save_path, sho
     ylim([ymin - 0.05*yrange, ymax]);
 
     saveas(h, save_path);
-    close
+    close all
 end

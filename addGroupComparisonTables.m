@@ -13,9 +13,9 @@ function rptTable = addGroupComparisonTables(dataCells, triggerLabels, modalityL
     % Generate tables for each modality
     for i = 1:numModalities
         data = dataCells{i};
-        meanOverParticipants = mean(data, 1);
-        meanOverTriggers = mean(data, 2);
-        grandMean = mean(data(:));
+        meanOverParticipants = mean(data, 1, 'omitnan');
+        meanOverTriggers = mean(data, 2, 'omitnan');
+        grandMean = mean(data(:), 'omitnan');
 
         % Create table with extra row and column for means
         tableData = cell(numParticipants + 1, numTriggers + 1);
@@ -43,8 +43,8 @@ function rptTable = addGroupComparisonTables(dataCells, triggerLabels, modalityL
     % Create comparison table with significance stars
     comparisonData = zeros(numModalities, numTriggers+1);
     for i = 1:numModalities
-        comparisonData(i, 1:(end-1)) = mean(dataCells{i}, 1);
-        comparisonData(i, end) = mean(mean(dataCells{i}, 1));
+        comparisonData(i, 1:(end-1)) = mean(dataCells{i}, 1, 'omitnan');
+        comparisonData(i, end) = mean(mean(dataCells{i}, 1, 'omitnan'), 'omitnan');
     end
 
     comparisonTable = cell(numModalities + 1, numTriggers + 1 +1);
@@ -87,7 +87,7 @@ function rptTable = addGroupComparisonTables(dataCells, triggerLabels, modalityL
         stars = "";
         for j = 1:numModalities
             if i ~= j
-                [~, p] = ttest(mean(dataCells{i}(:, :),2), mean(dataCells{j}(:, :),2));
+                [~, p] = ttest(mean(dataCells{i}(:, :),2, 'omitnan'), mean(dataCells{j}(:, :),2, 'omitnan'));
                 if p < 0.001
                     stars = stars + "***";
                 elseif p < 0.01
