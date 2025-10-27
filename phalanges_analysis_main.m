@@ -107,7 +107,7 @@ params.trigger_labels = {'I3' 'I2' 'I1' 'T1' 'I2b'};
 params.peaks = {};
 params.peaks{1} = [];
 params.peaks{1}.label = 'M60';
-params.peaks{1}.peak_latency = [0.04 0.08]; % 0.04 0.09
+params.peaks{1}.peak_latency = [0.03 0.08]; % 0.04 0.09
 params.maxtrls = 300;
 
 % HPI coregistration
@@ -158,15 +158,15 @@ bads =  {[]; %1
     []; %11
     []; %12
     []; %13
-    []; %14
-    []}; %15
+    {'L401_bz', 'R409_bz'}; %14
+    {'R403_bz', 'R409_bz'}}; %15
 
 if on_server
     subs_to_run = 1:size(subses,1);
 else
     subs_to_run = 2; %1:size(subses,1)
 end
-excl_subs = [14 15];
+excl_subs = [];
 excl_subs_src = [1 11 excl_subs];
 
 %% Loop over subjects
@@ -200,6 +200,9 @@ for i_sub = setdiff(subs_to_run,excl_subs)
     meg_file = fullfile(raw_path, 'meg', [params.paradigm 'MEG_proc-tsss+corr98+mc+avgHead_meg.fif']);
     if ~exist(meg_file,'file')
         meg_file = fullfile(raw_path, 'meg', [params.paradigm 'MEG_proc-tsss+corr98.fif']);
+        if ~exist(meg_file,'file')
+            meg_file = fullfile(raw_path, 'meg', [params.paradigm 'MEG_tsss.fif']);
+        end
     end
     opm_file = fullfile(raw_path, 'osmeg', [params.paradigm 'OPM_raw.fif']);
     aux_file = fullfile(raw_path, 'meg', [params.paradigm 'EEG.fif']);

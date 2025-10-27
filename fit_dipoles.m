@@ -57,9 +57,13 @@ for i_trigger = 1:n_triggers
     if numdipoles == 2
         cfg.symmetry    = 'x';
     end
+    cfg.model           = 'moving';
     cfg.latency         = peak_squid{i_trigger}.peak_latency + [-0.01 0.01];
     cfg.dipfit.checkinside = 'yes';
     dipole = ft_dipolefitting(cfg, squidmag_tlk);
+    [~,i_min] = min(vecnorm(dipole.Vdata-dipole.Vmodel,2,1)./vecnorm(dipole.Vdata,2,1)); % select lowest RV
+    dipole.dip = dipole.dip(i_min);
+    dipole.time = dipole.time(i_min);
     if numdipoles == 2
         if dipole.dip.pos(1,1) > 0 % first dipole is on the right -> flip order
             dipole.dip.pos([2 1],:) = dipole.dip.pos([1 2],:);
@@ -70,6 +74,9 @@ for i_trigger = 1:n_triggers
 
     cfg.channel         = 'meggrad';           
     dipole = ft_dipolefitting(cfg, squidgrad_tlk);
+    [~,i_min] = min(vecnorm(dipole.Vdata-dipole.Vmodel,2,1)./vecnorm(dipole.Vdata,2,1)); % select lowest RV
+    dipole.dip = dipole.dip(i_min);
+    dipole.time = dipole.time(i_min);
     if numdipoles == 2
         if dipole.dip.pos(1,1) > 0 % first dipole is on the right -> flip order
             dipole.dip.pos([2 1],:) = dipole.dip.pos([1 2],:);
@@ -101,9 +108,13 @@ for i_trigger = 1:n_triggers
     if numdipoles == 2
         cfg.symmetry    = 'x';
     end
+    cfg.model           = 'moving';
     cfg.latency         = peak_opm{i_trigger}.peak_latency + [-0.01 0.01];   
     cfg.dipfit.checkinside = 'yes';
     dipole = ft_dipolefitting(cfg, opm_tlk);
+    [~,i_min] = min(vecnorm(dipole.Vdata-dipole.Vmodel,2,1)./vecnorm(dipole.Vdata,2,1)); % select lowest RV
+    dipole.dip = dipole.dip(i_min);
+    dipole.time = dipole.time(i_min);
     if numdipoles == 2
         if dipole.dip.pos(1,1) > 0 % first dipole is on the right -> flip order
             dipole.dip.pos([2 1],:) = dipole.dip.pos([1 2],:);

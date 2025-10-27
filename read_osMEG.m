@@ -328,11 +328,8 @@ end
 
 %% Combine data
 EOG_channels = find(contains(aux_epo.label,'EOG'));
-ECG_channels = find(contains(aux_epo.label,'ECG'));
-EEG_channels = find(contains(aux_epo.label,'EEG'));
-MISC_channels = find(contains(aux_epo.label,'MISC'));
-TRIG_channels = find(contains(aux_epo.label,'STI101'));
-include_channels = [EOG_channels; ECG_channels; EEG_channels; MISC_channels; TRIG_channels];
+ECG_channels = find(contains(aux_epo.label,'ECG'));  
+include_channels = [EOG_channels; ECG_channels];
 
 comb = opm_epo; 
 comb.elec = aux_epo.elec;

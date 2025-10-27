@@ -31,6 +31,9 @@ for i_peak = 1:length(params.peaks)
         mom_squidmag = nan(n_subs,n_triggers);
         mom_squidgrad = nan(n_subs,n_triggers);
         mom_opm = nan(n_subs,n_triggers);
+        lat_squidmag = nan(n_subs,n_triggers);
+        lat_squidgrad = nan(n_subs,n_triggers);
+        lat_opm = nan(n_subs,n_triggers);
         dists_opm = nan(n_triggers,n_triggers,n_subs);
         dists_sqgrad = nan(n_triggers,n_triggers,n_subs);
         dists_sqmag = nan(n_triggers,n_triggers,n_subs);
@@ -62,6 +65,10 @@ for i_peak = 1:length(params.peaks)
                 mom_squidmag(i_sub,i_trigger) = max(vecnorm(dipole_squidmag{i_trigger}.dip.mom(i_dip,:),2,1));
                 mom_squidgrad(i_sub,i_trigger) = max(vecnorm(dipole_squidgrad{i_trigger}.dip.mom(i_dip,:),2,1));
                 mom_opm(i_sub,i_trigger) = max(vecnorm(dipole_opm{i_trigger}.dip.mom(i_dip,:),2,1));
+
+                lat_squidmag(i_sub,i_trigger) = 1e3*dipole_squidmag{i_trigger}.time;
+                lat_squidgrad(i_sub,i_trigger) = 1e3*dipole_squidgrad{i_trigger}.time;
+                lat_opm(i_sub,i_trigger) = 1e3*dipole_opm{i_trigger}.time;
         
                 dist_sqmag_opm(i_sub,i_trigger) = 1e1*norm(pos_squidmag(i_trigger,:)-pos_opm(i_trigger,:));
                 dist_sqgrad_opm(i_sub,i_trigger) = 1e1*norm(pos_squidgrad(i_trigger,:)-pos_opm(i_trigger,:));
@@ -276,16 +283,28 @@ for i_peak = 1:length(params.peaks)
         save_path = fullfile(base_save_path, 'figs', ['dipole_mom_sqmag_opm' peak_label dip_labels{i_dip} '_box.jpg']);
         pairedBoxplots(data, triggerLabels, yLabelStr, titleStr, save_path,1);
 
+        %% Peak lat
+        data = {lat_squidmag, lat_opm, lat_squidgrad};
+        triggerLabels = params.trigger_labels;
+        yLabelStr = 'Dipole latency [ms]';
+        titleStr = ['Group level ' params.peaks{1}.label ' dipole latency - SQMAG vs OPM vs SQGRAD'];
+        save_path = fullfile(base_save_path, 'figs', ['dipole_lat_sqmag_opm_sqgrad' peak_label dip_labels{i_dip} '_box.jpg']);
+        pairedBoxplots(data, triggerLabels, yLabelStr, titleStr, save_path,1);
+
         %% Save
         mom = [];
         mom.opm = mom_opm;
         mom.sqmag = mom_squidmag;
         mom.sqgrad = mom_squidgrad;
+        latency = [];
+        latnecy.opm = lat_opm;
+        latency.sqmag = lat_squidmag;
+        latency.sqgrad = lat_squidgrad;
         spread = [];
         spread.opm = spread_opm;
         spread.sqmag = spread_squidmag;
         spread.sqgrad = spread_squidgrad;
-        save(fullfile(base_save_path, ['group_dip' peak_label dip_labels{i_dip}]),"dist_sqmag_opm","dist_sqgrad_opm","dist_sqmag_sqgrad","mom","spread","-v7.3");
+        save(fullfile(base_save_path, ['group_dip' peak_label dip_labels{i_dip}]),"dist_sqmag_opm","dist_sqgrad_opm","dist_sqmag_sqgrad","mom","spread","latnecy","-v7.3");
     
         close all
     end

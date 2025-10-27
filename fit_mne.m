@@ -286,14 +286,17 @@ colors = [[0 0.4470 0.7410]; % blue
     [0.6350 0.0780 0.1840]]; % light blue
 
 %% SQMAG
+params.modality = 'squidmag';
 peak_label = params.peaks{1}.label;
 tmp = squidmag_mne{1};
 tmp.avg.pow = tmp.avg.pow/n_triggers;
 peak = squidmag_peak{1,1};
 peak.latency  = peak.latency/n_triggers;
+peak.fahm = peak.fahm/n_triggers;
 for i_trigger = 2:n_triggers
     tmp.avg.pow = tmp.avg.pow + squidmag_mne{i_trigger}.avg.pow/n_triggers;
     peak.latency = peak.latency + squidmag_peak{i_trigger,1}.latency/n_triggers;
+    peak.fahm = peak.fahm + squidmag_peak{i_trigger,1}.fahm/n_triggers;
 end
 h = plot_source_distribution(tmp, peak, params, 0);
 subplot(1,2,1)
@@ -316,13 +319,16 @@ saveas(h, fullfile(save_path,'figs', [params.sub '_squidmag_' peak_label '_mne' 
 close all 
 
 %% SQGRAD
+params.modality = 'squidgrad';
 tmp = squidgrad_mne{1};
 tmp.avg.pow = tmp.avg.pow/n_triggers;
 peak = squidgrad_peak{1,1};
 peak.latency  = peak.latency/n_triggers;
+peak.fahm = peak.fahm/n_triggers;
 for i_trigger = 2:n_triggers
     tmp.avg.pow = tmp.avg.pow + squidgrad_mne{i_trigger}.avg.pow/n_triggers;
     peak.latency = peak.latency + squidgrad_peak{i_trigger,1}.latency/n_triggers;
+    peak.fahm = peak.fahm + squidgrad_peak{i_trigger,1}.fahm/n_triggers;
 end
 h = plot_source_distribution(tmp, peak, params, 0);
 subplot(1,2,1)
@@ -344,13 +350,16 @@ saveas(h, fullfile(save_path,'figs', [params.sub '_squidgrad_' peak_label '_mne'
 close all
 
 %% OPM
+params.modality = 'opm';
 tmp = opm_mne{1};
 tmp.avg.pow = tmp.avg.pow/n_triggers;
 peak = opm_peak{1,1};
 peak.latency  = peak.latency/n_triggers;
+peak.fahm = peak.fahm/n_triggers;
 for i_trigger = 2:n_triggers
     tmp.avg.pow = tmp.avg.pow + opm_mne{i_trigger}.avg.pow/n_triggers;
     peak.latency = peak.latency + opm_peak{i_trigger,1}.latency/n_triggers;
+    peak.fahm = peak.fahm + opm_peak{i_trigger,1}.fahm/n_triggers;
 end
 h = plot_source_distribution(tmp, peak, params, 0);
 subplot(1,2,1)
