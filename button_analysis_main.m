@@ -43,8 +43,8 @@ if on_server
     overwrite.dip_group = true;
     overwrite.mne_group = true;
 else
-    overwrite.preproc = true;
-    overwrite.coreg = true;
+    overwrite.preproc = false;
+    overwrite.coreg = false;
     overwrite.mri = false;
     overwrite.dip = true;
     overwrite.empty_room = false;
@@ -58,13 +58,15 @@ end
 %% Params
 params = [];
 
-params.paradigm = 'AudOdd';
+params.paradigm = 'Button';
+params.exp = 'AudOdd';
 
 % Trials
-params.pre = 0.2; %0.1 sec
-params.post = 0.75+0.2; %0.5 sec
+params.pre = 0.7; %0.1 sec
+params.post = 1.0; %0.5 sec
 params.pad = 0.2; %sec
-params.delay = 0.01; % Stimulus delay in seconds (e.g., 0.01 for eartubes or 0.041 for membranes).
+params.delay = 0.; % Stimulus delay in seconds.
+params.baseline = [-0.5 -0.1];
 
 % EEG
 params.eeg_reref = 'all';%'EEG023';
@@ -72,9 +74,9 @@ params.eeg_reref = 'all';%'EEG023';
 % Filter
 params.filter = [];
 params.filter.hp_freq = 1;%0.1;
-params.filter.lp_freq = 50;
+params.filter.lp_freq = 45;
 params.filter.bp_freq = [];
-params.filter.notch = [50 60 100]; %[50 60 100 120 150];
+params.filter.notch = [50]; %[50 60 100 120 150];
 
 % Spatiotemporal filter (OPM-MEG only)
 params.do_hfc = true;
@@ -105,16 +107,20 @@ params.ica_cor = 0.8; % cutoff for EOG/ECG coherence
 params.ica_coh = 0.95; % cutoff for EOG/ECG coherence
 
 % Timelocking
-params.ds_freq = 500; % downsample frequency (timelock)
-params.trigger_codes = {1 [3 11] [5 13]}; % combined oddball-nogo and oddball-go
-params.trigger_labels = {'std' 'oddNoGo' 'oddGo'};
+params.do_buttons = true;
+params.ds_freq = 1000; % downsample frequency (timelock)
+params.trigger_codes = {[5 13]};%{1 [3 11] [5 13]}; % combined oddball-nogo and oddball-go
+params.trigger_labels = {'button'};%{'std' 'oddNoGo' 'oddGo'};
 % params.trigger_codes = {1 3 5 11 13};
 % params.trigger_labels = {'STD' 'LNG' 'LG' 'HNG' 'HG'};
 
 params.peaks = {};
 params.peaks{1} = [];
-params.peaks{1}.label = 'M100';
-params.peaks{1}.peak_latency = [0.08 0.13];
+params.peaks{1}.label = 'motor_post';
+params.peaks{1}.peak_latency = [0.0 0.05];
+params.peaks{2} = [];
+params.peaks{2}.label = 'motor_pre';
+params.peaks{2}.peak_latency = [0.1 0.2];
 % params.peaks{2} = [];
 % params.peaks{2}.label = 'M200';
 % params.peaks{2}.peak_latency = [0.15 0.25];
@@ -122,14 +128,14 @@ params.peaks{1}.peak_latency = [0.08 0.13];
 % params.peaks{3}.label = 'M50';
 % params.peaks{3}.peak_latency = [0.04 0.08];
 
-params.tfr = true;
+%params.tfr = false;
 
 % HPI coregistration
 params.hpi_freq = 33;
 params.hpi_gof = 0.9;
 
 % Source reconstruction - dipoles
-params.numdipoles = 2;
+params.numdipoles = 1;
 
 % Source reconstruction - distributed
 params.source_fixedori = true; 
@@ -160,7 +166,7 @@ subses = {'0005' '240208';
 bads =  {[];
     [];
     [];
-    {'R403_bz', 'R408_bz'};
+    {'L209_bz', 'L604_bz', 'R403_bz', 'R408_bz'};
     {'L505_bz'};
     {'R403_bz', 'R408_bz', 'R409_bz'};
     {'R403_bz', 'R408_bz', 'R409_bz'};
@@ -192,6 +198,12 @@ for i_sub = setdiff(subs_to_run,excl_subs)
         params.flip_sign  = false;
     end
 
+    if isfield(params,'baseline')
+        baseline = params.baseline;
+    else
+        baseline = [-params.pre 0];
+    end
+
     %% Paths
     raw_path = fullfile(base_data_path,'MEG',['NatMEG_' subses{i_sub,1}], subses{i_sub,2});
     save_path = fullfile(base_save_path,params.paradigm,params.sub);
@@ -209,12 +221,12 @@ for i_sub = setdiff(subs_to_run,excl_subs)
        mkdir(fullfile(save_path,'figs'))
     end
 
-    meg_file = fullfile(raw_path, 'meg', [params.paradigm 'MEG_proc-tsss+corr98+mc+avgHead_meg.fif']);
+    meg_file = fullfile(raw_path, 'meg', [params.exp 'MEG_proc-tsss+corr98+mc+avgHead_meg.fif']);
     if ~exist(meg_file,'file')
-        meg_file = fullfile(raw_path, 'meg', [params.paradigm 'MEG_proc-tsss+corr98.fif']);
+        meg_file = fullfile(raw_path, 'meg', [params.exp 'MEG_proc-tsss+corr98.fif']);
     end
-    opm_file = fullfile(raw_path, 'osmeg', [params.paradigm 'OPM_raw.fif']);
-    aux_file = fullfile(raw_path, 'meg', [params.paradigm 'EEG.fif']);
+    opm_file = fullfile(raw_path, 'osmeg', [params.exp 'OPM_raw.fif']);
+    aux_file = fullfile(raw_path, 'meg', [params.exp 'EEG.fif']);
     params.ssp_file = fullfile(raw_path, 'osmeg', 'EmptyRoomOPM_raw.fif');
     
     %% OPM-MEG 
@@ -251,6 +263,67 @@ for i_sub = setdiff(subs_to_run,excl_subs)
         params.amp_label = 'B [fT]';
         timelock_MEG(data_ica, save_path, params);
         close all
+
+        cfg = [];
+        cfg.toilim = [-params.pre params.post];
+        data_ica = ft_redefinetrial(cfg, data_ica);
+        
+        % Demean
+        cfg = [];
+        cfg.demean = 'yes';
+        cfg.baselinewindow = baseline;
+        data_ica = ft_preprocessing(cfg,data_ica);
+
+        cfg = [];
+        cfg.channel = '*_bz';
+        data_ica = ft_selectdata(cfg,data_ica);
+        timelocked = load(fullfile(save_path, [params.sub '_opm_timelocked.mat'])).timelocked;
+        for i_trl = 1:length(data_ica.trial)
+            data_ica.trial{i_trl} = data_ica.trial{i_trl}-timelocked{1}.avg; % remove avoked
+        end
+        cfg = [];
+        cfg.channel    = 'all';
+        cfg.method      = 'wavelet';
+        cfg.foi         = 12:1:30;       % Frequencies we want to estimate from 1 Hz to 45 Hz in steps of 1HZ
+        cfg.toi         = (-params.pre+0.2):0.01:(params.post-0.2);
+        cfg.width       = 5;
+        cfg.pad         = 'nextpow2';
+        opm_tfr = ft_freqanalysis(cfg, data_ica);    % visual stimuli
+
+        tmp = squeeze(mean(opm_tfr.powspctrm,2,'omitnan'));
+        h = figure; plot(opm_tfr.time,tmp./mean(tmp(:,1:41),2))
+        title('Beta power relative change')
+        saveas(h, fullfile(save_path, 'figs', [params.sub '_' params.modality '_beta_trig-' params.trigger_labels{1} '.jpg']))
+        
+        cfg = [];
+        cfg.baseline     = baseline;
+        cfg.baselinetype = 'relative';
+        cfg.showlabels   = 'yes';
+        cfg.layout       = 'fieldlinebeta2bz_helmet.mat';
+        cfg.xlim = [0.4 0.6];
+        cfg.ylim = [18 22];
+        h = figure; ft_topoplotTFR(cfg, opm_tfr);
+        saveas(h, fullfile(save_path, 'figs', [params.sub '_' params.modality '_TFR_topo_trig-' params.trigger_labels{1} '.jpg']))
+        
+        cfg = [];
+        cfg.baseline     = baseline;
+        cfg.baselinetype = 'relative';
+        cfg.showlabels   = 'yes';
+        cfg.layout       = 'fieldlinebeta2bz_helmet.mat';
+        h= figure; ft_multiplotTFR(cfg, opm_tfr);
+        saveas(h, fullfile(save_path, 'figs', [params.sub '_' params.modality '_TFR_trig-' params.trigger_labels{1} '.jpg']))
+        close all
+
+        cfg = [];
+        cfg.baseline     = baseline;
+        cfg.baselinetype = 'relative';
+        cfg.channel      = 'L405_bz';
+        cfg.layout       = 'fieldlinebeta2bz_helmet.mat';    
+        h = figure;
+        ft_singleplotTFR(cfg, opm_tfr); 
+        saveas(h, fullfile(save_path, 'figs', [params.sub '_' params.modality '_TFR_peakch_trig-' params.trigger_labels{1} '.jpg']))
+        close all
+
         clear data_ica
 
         % OPM-EEG ICA 
@@ -283,10 +356,12 @@ for i_sub = setdiff(subs_to_run,excl_subs)
                 params.modality = 'opm';
                 cfg = [];
                 cfg.channel    = 'all';
-                cfg.method     = 'mtmfft';
-                cfg.taper      = 'hanning';
-                cfg.pad = 2;
-                cfg.foi        = 35:1:45;              % the time window "slides" from -0.5 to 1.5 in 0.05 sec steps
+                cfg.method     = 'wavelet';
+                cfg.taper      = 'dpss';
+                cfg.width = 7;
+                cfg.pad = 5;
+                cfg.foi        = 5:45;              % the time window "slides" from -0.5 to 1.5 in 0.05 sec steps
+                cfg.toi = -params.pre:0.2:params.post;
                 opm_tfr{i_trig} = ft_freqanalysis(cfg, opm_timelocked{i_trig});    % visual stimuli
 
                 h=figure;
@@ -362,7 +437,66 @@ for i_sub = setdiff(subs_to_run,excl_subs)
         params.amp_label = 'B [fT]';
         timelock_MEG(data_ica, save_path, params);
         close all
+
+        cfg = [];
+        cfg.toilim = [-params.pre params.post];
+        data_ica = ft_redefinetrial(cfg, data_ica);
+        cfg = [];
+        cfg.demean = 'yes';
+        cfg.baselinewindow = baseline;
+        data_ica = ft_preprocessing(cfg,data_ica);
+        cfg = [];
+        cfg.channel = 'meg';
+        data_ica = ft_selectdata(cfg,data_ica);
+        timelocked = load(fullfile(save_path, [params.sub '_squid_timelocked.mat'])).timelocked;
+        for i_trl = 1:length(data_ica.trial)
+            data_ica.trial{i_trl} = data_ica.trial{i_trl}-timelocked{1}.avg; % remove avoked
+        end
+        cfg = [];
+        cfg.channel    = 'all';
+        cfg.method      = 'wavelet';
+        cfg.foi         = 12:1:30;       % Frequencies we want to estimate from 1 Hz to 45 Hz in steps of 1HZ
+        cfg.toi         = (-params.pre+0.2):0.01:(params.post-0.2);
+        cfg.width       = 5;
+        cfg.pad         = 'nextpow2';
+        squid_tfr = ft_freqanalysis(cfg, data_ica);    % visual stimuli
+
+        tmp = squeeze(mean(squid_tfr.powspctrm,2,'omitnan'));
+        h = figure; plot(opm_tfr.time,tmp./mean(tmp(:,1:41),2))
+        title('Beta power relative change')
+        saveas(h, fullfile(save_path, 'figs', [params.sub '_' params.modality '_beta_trig-' params.trigger_labels{1} '.jpg']))
+        
+        cfg = [];
+        cfg.baseline     = baseline;
+        cfg.baselinetype = 'relative';
+        cfg.showlabels   = 'yes';
+        cfg.layout       = 'neuromag306mag.lay';
+        cfg.xlim = [0.2 0.6];
+        cfg.ylim = [18 22];
+        h = figure; ft_topoplotTFR(cfg, squid_tfr);
+        saveas(h, fullfile(save_path, 'figs', [params.sub '_' params.modality '_TFR_topo_trig-' params.trigger_labels{1} '.jpg']))
+        
+        cfg = [];
+        cfg.baseline     = baseline;
+        cfg.baselinetype = 'relative';
+        cfg.showlabels   = 'yes';
+        cfg.layout       = 'neuromag306mag.lay';
+        h= figure; ft_multiplotTFR(cfg, squid_tfr);
+        saveas(h, fullfile(save_path, 'figs', [params.sub '_' params.modality '_TFR_trig-' params.trigger_labels{1} '.jpg']))
+
+        cfg = [];
+        cfg.baseline     = baseline;
+        cfg.baselinetype = 'relative';
+        cfg.channel      = 'MEG1811';
+        cfg.layout       = 'neuromag306mag.lay';    
+        h = figure;
+        ft_singleplotTFR(cfg, squid_tfr); 
+        saveas(h, fullfile(save_path, 'figs', [params.sub '_' params.modality '_TFR_peakch_trig-' params.trigger_labels{1} '.jpg']))
+        close all
+
+        close all
         clear data_ica
+        
 
         % EEG ICA
         cfg = [];
@@ -487,9 +621,9 @@ for i_sub = setdiff(subs_to_run,excl_subs)
     if exist(fullfile(save_path_mri, 'opm_trans.mat'),'file') && overwrite.coreg==false
         disp(['Not overwriting OPM transform for ' params.sub]);
     else
-        meg_file = fullfile(raw_path, 'meg', [params.paradigm 'MEG_proc-tsss+corr98+mc+avgHead_meg.fif']);
+        meg_file = fullfile(raw_path, 'meg', [params.exp 'MEG_proc-tsss+corr98+mc+avgHead_meg.fif']);
         if ~exist(meg_file,'file')
-            meg_file = fullfile(raw_path, 'meg', [params.paradigm 'MEG_proc-tsss+corr98.fif']);
+            meg_file = fullfile(raw_path, 'meg', [params.exp 'MEG_proc-tsss+corr98.fif']);
         end
         ft_hastoolbox('mne', 1);
         load(fullfile(save_path, [params.sub '_opm_ica_ds']));
@@ -501,6 +635,7 @@ for i_sub = setdiff(subs_to_run,excl_subs)
         %% Plot sensor arrays with headmodels and sourcemodel
         if exist(fullfile(save_path_mri, 'headmodels.mat'),'file') && exist(fullfile(save_path_mri, 'sourcemodel.mat'),'file') && ~isempty(opm_trans)
             opm_timelockedT = load(fullfile(save_path, [params.sub '_opm_timelocked.mat'])).timelocked;
+            opm_tfrT = load(fullfile(save_path, [params.sub '_opm_tfr.mat'])).opm_tfr;
             opmeeg_timelockedT = load(fullfile(save_path, [params.sub '_opmeeg_timelocked.mat'])).timelocked;
             squideeg_timelocked = load(fullfile(save_path, [params.sub '_squideeg_timelocked.mat'])).timelocked;
             squid_timelocked = load(fullfile(save_path, [params.sub '_squid_timelocked.mat'])).timelocked;
@@ -511,6 +646,10 @@ for i_sub = setdiff(subs_to_run,excl_subs)
                 opm_timelockedT{i}.grad.coilori = (opm_trans.Rotation'*opm_timelockedT{i}.grad.coilori')';
                 opmeeg_timelockedT{i}.elec.chanpos = squideeg_timelocked{i}.elec.chanpos;
                 opmeeg_timelockedT{i}.elec.elecpos = squideeg_timelocked{i}.elec.elecpos;
+                opm_tfrT{i}.grad.chanpos = opm_trans.transformPointsForward(opm_tfrT{i}.grad.chanpos);
+                opm_tfrT{i}.grad.coilpos = opm_trans.transformPointsForward(opm_tfrT{i}.grad.coilpos);
+                opm_tfrT{i}.grad.chanori = (opm_trans.Rotation'*opm_tfrT{i}.grad.chanori')';
+                opm_tfrT{i}.grad.coilori = (opm_trans.Rotation'*opm_tfrT{i}.grad.coilori')';
             end
             
             headmodel = load(fullfile(save_path_mri,'headmodels.mat')).headmodels.headmodel_meg;
@@ -549,6 +688,7 @@ for i_sub = setdiff(subs_to_run,excl_subs)
     
             %% Save
             save(fullfile(save_path, [params.sub '_opm_timelockedT']), 'opm_timelockedT', '-v7.3');
+            save(fullfile(save_path, [params.sub '_opm_tfrT']), 'opm_tfrT', '-v7.3');
             save(fullfile(save_path, [params.sub '_opmeeg_timelockedT']), 'opmeeg_timelockedT', '-v7.3');
             clear opm_timelockedT opmeeg_timelockedT
 

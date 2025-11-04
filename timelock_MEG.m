@@ -9,10 +9,16 @@ cfg = [];
 cfg.toilim = [-params.pre params.post];
 data = ft_redefinetrial(cfg, data);
 
+if isfield(params,'baseline')
+    baseline = params.baseline;
+else
+    baseline = [-params.pre 0];
+end
+
 % Demean
 cfg = [];
 cfg.demean = 'yes';
-cfg.baselinewindow = [-params.pre 0];
+cfg.baselinewindow = baseline;
 data = ft_preprocessing(cfg,data);
 
 if contains(params.chs,'meg')
@@ -42,7 +48,7 @@ for i_trigger = 1:length(params.trigger_codes)
     end
     cfg = [];
     cfg.covariance          = 'yes';
-    cfg.covariancewindow    = [-params.pre 0];
+    cfg.covariancewindow    = baseline;
     cfg.trials = trls;
     timelocked{i_trigger} = ft_timelockanalysis(cfg, data);
     

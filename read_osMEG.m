@@ -59,6 +59,12 @@ if trl_aux(:,4) ~= trl_opm(:,4) % Throw error if trials don't match.
     error('events do not match')
 end
 
+if params.do_buttons
+    button_trig = aux_raw.trial{1}(contains(aux_raw.label,'STI102'),:);
+    tmp = trl_aux(trl_aux(:,4)==13|trl_aux(:,4)==5,:);
+    [offsets, trl_aux] = findButtonOffsets(tmp,button_trig, round(-0.*aux_raw.fsample));
+end
+
 %% AUX data filter & epoch
 cfg = [];
 if isfield(params.filter,'lp_freq') && ~isempty(params.filter.lp_freq)
@@ -175,7 +181,7 @@ opm_raw = ft_selectdata(cfg, opm_raw);
 % ExG = ft_selectdata(cfg,comb);
 
 %% Spatiotemporal filtering
-if params.do_ssp && isfile(params.ssp_file)
+if isfield(params,'do_ssp') && params.do_ssp && isfile(params.ssp_file)
     ssp_done = true;
     % Load reference data
     cfg = [];
@@ -243,6 +249,25 @@ if params.do_ssp && isfile(params.ssp_file)
     for i_trl = 1:length(opm_cleaned.trial)
         opm_cleaned.trial{i_trl}(i_datachans,:) = proj * opm_cleaned.trial{i_trl}(i_datachans,:);
     end
+elseif isfield(params,'do_ssp_data') && params.do_ssp_data
+    cfg = [];
+    cfg.channel = '*_b*'; 
+    opm_cleaned = ft_selectdata(cfg,opm_raw);
+
+    cfg = [];
+    cfg.trl             = trl_opm;
+    tmp = ft_redefinetrial(cfg,opm_cleaned); 
+
+    cfg = [];
+    cfg.latency = [-params.pre 0];
+    tmp = ft_selectdata(cfg, tmp);
+    
+    [coeff,score,latent,tsquared,explained] = pca(cell2mat(tmp.trial)','NumComponents',params.ssp_n);
+    proj = eye(size(coeff,1))-coeff*transpose(coeff);
+    for i_trl = 1:length(opm_cleaned.trial)
+        opm_cleaned.trial{i_trl} = proj*opm_cleaned.trial{i_trl};
+    end
+    ssp_done = true;
 else
     ssp_done = false;
 end
@@ -277,6 +302,11 @@ cfg.detrend    = 'no';
 opm_epo = ft_resampledata(cfg, opm_cleaned);
 opm_epo.fsample = 1000;
 trl_opm(:,1:3) = ceil(trl_opm(:,1:3)/5);
+
+if params.do_buttons
+    trl_opm = trl_opm(trl_opm(:,4)==13|trl_opm(:,4)==5,:);
+    trl_opm(:,1:2) = trl_opm(:,1:2) + offsets;
+end
 
 cfg = [];
 if isfield(params.filter,'lp_freq') && ~isempty(params.filter.lp_freq)
@@ -329,10 +359,7 @@ end
 %% Combine data
 EOG_channels = find(contains(aux_epo.label,'EOG'));
 ECG_channels = find(contains(aux_epo.label,'ECG'));
-EEG_channels = find(contains(aux_epo.label,'EEG'));
-MISC_channels = find(contains(aux_epo.label,'MISC'));
-TRIG_channels = find(contains(aux_epo.label,'STI101'));
-include_channels = [EOG_channels; ECG_channels; EEG_channels; MISC_channels; TRIG_channels];
+include_channels = [EOG_channels; ECG_channels];
 
 comb = opm_epo; 
 comb.elec = aux_epo.elec;
