@@ -50,7 +50,7 @@ mri_files = {'00000001.dcm'
     '/nifti/anat/sub-15985_T1w.nii.gz'};
 
 if on_server
-    subs_to_run = 14:15;%1:size(subses,1);
+    subs_to_run = 1:size(subses,1);
 else
     subs_to_run = 14:15; %1:size(subses,1)
 end
@@ -82,6 +82,6 @@ for i_sub = setdiff(subs_to_run,excl_subs)
         end
     end
     %mri_file = fullfile(mri_path, 'orig','001.mgz');
-    prepare_mri(mri_path,meg_file,save_path_mri);
+    prepare_mri(mri_path,meg_file,save_path_mri, false, '8');
     close all
 end

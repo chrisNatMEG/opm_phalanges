@@ -87,7 +87,7 @@ for i_trigger = 1:length(params.trigger_codes)
         [~, i_peak_latency] = findpeaks(std(dat.avg(:,t_int),0,1),'SortStr','descend');
         if isempty(i_peak_latency)
             lat = (params.peaks{i_peak}.peak_latency(2)-params.peaks{i_peak}.peak_latency(1))/2;
-            [~, i_peak_latency] = min(abs(dat.time-lat)); % find closest time sample
+            [~, i_peak_latency] = min(abs(dat.time-lat)); % find closest time sample to center of window
             tmp.nopeak = true;
         end
         i_peak_latency = peak_interval(1)-1+i_peak_latency(1); % adjust for interval and pick first (=strongest) peak

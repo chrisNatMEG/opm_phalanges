@@ -336,6 +336,7 @@ if save_results
         h = figure;
         ft_topoplotIC(cfg, comp);   
         saveas(h,fullfile(save_path, 'figs', [params.sub '_' params.modality '_ica_rejected_comps' num2str(i) '.jpg'])) 
+        close all
     end
 
     %% Downsample for MVPA

@@ -101,7 +101,7 @@ for i_trigger = 1:n_triggers
     end
     
     h = figure;
-    plot(tmp.time*1e3,tmp.avg.pow)
+    plot(tmp.time*1e3,std(tmp.avg.pow,0,1))
     xlabel('t [msec]')
     ylabel('Field power')
     xlim([-params.pre params.post]*1e3);
@@ -152,7 +152,7 @@ for i_trigger = 1:n_triggers
         end
     end
     h = figure;
-    plot(tmp.time*1e3,tmp.avg.pow)
+    plot(tmp.time*1e3,std(tmp.avg.pow,0,1))
     xlabel('t [msec]')
     ylabel('Field power')
     xlim([-params.pre params.post]*1e3);
@@ -203,7 +203,7 @@ for i_trigger = 1:n_triggers
         end
     end
     h = figure;
-    plot(tmp.time*1e3,tmp.avg.pow)
+    plot(tmp.time*1e3,std(tmp.avg.pow,0,1))
     xlabel('t [msec]')
     ylabel('Field power')
     xlim([-params.pre params.post]*1e3);
