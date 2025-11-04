@@ -36,7 +36,7 @@ if on_server
     overwrite.coreg = true;
     overwrite.mri = false;
     overwrite.dip = true;
-    overwrite.empty_room = true;
+    overwrite.empty_room = false;
     overwrite.mne = true;
 
     overwrite.sens_group = true;
@@ -60,7 +60,7 @@ params = [];
 params.paradigm = 'Phalanges';
 
 % Trials
-params.pre = 0.03; %sec
+params.pre = 0.02; %sec
 params.post = 0.3; %sec
 params.pad = 0.2; %sec
 params.delay = 0.041; % Stimulus delay in seconds (e.g., 0.01 for eartubes or 0.041 for membranes).
@@ -74,7 +74,7 @@ params.filter.notch = [50 60]; %[50 60 100 120 150];
 
 % Spatiotemporal filter (OPM-MEG only)
 params.do_hfc = true;
-params.hfc_order = 1;
+params.hfc_order = 2;
 params.do_amm = false;
 params.amm_in = 12;
 params.amm_out = 1;
@@ -107,7 +107,7 @@ params.trigger_labels = {'I3' 'I2' 'I1' 'T1' 'I2b'};
 params.peaks = {};
 params.peaks{1} = [];
 params.peaks{1}.label = 'M60';
-params.peaks{1}.peak_latency = [0.04 0.08]; % 0.04 0.09
+params.peaks{1}.peak_latency = [0.03 0.1]; % 0.04 0.09
 params.maxtrls = 300;
 
 % HPI coregistration
@@ -148,26 +148,26 @@ subses = {'0005' '240208';
 bads =  {[]; %1
     []; %2
     {'R403_bz', 'R408_bz', 'R409_bz'}; %3 
-    {'R403_bz', 'R408_bz'}; %4
-    {'R408_bz'}; %5%{'L505_bz', 'R403_bz', 'R408_bz', 'R409_bz'}; %5
+    {'L209_bz', 'R403_bz', 'R408_bz'}; %4
+    {'L209_bz', 'L505_bz', 'R403_bz', 'R408_bz', 'R409_bz'}; %5
     {'R403_bz', 'R408_bz', 'R409_bz'}; %6
     {'R403_bz', 'R408_bz', 'R409_bz'}; %7
-    {'L502', 'R209_bz', 'R403_bz', 'R402_bz', 'R409_bz'}; %8
+    {'L502_bz', 'R209_bz', 'R403_bz', 'R402_bz', 'R409_bz'}; %8
     {'L209_bz', 'R408_bz'}; %9
-    []; %10
-    []; %11
-    []; %12
-    []; %13
-    []; %14
-    []}; %15
+    {'L209_bz', 'R408_bz'}; %10
+    {'L209_bz', 'L109', 'L111_bz', 'R408_bz'}; %11
+    {'L209_bz', 'R408_bz'}; %12
+    {'L209_bz', 'L111_bz', 'R408_bz'}; %13
+    {'L401_bz', 'R409_bz'}; %14
+    {'R403_bz', 'R409_bz'}}; %15
 
 if on_server
     subs_to_run = 1:size(subses,1);
 else
     subs_to_run = 2; %1:size(subses,1)
 end
-excl_subs = [14 15];
-excl_subs_src = [1 11 excl_subs];
+excl_subs = [];
+excl_subs_src = [1 excl_subs];
 
 %% Loop over subjects
 ssp_done = false(size(subs_to_run,2),1);
@@ -200,6 +200,9 @@ for i_sub = setdiff(subs_to_run,excl_subs)
     meg_file = fullfile(raw_path, 'meg', [params.paradigm 'MEG_proc-tsss+corr98+mc+avgHead_meg.fif']);
     if ~exist(meg_file,'file')
         meg_file = fullfile(raw_path, 'meg', [params.paradigm 'MEG_proc-tsss+corr98.fif']);
+        if ~exist(meg_file,'file')
+            meg_file = fullfile(raw_path, 'meg', [params.paradigm 'MEG_tsss.fif']);
+        end
     end
     opm_file = fullfile(raw_path, 'osmeg', [params.paradigm 'OPM_raw.fif']);
     aux_file = fullfile(raw_path, 'meg', [params.paradigm 'EEG.fif']);
@@ -348,8 +351,11 @@ for i_sub = setdiff(subs_to_run,excl_subs)
         disp(['Not overwriting OPM transform for ' params.sub]);
     else
         meg_file = fullfile(raw_path, 'meg', [params.paradigm 'MEG_proc-tsss+corr98+mc+avgHead_meg.fif']);
-        if i_sub == 9
+        if ~exist(meg_file,'file')
             meg_file = fullfile(raw_path, 'meg', [params.paradigm 'MEG_proc-tsss+corr98.fif']);
+            if ~exist(meg_file,'file')
+                meg_file = fullfile(raw_path, 'meg', [params.paradigm 'MEG_tsss.fif']);
+            end
         end
         ft_hastoolbox('mne', 1);
         load(fullfile(save_path, [params.sub '_opm_ica_ds']));
@@ -358,7 +364,7 @@ for i_sub = setdiff(subs_to_run,excl_subs)
         close all
         clear data_ica_ds
 
-        %% Plot sensor arrays with headmodels and sourcemodel
+        % Plot sensor arrays with headmodels and sourcemodel
         if exist(fullfile(save_path_mri, 'headmodels.mat'),'file') && exist(fullfile(save_path_mri, 'sourcemodel.mat'),'file') && ~isempty(opm_trans)
             opm_timelockedT = load(fullfile(save_path, [params.sub '_opm_timelocked.mat'])).timelocked;
             opmeeg_timelockedT = load(fullfile(save_path, [params.sub '_opmeeg_timelocked.mat'])).timelocked;
@@ -462,14 +468,14 @@ for i_sub = setdiff(subs_to_run,excl_subs)
             end
         end
         
-        %% MNE fit
+        % MNE fit
         params.inv_method = 'mne';
         for i_cov = 1:length(params.covs)
             params.noise_cov = params.covs{i_cov}; 
             fit_mne(save_path, squid_timelocked, opm_timelockedT, headmodel, sourcemodel, sourcemodel_inflated, params);
         end
 
-        %% Clear variables
+        % Clear variables
         clear squid_timelocked opm_timelockedT headmodel sourcemodel sourcemodel_inflated
     end
 end
@@ -507,9 +513,12 @@ end
 if overwrite.mne_group
     save_path = fullfile(base_save_path,params.paradigm);
     subs = setdiff(subs_to_run,excl_subs_src);
+    save_path_mri = fullfile(base_save_path,'MRI',['sub_' num2str(subs(1),'%02d')]);
+    sourcemodel = load(fullfile(save_path_mri, 'sourcemodel')).sourcemodel;
+    sourcemodel_inflated = load(fullfile(save_path_mri, 'sourcemodel_inflated')).sourcemodel_inflated;
     for i_cov = 1:length(params.covs)
         params.use_cov = params.covs{i_cov}; 
-        mne_results_goup(save_path, subs, params);
+        mne_results_goup(save_path, subs, sourcemodel, sourcemodel_inflated, params);
     end
 end
 

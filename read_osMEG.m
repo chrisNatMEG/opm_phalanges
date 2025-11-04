@@ -359,6 +359,7 @@ end
 %% Combine data
 EOG_channels = find(contains(aux_epo.label,'EOG'));
 ECG_channels = find(contains(aux_epo.label,'ECG'));
+ECG_channels = find(contains(aux_epo.label,'ECG'));  
 include_channels = [EOG_channels; ECG_channels];
 
 comb = opm_epo; 
@@ -382,6 +383,7 @@ clear opm_epo opm_cleaned
 opm_cleaned = comb;
 
 %% Bad trials
+smplinfo = opm_cleaned.sampleinfo;
 cfg = [];
 cfg.channel = {'*bz'};
 cfg.metric = 'maxzvalue';
@@ -422,11 +424,11 @@ save(fullfile(save_path, [params.sub '_opm_badchs']), ...
     'badchs_opm_noloc',"-v7.3"); 
 
 % Save bad trials
-[~,idx]=ismember(opm_cleaned.sampleinfo,badtrl_opm_jump,'rows');
+[~,idx]=ismember(smplinfo,badtrl_opm_jump,'rows');
 badtrl_opm_jump = find(idx);
-[~,idx]=ismember(opm_cleaned.sampleinfo,badtrl_opm_std,'rows');
+[~,idx]=ismember(smplinfo,badtrl_opm_std,'rows');
 badtrl_opm_std = find(idx);
-[~,idx]=ismember(opm_cleaned.sampleinfo,badtrl_opm_range,'rows');
+[~,idx]=ismember(smplinfo,badtrl_opm_range,'rows');
 badtrl_opm_range = find(idx);
 save(fullfile(save_path, [params.sub '_opm_badtrls']), ...
     'badtrl_opm_jump', ...
@@ -505,9 +507,9 @@ save(fullfile(save_path, [params.sub '_opmeeg_badchs']), ...
     'badchs_opmeeg_neighbors', "-v7.3"); 
 
 % Save bad trials
-[~,idx]=ismember(opmeeg_cleaned.sampleinfo,badtrl_opmeeg_jump,'rows');
+[~,idx]=ismember(smplinfo,badtrl_opmeeg_jump,'rows');
 badtrl_opmeeg_jump = find(idx);
-[~,idx]=ismember(opmeeg_cleaned.sampleinfo,badtrl_opmeeg_std,'rows');
+[~,idx]=ismember(smplinfo,badtrl_opmeeg_std,'rows');
 badtrl_opmeeg_std = find(idx);
 save(fullfile(save_path, [params.sub '_opmeeg_badtrls']), ...
     'badtrl_opmeeg_jump', ...

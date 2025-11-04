@@ -29,6 +29,7 @@ if params.numdipoles == 2
     peak_activation.fahm = nan(2,1);
     peak_activation.halfmax_distribution = cell(2,1);
     peak_activation.target_region = nan(2,1);
+    peak_activation.peak_distribution = cell(2,1);
 
     %% Left
     % Half max level
@@ -70,6 +71,7 @@ if params.numdipoles == 2
     peak_activation.mom(1) = peak_mom;
     peak_activation.fahm(1) = fahm;
     peak_activation.halfmax_distribution{1} = i_halfmax_vertices;
+    peak_activation.peak_distribution{1} = sourcedistribution.avg.mom(:,i_latency);
 
     if isfield(params,'target_region')
         target_region = find(contains(sourcemodel.brainstructurelabel,params.target_region));
@@ -115,6 +117,7 @@ if params.numdipoles == 2
     peak_activation.mom(2) = peak_mom;
     peak_activation.fahm(2) = fahm;
     peak_activation.halfmax_distribution{2} = i_halfmax_vertices;
+    peak_activation.peak_distribution{2} = sourcedistribution.avg.mom(:,i_latency);
 
     if isfield(params,'target_region')
         target_region = find(contains(sourcemodel.brainstructurelabel,params.target_region));
@@ -157,6 +160,7 @@ else
     peak_activation.mom = peak_mom;
     peak_activation.fahm = fahm;
     peak_activation.halfmax_distribution = i_halfmax_vertices;
+    peak_activation.peak_distribution = sourcedistribution.avg.mom(:,i_latency);
     
     if isfield(params,'target_region')
         target_region = find(contains(sourcemodel.brainstructurelabel,params.target_region));

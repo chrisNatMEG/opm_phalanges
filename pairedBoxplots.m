@@ -83,6 +83,7 @@ function pairedBoxplots(data, triggerLabels, yLabelStr, titleStr, save_path, sho
 
     ylim([ymin - 0.05*yrange, ymax]);
 
+    set(gca, 'fontsize',14)
     saveas(h, save_path);
     close all
 end

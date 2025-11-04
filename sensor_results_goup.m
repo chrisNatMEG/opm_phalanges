@@ -82,24 +82,24 @@ for i_peak = 1:length(params.peaks)
             n_trl.opmeeg(i_sub,i_trigger) = length(opmeeg_timelocked{i_trigger}.cfg.trials);
             n_trl.squideeg(i_sub,i_trigger) = length(squideeg_timelocked{i_trigger}.cfg.trials);
     
-            h = figure;
-            subplot(2,1,1)
-            plot(squid_timelocked{i_trigger}.time*1e3,squid_timelocked{i_trigger}.avg(meg_chs(1:3:end),:)*1e15)
-            xlabel('t [msec]')
-            ylabel('B [fT]')
-            xlim([-params.pre params.post]*1e3)
-            title(['Evoked SQUID MAG - ' params.trigger_labels{i_trigger} ' (n_{trls}=' num2str(length(squid_timelocked{i_trigger}.cfg.trials)) ')'])
-            subplot(2,1,2)
-            plot(opm_timelocked{i_trigger}.time*1e3,opm_timelocked{i_trigger}.avg(opm_chs,:)*1e15)
-            xlabel('t [msec]')
-            ylabel('B [fT]')
-            xlim([-params.pre params.post]*1e3)
-            title(['Evoked OPM MAG - ' params.trigger_labels{i_trigger} ' (n_{trls}=' num2str(length(opm_timelocked{i_trigger}.cfg.trials)) ')'])
-            ylims = ylim;
-            subplot(2,1,1)
-            ylim(ylims)
-            saveas(h, fullfile(save_path, 'figs', [params.sub '_squidopm_butterfly_trig-' params.trigger_labels{i_trigger} '.jpg']))
-            close all
+%             h = figure;
+%             subplot(2,1,1)
+%             plot(squid_timelocked{i_trigger}.time*1e3,squid_timelocked{i_trigger}.avg(meg_chs(1:3:end),:)*1e15)
+%             xlabel('t [msec]')
+%             ylabel('B [fT]')
+%             xlim([-params.pre params.post]*1e3)
+%             title(['Evoked SQUID MAG - ' params.trigger_labels{i_trigger} ' (n_{trls}=' num2str(length(squid_timelocked{i_trigger}.cfg.trials)) ')'])
+%             subplot(2,1,2)
+%             plot(opm_timelocked{i_trigger}.time*1e3,opm_timelocked{i_trigger}.avg(opm_chs,:)*1e15)
+%             xlabel('t [msec]')
+%             ylabel('B [fT]')
+%             xlim([-params.pre params.post]*1e3)
+%             title(['Evoked OPM MAG - ' params.trigger_labels{i_trigger} ' (n_{trls}=' num2str(length(opm_timelocked{i_trigger}.cfg.trials)) ')'])
+%             ylims = ylim;
+%             subplot(2,1,1)
+%             ylim(ylims)
+%             saveas(h, fullfile(save_path, 'figs', [params.sub '_squidopm_butterfly_trig-' params.trigger_labels{i_trigger} '.jpg']))
+%             close all
         end
     end
     clear squid_timelocked opm_timelocked squideeg_timelocked opmeeg_timelocked
@@ -116,6 +116,11 @@ for i_peak = 1:length(params.peaks)
     er.LineStyle = 'none';  
     er.LineWidth = 1;
     er.CapSize = 30;
+    p_values = zeros(1,n_triggers);
+    for i = 1:n_triggers
+        [~, p_values(i)] = ttest(peak_ratio.meg(:, i)-1);
+    end
+    sigstar(arrayfun(@(x) [x, x], 1:n_triggers, 'UniformOutput', false), p_values);
     hold off
     title([params.peaks{1}.label ' peak amp ratio (mean = ' num2str(mean(mean(peak_ratio.meg,'omitnan'),'omitnan'),'%.2f') ')'])
     ylabel('OPM/SQUID')
@@ -454,6 +459,26 @@ for i_sub = subs
     end
     clear squid_timelocked opm_timelocked
 end
+
+for i_trigger = 1:n_triggers
+    tmp = opm{i_trigger,i_sub}.avg;
+    opmavg = nan(size(tmp,1),size(tmp,2),length(subs));
+    labels = opm{i_trigger,i_sub}.label;
+    for i_sub = subs
+        [~,ia,ib] = intersect(labels,opm{i_trigger,i_sub}.label);
+        opmavg(ia,:,i_sub) = opm{i_trigger,i_sub}.avg(ib,:);
+    end
+    h = figure; 
+    plot(opm{i_trigger,i_sub}.time*1e3,mean(opmavg,3,'omitnan').*1e15)
+    xlabel('t [msec]')
+    ylabel('B [fT]')
+    xlim([-params.pre params.post]*1e3);
+    title(['OPM grand avgerage: ' params.trigger_labels{i_trigger}])
+    set(gca, 'fontsize',14)
+    saveas(h, fullfile(base_save_path, 'figs', ['opm_grndAvg_butterfly2_trig-' params.trigger_labels{i_trigger} '.jpg']))
+    close all
+end
+
 for i_trigger = 1:n_triggers
 
     % OPM

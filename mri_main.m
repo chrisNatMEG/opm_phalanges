@@ -42,7 +42,9 @@ subses = {'0005' '240208';
     '1191' '241024';
     '1193' '241029';
     '1194' '241029';
-    '1195' '241030'};
+    '1195' '241030';
+    '1209' '250219';
+    '1215' '250415'};
 mri_files = {'00000001.dcm' 
     '/mri/sub-15931_T1w.nii.gz'  
     '/nifti/anat/sub-15985_T1w.nii.gz'};
@@ -50,9 +52,11 @@ mri_files = {'00000001.dcm'
 if on_server
     subs_to_run = 1:size(subses,1);
 else
-    subs_to_run = 2; %1:size(subses,1)
+    subs_to_run = 14:15; %1:size(subses,1)
 end
 excl_subs = [1];
+
+paradigm = 'Phalanges';
 
 %% Loop over subjects
 for i_sub = setdiff(subs_to_run,excl_subs)
@@ -70,8 +74,14 @@ for i_sub = setdiff(subs_to_run,excl_subs)
     if ~exist(save_path_mri, 'dir')
         mkdir(save_path_mri)
     end
-    meg_file = fullfile(raw_path, 'meg', 'AudOddMEG_proc-tsss+corr98+mc+avgHead_meg.fif');
+    meg_file = fullfile(raw_path, 'meg', [paradigm 'MEG_proc-tsss+corr98+mc+avgHead_meg.fif']);
+    if ~exist(meg_file,'file')
+        meg_file = fullfile(raw_path, 'meg', [paradigm 'MEG_proc-tsss+corr98.fif']);
+        if ~exist(meg_file,'file')
+            meg_file = fullfile(raw_path, 'meg', [paradigm 'MEG_tsss.fif']);
+        end
+    end
     %mri_file = fullfile(mri_path, 'orig','001.mgz');
-    prepare_mri(mri_path,meg_file,save_path_mri);
+    prepare_mri(mri_path,meg_file,save_path_mri, false, '8');
     close all
 end

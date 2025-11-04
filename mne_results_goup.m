@@ -1,5 +1,7 @@
-function mne_results_goup(base_save_path, subs, params)
 
+function mne_results_goup(base_save_path, subs, sourcemodel, sourcemodel_inflated, params)
+n_triggers = length(params.trigger_codes);
+n_subs = length(subs);
 cov = '';
 if isfield(params,'use_cov') && strcmp(params.use_cov,'all')
     cov = '_covAll';
@@ -15,6 +17,96 @@ elseif params.numdipoles == 1
     hemi_labels = {''};
 end
 
+for i_peak = 1:length(params.peaks)
+    peak_label = ['_' params.peaks{i_peak}.label];
+    for i_hemi = 1:params.numdipoles
+        i_sub = subs(1);
+        params.sub = ['sub_' num2str(i_sub,'%02d')];
+        ft_hastoolbox('mne', 1);
+        save_path = fullfile(base_save_path,params.sub);
+        tmp = load(fullfile(save_path,'mne_distributions.mat'));
+        squidmag_peak = load(fullfile(save_path,'squidmag_mne_peaks.mat')).peaks;
+        squidgrad_peak = load(fullfile(save_path,'squidgrad_mne_peaks.mat')).peaks;
+        opm_peak = load(fullfile(save_path,'opm_mne_peaks.mat')).peaks;
+        for i_trigger = 1:n_triggers
+            squidmag_mne{i_trigger} = tmp.squidmag_mne{i_trigger};
+            squidgrad_mne{i_trigger} = tmp.squidgrad_mne{i_trigger};
+            opm_mne{i_trigger} = tmp.opm_mne{i_trigger};
+            squidmag_mne{i_trigger}.avg.pow = tmp.squidmag_mne{i_trigger}.avg.pow/n_subs;
+            squidgrad_mne{i_trigger}.avg.pow = tmp.squidgrad_mne{i_trigger}.avg.pow/n_subs;
+            opm_mne{i_trigger}.avg.pow = tmp.opm_mne{i_trigger}.avg.pow/n_subs;
+            squidmag_peak{i_trigger}.fahm = squidmag_peak{i_trigger}.fahm/n_subs;
+            squidgrad_peak{i_trigger}.fahm = squidgrad_peak{i_trigger}.fahm/n_subs;
+            opm_peak{i_trigger}.fahm = opm_peak{i_trigger}.fahm/n_subs;
+            squidmag_peak{i_trigger}.latency = squidmag_peak{i_trigger}.latency/n_subs;
+            squidgrad_peak{i_trigger}.latency = squidgrad_peak{i_trigger}.latency/n_subs;
+            opm_peak{i_trigger}.latency = opm_peak{i_trigger}.latency/n_subs;
+        end
+        clear tmp
+        for i_sub = subs(2:end)
+            params.sub = ['sub_' num2str(i_sub,'%02d')];
+            ft_hastoolbox('mne', 1);
+            save_path = fullfile(base_save_path,params.sub);
+            tmp = load(fullfile(save_path,'mne_distributions.mat'));
+            t_squidmag_peak = load(fullfile(save_path,'squidmag_mne_peaks.mat')).peaks;
+            t_squidgrad_peak = load(fullfile(save_path,'squidgrad_mne_peaks.mat')).peaks;
+            t_opm_peak = load(fullfile(save_path,'opm_mne_peaks.mat')).peaks;
+            for i_trigger = 1:n_triggers
+                squidmag_mne{i_trigger}.avg.pow = squidmag_mne{i_trigger}.avg.pow + tmp.squidmag_mne{i_trigger}.avg.pow/n_subs;
+                squidgrad_mne{i_trigger}.avg.pow = squidgrad_mne{i_trigger}.avg.pow + tmp.squidgrad_mne{i_trigger}.avg.pow/n_subs;
+                opm_mne{i_trigger}.avg.pow = opm_mne{i_trigger}.avg.pow + tmp.opm_mne{i_trigger}.avg.pow/n_subs;
+                squidmag_peak{i_trigger}.fahm = squidmag_peak{i_trigger}.fahm + t_squidmag_peak{i_trigger}.fahm/n_subs;
+                squidgrad_peak{i_trigger}.fahm = squidgrad_peak{i_trigger}.fahm + t_squidgrad_peak{i_trigger}.fahm/n_subs;
+                opm_peak{i_trigger}.fahm = opm_peak{i_trigger}.fahm + t_opm_peak{i_trigger}.fahm/n_subs;
+                squidmag_peak{i_trigger}.latency = squidmag_peak{i_trigger}.latency + t_squidmag_peak{i_trigger}.latency/n_subs;
+                squidgrad_peak{i_trigger}.latency = squidgrad_peak{i_trigger}.latency + t_squidgrad_peak{i_trigger}.latency/n_subs;
+                opm_peak{i_trigger}.latency = opm_peak{i_trigger}.latency + t_opm_peak{i_trigger}.latency/n_subs;
+            end
+            clear tmp
+        end
+        for i_trigger = 1:n_triggers
+            opm_mne{i_trigger}.pos = sourcemodel_inflated.pos;
+            opm_mne{i_trigger}.tri = sourcemodel_inflated.tri;
+            params.modality = 'opm';
+            h =  plot_source_distribution(opm_mne{i_trigger},opm_peak{i_trigger},params,0);
+            saveas(h, fullfile(base_save_path, 'figs', ['mne_grnd_avg_infl_opm_' params.trigger_labels{i_trigger} '_' peak_label cov hemi_labels{i_hemi} '.jpg']))
+            close all
+            opm_mne{i_trigger}.pos = sourcemodel.pos;
+            opm_mne{i_trigger}.tri = sourcemodel.tri;
+            params.modality = 'opm';
+            h =  plot_source_distribution(opm_mne{i_trigger},opm_peak{i_trigger},params,0);
+            saveas(h, fullfile(base_save_path, 'figs', ['mne_grnd_avg_opm_' params.trigger_labels{i_trigger} '_' peak_label cov hemi_labels{i_hemi} '.jpg']))
+            close all
+
+            squidmag_mne{i_trigger}.pos = sourcemodel_inflated.pos;
+            squidmag_mne{i_trigger}.tri = sourcemodel_inflated.tri;
+            params.modality = 'sqmag';
+            h =  plot_source_distribution(squidmag_mne{i_trigger},squidmag_peak{i_trigger},params,0);
+            saveas(h, fullfile(base_save_path, 'figs', ['mne_grnd_avg_infl_squidmag_' params.trigger_labels{i_trigger} '_' peak_label cov hemi_labels{i_hemi} '.jpg']))
+            close all
+            squidmag_mne{i_trigger}.pos = sourcemodel.pos;
+            squidmag_mne{i_trigger}.tri = sourcemodel.tri;
+            params.modality = 'sqmag';
+            h =  plot_source_distribution(squidmag_mne{i_trigger},squidmag_peak{i_trigger},params,0);
+            saveas(h, fullfile(base_save_path, 'figs', ['mne_grnd_avg_squidmag_' params.trigger_labels{i_trigger} '_' peak_label cov hemi_labels{i_hemi} '.jpg']))
+            close all
+
+            squidgrad_mne{i_trigger}.pos = sourcemodel_inflated.pos;
+            squidgrad_mne{i_trigger}.tri = sourcemodel_inflated.tri;
+            params.modality = 'sqgrad';
+            h =  plot_source_distribution(squidgrad_mne{i_trigger},squidgrad_peak{i_trigger},params,0);
+            saveas(h, fullfile(base_save_path, 'figs', ['mne_grnd_avg_infl_squidgrad_' params.trigger_labels{i_trigger} '_' peak_label cov hemi_labels{i_hemi} '.jpg']))
+            close all
+            squidgrad_mne{i_trigger}.pos = sourcemodel.pos;
+            squidgrad_mne{i_trigger}.tri = sourcemodel.tri;
+            params.modality = 'sqgrad';
+            h =  plot_source_distribution(squidgrad_mne{i_trigger},squidgrad_peak{i_trigger},params,0);
+            saveas(h, fullfile(base_save_path, 'figs', ['mne_grnd_avg_squidgrad_' params.trigger_labels{i_trigger} '_' peak_label cov hemi_labels{i_hemi} '.jpg']))
+            close all
+        end
+    end
+end
+%%
 for i_peak = 1:length(params.peaks)
     peak_label = ['_' params.peaks{i_peak}.label];
     for i_hemi = 1:params.numdipoles
@@ -260,17 +352,17 @@ for i_peak = 1:length(params.peaks)
         
         hold off
         title(['MNE: Group level FAHM (mean: ' num2str(mean(median(fahm_squidmag,1,'omitnan')),'%.1f') ', ' num2str(mean(median(fahm_opm,1,'omitnan')),'%.1f') ', ' num2str(mean(median(fahm_squidgrad,1,'omitnan')),'%.1f') ')'])
-        ylabel('M60 FAHM [cm^2]')
+        ylabel('FAHM [cm^2]')
         xlabel('Phalange')
         legend({'squidmag','opm','squidgrad'},'Location','eastoutside');
         xticklabels(params.trigger_labels)
-        saveas(h, fullfile(base_save_path, 'figs', ['mne_fahm_' peak_label cov hemi_labels{i_hemi} '.jpg']))
+        saveas(h, fullfile(base_save_path, 'figs', ['mne_fahm' peak_label cov hemi_labels{i_hemi} '.jpg']))
         close all
 
         data = {fahm_squidmag, fahm_opm, fahm_squidgrad};
         triggerLabels = params.trigger_labels;
         yLabelStr = 'FAHM [cm^2]';
-        titleStr = ['Group level ' params.peaks{1}.label ' MNE FAHM - SQMAG vs OPM vs SQGRAD'];
+        titleStr = ['Group level ' params.peaks{1}.label ' FAHM - SQM vs OPM vs SQG'];
         save_path = fullfile(base_save_path, 'figs', ['mne_fahm_sqmag_opm_sqgrad' peak_label cov hemi_labels{i_hemi} '_box.jpg']);
         pairedBoxplots(data, triggerLabels, yLabelStr, titleStr, save_path,1);
     
