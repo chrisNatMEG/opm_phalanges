@@ -51,22 +51,6 @@ for i_trigger = 1:length(params.trigger_codes)
     cfg.covariancewindow    = baseline;
     cfg.trials = trls;
     timelocked{i_trigger} = ft_timelockanalysis(cfg, data);
-    
-    cfg = [];
-    cfg.covariance          = 'yes';
-    cfg.covariancewindow    = 'all';
-    cfg.trials = trls;
-    tmp = ft_timelockanalysis(cfg, data);
-    timelocked{i_trigger}.cov_all = tmp.cov;
-    clear tmp
-
-    cfg = [];
-    cfg.covariance          = 'yes';
-    cfg.covariancewindow    = [0 params.post];
-    cfg.trials = trls;
-    tmp = ft_timelockanalysis(cfg, data);
-    timelocked{i_trigger}.sourcecov = tmp.cov;
-    clear tmp
 
     %% Find peaks
     cfg = [];

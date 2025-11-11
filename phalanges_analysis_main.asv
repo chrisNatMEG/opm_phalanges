@@ -32,8 +32,8 @@ ft_default.showcallinfo = 'no';
 %% Overwrite
 overwrite = [];
 if on_server
-    overwrite.preproc = true;
-    overwrite.coreg = true;
+    overwrite.preproc = false;
+    overwrite.coreg = false;
     overwrite.mri = false;
     overwrite.dip = false;
     overwrite.empty_room = false;
@@ -470,9 +470,7 @@ for i_sub = setdiff(subs_to_run,excl_subs)
         end
         
         % MNE fit
-        if i_sub == 2 
-            params.do_sourcemovie = true;
-        elseif i_sub == 4 
+        if i_sub ==2
             params.do_sourcemovie = true;
         else
             params.do_sourcemovie = false;

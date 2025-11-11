@@ -386,7 +386,7 @@ end
 if isfield(params,'do_sourcemovie') && params.do_sourcemovie
     % OPM
     for i_trigger = 1:n_triggers
-        v = VideoWriter(fullfile(save_path,'figs', [params.sub '_opm_' params.trigger_labels{i_trigger} '.avi']),"Indexed AVI");
+        v = VideoWriter(fullfile(save_path,'figs', [params.sub '_opm_' params.trigger_labels{i_trigger} '.avi']),"Uncompressed AVI");
         v.FrameRate = 15;
         
         v.open
@@ -431,7 +431,7 @@ if isfield(params,'do_sourcemovie') && params.do_sourcemovie
     
     % SQ-GRAD
     for i_trigger = 1:n_triggers
-        v = VideoWriter(fullfile(save_path,'figs', [params.sub '_sqgrad_' params.trigger_labels{i_trigger} '.avi']),"Indexed AVI");
+        v = VideoWriter(fullfile(save_path,'figs', [params.sub '_sqgrad_' params.trigger_labels{i_trigger} '.avi']),"Uncompressed AVI");
         v.FrameRate = 15;
     
         v.open
@@ -476,7 +476,7 @@ if isfield(params,'do_sourcemovie') && params.do_sourcemovie
 
     % SQ-MAG
     for i_trigger = 1:n_triggers
-        v = VideoWriter(fullfile(save_path,'figs', [params.sub '_sqmag_' params.trigger_labels{i_trigger} '.avi']),"Indexed AVI");
+        v = VideoWriter(['/home/chrpfe/Documents/21099_opm//Phalanges/sub02_sqmag_' params.trigger_labels{i_trigger} '.avi'],"Uncompressed AVI");
         v.FrameRate = 15;
     
         v.open

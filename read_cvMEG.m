@@ -20,7 +20,7 @@ trl_squid(:,4) = squid_raw.trial{1}(squid_trig,trig);
 trl_squid(:,1:2) = trl_squid(:,1:2) + floor(params.delay*squid_raw.fsample); % adjust for stim delay
 trl_squid = round(trl_squid);
 
-if params.do_buttons
+if isfield(params,'do_buttons') && params.do_buttons
     button_trig = squid_raw.trial{1}(contains(squid_raw.label,'STI102'),:);
     tmp = trl_squid(trl_squid(:,4)==13|trl_squid(:,4)==5,:);
     [~, trl_squid] = findButtonOffsets(tmp,button_trig, round(-0.*squid_raw.fsample));

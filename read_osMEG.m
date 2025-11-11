@@ -59,7 +59,7 @@ if trl_aux(:,4) ~= trl_opm(:,4) % Throw error if trials don't match.
     error('events do not match')
 end
 
-if params.do_buttons
+if isfield(params,'do_buttons') && params.do_buttons
     button_trig = aux_raw.trial{1}(contains(aux_raw.label,'STI102'),:);
     tmp = trl_aux(trl_aux(:,4)==13|trl_aux(:,4)==5,:);
     [offsets, trl_aux] = findButtonOffsets(tmp,button_trig, round(-0.*aux_raw.fsample));
@@ -256,10 +256,16 @@ elseif isfield(params,'do_ssp_data') && params.do_ssp_data
 
     cfg = [];
     cfg.trl             = trl_opm;
-    tmp = ft_redefinetrial(cfg,opm_cleaned); 
+    tmp = ft_redefinetrial(cfg,opm_cleaned);
+
+    if isfield(params,'baseline')
+        baseline = params.baseline;
+    else
+        baseline = [-params.pre 0];
+    end
 
     cfg = [];
-    cfg.latency = [-params.pre 0];
+    cfg.latency = params.baseline;
     tmp = ft_selectdata(cfg, tmp);
     
     [coeff,score,latent,tsquared,explained] = pca(cell2mat(tmp.trial)','NumComponents',params.ssp_n);
@@ -303,7 +309,7 @@ opm_epo = ft_resampledata(cfg, opm_cleaned);
 opm_epo.fsample = 1000;
 trl_opm(:,1:3) = ceil(trl_opm(:,1:3)/5);
 
-if params.do_buttons
+if isfield(params,'do_buttons') && params.do_buttons
     trl_opm = trl_opm(trl_opm(:,4)==13|trl_opm(:,4)==5,:);
     trl_opm(:,1:2) = trl_opm(:,1:2) + offsets;
 end
