@@ -33,6 +33,8 @@ ft_default.showcallinfo = 'no';
 overwrite = [];
 if on_server
     overwrite.preproc = true;
+    overwrite.timelock = true;
+    overwrite.TFR = false;
     overwrite.coreg = true;
     overwrite.mri = false;
     overwrite.dip = false;
@@ -40,10 +42,12 @@ if on_server
     overwrite.mne = true;
 
     overwrite.sens_group = true;
-    overwrite.dip_group = true;
+    overwrite.dip_group = false;
     overwrite.mne_group = true;
 else
     overwrite.preproc = true;
+    overwrite.timelock = true;
+    overwrite.TFR = true;
     overwrite.coreg = true;
     overwrite.mri = false;
     overwrite.dip = true;
@@ -74,7 +78,7 @@ params.filter = [];
 params.filter.hp_freq = 0.1;%0.1;
 params.filter.lp_freq = 50;
 params.filter.bp_freq = [];
-params.filter.notch = [50 60 100]; %[50 60 100 120 150];
+params.filter.notch = [50 60]; %[50 60 100 120 150];
 
 % Spatiotemporal filter (OPM-MEG only)
 params.do_hfc = true;
@@ -91,13 +95,10 @@ params.outlier_zscore = 3; % Outliers: how many stddevs above mean
 params.outlier_ratio = 0.5; % Outliers: ratio of frequencies over threshold above which the channel is considered an outlier
 params.corr_threshold = 0.6; % Correlation threshold for badchannei detection based on neighbor correlation
 params.z_threshold = 20; % Zmax threshold for badchannel and trial detection based on jumps
-% params.opm_std_threshold = 5e-12; % Standard deviation threshold for OPM badtrial detection
-% params.squidmag_std_threshold = 2.5e-12; % Standard deviation for SQUID-MAG badtrial detection
-% params.squidgrad_std_threshold = 2000e-13; % Standard deviation for SQUID-GRAD badtrial detection
-% params.eeg_std_threshold = 10e-4; % Standard deviation for EEG badtrial detection
 params.opm_range_threshold = 20e-12; % Range for OPM badtrial detection
 params.squidmag_range_threshold = 10e-12; % Range for SQUID-MAG badtrial detection
 params.squidgrad_range_threshold = 4000e-13; % Range for SQUID-GRAD badtrial detection
+params.debug = false; % Do manual rejection
 
 % ICA ECG&EOG artifact removal 
 params.n_comp = 40;
@@ -111,17 +112,13 @@ params.trigger_labels = {'std' 'oddNoGo' 'oddGo'};
 % params.trigger_codes = {1 3 5 11 13};
 % params.trigger_labels = {'STD' 'LNG' 'LG' 'HNG' 'HG'};
 
+% Evoked peaks to analyze
 params.peaks = {};
 params.peaks{1} = [];
 params.peaks{1}.label = 'M100';
 params.peaks{1}.peak_latency = [0.08 0.13];
-% params.peaks{2} = [];
-% params.peaks{2}.label = 'M200';
-% params.peaks{2}.peak_latency = [0.15 0.25];
-% params.peaks{3} = [];)
-% params.peaks{3}.label = 'M50';
-% params.peaks{3}.peak_latency = [0.04 0.08];
 
+% Time-Frequency
 params.tfr = true;
 
 % HPI coregistration
@@ -133,12 +130,10 @@ params.numdipoles = 2;
 
 % Source reconstruction - distributed
 params.source_fixedori = true; 
-params.covs = {'prestim'};%{'empty_room', ' '}; % noise cov to use; default=prestim, alt: 'resting_state', 'all', 'empty_room' , prestim = ' '
+params.covs = {' '}; % noise cov to use; default=prestim, alt: 'resting_state', 'all', 'empty_room' , prestim = ' '
 params.mne_view = 'sides';
 params.plot_inflated = true;
 params.target_region = {'superiortemporal', 'transversetemporal'};
-
-params.debug = 0;
 
 %% Subjects + dates
 subses = {'0005' '240208';
@@ -158,27 +153,27 @@ subses = {'0005' '240208';
     '1215' '250415'};
 
 bads =  {[]; %1
-    []; %2
-    {'R403_bz', 'R408_bz', 'R409_bz'}; %3 
-    {'L209_bz', 'R403_bz', 'R408_bz'}; %4
+    {'R409_bz'}; %2
+    {'L503_bz', 'R403_bz', 'R408_bz', 'R409_bz'}; %3 
+    {'L109_bz', 'L604_bz', 'L205_bz', 'L209_bz', 'R403_bz', 'R408_bz'}; %4
     {'L209_bz', 'L505_bz', 'R403_bz', 'R408_bz', 'R409_bz'}; %5
-    {'R403_bz', 'R408_bz', 'R409_bz'}; %6
+    {'L310_bz', 'R403_bz', 'R408_bz', 'R409_bz'}; %6
     {'R403_bz', 'R408_bz', 'R409_bz'}; %7
-    {'L502_bz', 'R209_bz', 'R403_bz', 'R402_bz', 'R409_bz'}; %8
-    {'L209_bz', 'R408_bz'}; %9
-    {'L209_bz', 'R408_bz'}; %10
-    {'L209_bz', 'L109_bz', 'L111_bz', 'R408_bz'}; %11
-    {'L209_bz', 'R408_bz'}; %12
-    {'L209_bz', 'L109_bz', 'L111_bz', 'R408_bz'}; %13
-    {'L401_bz', 'R409_bz'}; %14
-    {'R403_bz', 'R409_bz'}}; %15
+    {'L502_bz', 'R209_bz', 'R403_bz', 'R402_bz', 'R502_bz', 'R409_bz'}; %8
+    {'L502_bz', 'L503_bz', 'L209_bz', 'R408_bz'}; %9
+    {'L111_bz', 'L209_bz', 'R408_bz'}; %10
+    {'L603_bz', 'L209_bz', 'L109_bz', 'L111_bz', 'R408_bz'}; %11
+    {'L604_bz', 'L209_bz', 'R408_bz'}; %12
+    {'L604_bz', 'R401_bz', 'L209_bz', 'L109_bz', 'L111_bz', 'R408_bz'}; %13
+    {'L209_bz', 'L411_bz', 'L504_bz', 'L401_bz', 'R409_bz'}; %14
+    {'L502_bz', 'R403_bz', 'R409_bz'}}; %15
 
 if on_server
     subs_to_run = 1:size(subses,1);
 else
     subs_to_run = 4; %1:size(subses,1)
 end
-excl_subs = [3 14 15]; % split file TODO: allow split file
+excl_subs = [3]; % split file TODO: allow split file
 excl_subs_src = [1 excl_subs];
 
 %% Loop over subjects
@@ -217,12 +212,13 @@ for i_sub = setdiff(subs_to_run,excl_subs)
     aux_file = fullfile(raw_path, 'meg', [params.paradigm 'EEG.fif']);
     params.ssp_file = fullfile(raw_path, 'osmeg', 'EmptyRoomOPM_raw.fif');
     
-    %% OPM-MEG 
-    if exist(fullfile(save_path, [params.sub '_opmeeg_timelocked.mat']),'file') && exist(fullfile(save_path, [params.sub '_squideeg_timelocked.mat']),'file') && overwrite.preproc==false
+    %% Preprocessing
+    if exist(fullfile(save_path, [params.sub '_opm_preproc.mat']),'file') && exist(fullfile(save_path, [params.sub '_squid_preproc.mat']),'file') && overwrite.preproc==false
         disp(['Not overwriting preproc for ' params.sub]);
     else
         ft_hastoolbox('mne', 1);
 
+        %% OPM-MEG 
         % Read data
         [opm_cleaned, opmeeg_cleaned, ssp_done(i_sub)] = read_osMEG(opm_file, aux_file, save_path, params); % Read data
         close all
@@ -242,94 +238,22 @@ for i_sub = setdiff(subs_to_run,excl_subs)
         params.layout = 'fieldlinebeta2bz_helmet.mat';
         params.chs = '*bz';
         data_ica = ica_MEG(opm_cleaned, save_path, params, 1);
-        clear opm_cleaned
-        % OPM Average
-        params.modality = 'opm';
-        params.layout = 'fieldlinebeta2bz_helmet.mat';
-        params.chs = '*bz';
-        params.amp_scaler = 1e15;
-        params.amp_label = 'B [fT]';
-        timelock_MEG(data_ica, save_path, params);
-        close all
-        clear data_ica
+        save(fullfile(save_path, [params.sub '_' params.modality '_preproc']), 'data_ica', '-v7.3'); 
+        clear opm_cleaned data_ica
 
-        % OPM-EEG ICA 
+        % Make OPM-EEG layout
         cfg = [];
         cfg.elec = opmeeg_cleaned.elec;
         cfg.output = fullfile(save_path, [params.sub '_opmeeg_layout.mat']);
         opmeeg_layout = ft_prepare_layout(cfg);
+
+        % OPM-EEG ICA
         params.layout = opmeeg_layout;
         params.chs = 'EEG*';
         params.modality = 'opmeeg';
         data_ica = ica_MEG(opmeeg_cleaned, save_path, params, 1);
-        close all
-        clear opmeeg_cleaned
-        % OPM-EEG Average
-        params.modality = 'opmeeg';
-        params.layout = opmeeg_layout;
-        params.chs = 'EEG*';
-        params.amp_scaler = 1e9;
-        params.amp_label = 'V [nV]';
-        timelock_MEG(data_ica, save_path, params);
-        close all
-        clear data_ica
-
-        %%
-        if isfield(params,'tfr') && params.tfr 
-            opm_timelocked = load(fullfile(save_path, [params.sub '_opm_timelocked.mat'])).timelocked;
-            opmeeg_timelocked = load(fullfile(save_path, [params.sub '_opmeeg_timelocked.mat'])).timelocked;
-            for i_trig = 1:length(params.trigger_codes)
-
-                params.modality = 'opm';
-                cfg = [];
-                cfg.channel    = 'all';
-                cfg.method     = 'mtmfft';
-                cfg.taper      = 'hanning';
-                cfg.pad = 2;
-                cfg.foi        = 35:1:45;              % the time window "slides" from -0.5 to 1.5 in 0.05 sec steps
-                opm_tfr{i_trig} = ft_freqanalysis(cfg, opm_timelocked{i_trig});    % visual stimuli
-
-                h=figure;
-                plot(opm_tfr{i_trig}.freq,opm_tfr{i_trig}.powspctrm);
-                xlabel('Freq [Hz]')
-                ylabel('Power [T^2/Hz]')
-                title(['FFT: ' params.trigger_labels{i_trig} ' (max = ' num2str(max(max(opm_tfr{i_trig}.powspctrm))) ', SNR=' num2str(max(max(opm_tfr{i_trig}.powspctrm)) /(mean(mean(opm_tfr{i_trig}.powspctrm(:,[1 end])))),'%.1f') ')' ])
-                saveas(h, fullfile(save_path, 'figs', [params.sub '_' params.modality '_FFT_trig-' params.trigger_labels{i_trig} '.jpg']))
-
-                cfg = [];
-                cfg.layout       = 'fieldlinebeta2bz_helmet.mat';
-                h=figure; ft_topoplotER(cfg, opm_tfr{i_trig});
-                saveas(h, fullfile(save_path, 'figs', [params.sub '_' params.modality '_FFTtopo_trig-' params.trigger_labels{i_trig} '.jpg']))
-    
-                params.modality = 'opmeeg';
-                cfg = [];
-                cfg.channel    = 'all';
-                cfg.method     = 'mtmfft';
-                cfg.taper      = 'hanning';
-                cfg.pad = 2;
-                cfg.foi        = 35:1:45;             % the time window "slides" from -0.5 to 1.5 in 0.05 sec steps
-                opmeeg_tfr{i_trig} = ft_freqanalysis(cfg, opmeeg_timelocked{i_trig});    % visual stimuli
-    
-                h=figure;
-                plot(opmeeg_tfr{i_trig}.freq,opmeeg_tfr{i_trig}.powspctrm);
-                xlabel('Freq [Hz]')
-                ylabel('Power [V^2/Hz]')
-                title(['FFT: ' params.trigger_labels{i_trig} ' (max = ' num2str(max(max(opmeeg_tfr{i_trig}.powspctrm))) ', SNR=' num2str(max(max(opmeeg_tfr{i_trig}.powspctrm)) /(mean(mean(opmeeg_tfr{i_trig}.powspctrm(:,[1 end])))),'%.1f') ')' ])
-                saveas(h, fullfile(save_path, 'figs', [params.sub '_' params.modality '_FFT_trig-' params.trigger_labels{i_trig} '.jpg']))
-
-                cfg = [];
-                cfg.baseline = [-0.2 -0.0];
-                cfg.layout       = opmeeg_layout;
-                h=figure; ft_topoplotER(cfg, opmeeg_tfr{i_trig});
-                saveas(h, fullfile(save_path, 'figs', [params.sub '_' params.modality '_FFTtopo_trig-' params.trigger_labels{i_trig} '.jpg']))
-                close all
-            end
-            save(fullfile(save_path, [params.sub '_opm_tfr']), 'opm_tfr', '-v7.3'); 
-            save(fullfile(save_path, [params.sub '_opmeeg_tfr']), 'opmeeg_tfr', '-v7.3');
-            clear opm_timelocked opmeeg_timelocked
-        end
-
-        params = rmfield(params,{'modality', 'layout', 'chs', 'amp_scaler', 'amp_label'}); % remove fields used for picking modality
+        save(fullfile(save_path, [params.sub '_' params.modality '_preproc']), 'data_ica', '-v7.3'); 
+        clear opmeeg_cleaned data_ica
         
         %% SQUID-MEG 
         ft_hastoolbox('mne', 1);
@@ -352,98 +276,117 @@ for i_sub = setdiff(subs_to_run,excl_subs)
         params.layout = 'neuromag306mag.lay';
         params.chs = 'meg';
         data_ica = ica_MEG(squid_cleaned, save_path, params, 1); 
-        clear squid_cleaned
+        save(fullfile(save_path, [params.sub '_' params.modality '_preproc']), 'data_ica', '-v7.3'); 
+        clear squid_cleaned data_ica
+
+        % Make SQUID-EEG layout
+        cfg = [];
+        cfg.elec = squideeg_cleaned.elec;
+        cfg.output = fullfile(save_path, [params.sub '_squideeg_layout.mat']);
+        megeeg_layout = ft_prepare_layout(cfg);
+
+        % SQUID-EEG ICA
+        params.layout = megeeg_layout;
+        params.chs = 'EEG*';
+        params.modality = 'squideeg';
+        data_ica = ica_MEG(squideeg_cleaned, save_path, params, 1);
+        save(fullfile(save_path, [params.sub '_' params.modality '_preproc']), 'data_ica', '-v7.3'); 
+        clear squideeg_cleaned data_íca
+    end
+
+    %% Timelocking
+    if exist(fullfile(save_path, [params.sub '_opm_preproc.mat']),'file') && overwrite.timelock == false
+        disp(['Not overwriting timelocked for ' params.sub]);
+    else
+        % OPM average
+        opm_preproc = load(fullfile(save_path, [params.sub '_' params.modality '_preproc'])).data_ica; 
+        params.modality = 'opm';
+        params.layout = 'fieldlinebeta2bz_helmet.mat';
+        params.chs = '*bz';
+        params.amp_scaler = 1e15;
+        params.amp_label = 'B [fT]';
+        timelock_MEG(opm_preproc, save_path, params);
+        clear opm_preproc
+
+        % OPM-EEG Average
+        opmeeg_preproc = load(fullfile(save_path, [params.sub '_' params.modality '_preproc'])).data_ica; 
+        params.modality = 'opmeeg';
+        params.layout = load(fullfile(save_path, [params.sub '_opmeeg_layout.mat'])).layout;
+        params.chs = 'EEG*';
+        params.amp_scaler = 1e9;
+        params.amp_label = 'V [nV]';
+        timelock_MEG(opmeeg_preproc, save_path, params);
+        clear opmeeg_preproc
 
         % SQUID-MAG timelock
+        squid_preproc = load(fullfile(save_path, [params.sub '_' params.modality '_preproc'])).data_ica; 
         params.modality = 'squid';
         params.layout = 'neuromag306mag.lay';
         params.chs = 'megmag';
         params.amp_scaler = 1e15;
         params.amp_label = 'B [fT]';
-        timelock_MEG(data_ica, save_path, params);
-        close all
-        clear data_ica
+        timelock_MEG(squid_preproc, save_path, params);
 
-        % EEG ICA
-        cfg = [];
-        cfg.elec = squideeg_cleaned.elec;
-        cfg.output = fullfile(save_path, [params.sub '_megeeg_layout.mat']);
-        megeeg_layout = ft_prepare_layout(cfg);
-        params.layout = megeeg_layout;
-        params.chs = 'EEG*';
-        params.modality = 'squideeg';
-        data_ica = ica_MEG(squideeg_cleaned, save_path, params, 1);
-        close all
-        clear squideeg_cleaned
+        % SQUID-GRAD timelock
+        squid_preproc = load(fullfile(save_path, [params.sub '_' params.modality '_preproc'])).data_ica; 
+        params.modality = 'squidgrad';
+        params.layout = 'neuromag306planar.lay';
+        params.chs = 'megplanar';
+        params.amp_scaler = 1;
+        params.amp_label = 'B [T/cm]';
+        timelock_MEG(squid_preproc, save_path, params);
+        clear squid_preproc
 
-        % EEG timelock
+        % SQUID-EEG timelock
+        squideeg_preproc = load(fullfile(save_path, [params.sub '_' params.modality '_preproc'])).data_ica;
         params.modality = 'squideeg';
-        params.layout = megeeg_layout;
+        params.layout = load(fullfile(save_path, [params.sub '_squideeg_layout.mat'])).layout;
         params.chs = 'EEG*';
         params.amp_scaler = 1e9;
         params.amp_label = 'V [nV]';
-        timelock_MEG(data_ica, save_path, params);
-        close all
-        clear data_íca
+        timelock_MEG(squideeg_preproc, save_path, params);
+        clear squideeg_preproc
+    end
+
+    %% TFR
+    if exist(fullfile(save_path, [params.sub '_opm_tfr.mat']),'file') && overwrite.TFR == false
+        disp(['Not overwriting TFR for ' params.sub]);
+    else
+        % OPM 
+        opm_timelocked = load(fullfile(save_path, [params.sub '_opm_timelocked.mat'])).timelocked;
+        params.modality = 'opm';
+        params.layout = 'fieldlinebeta2bz_helmet.mat';
+        params.chs = '*bz';
+        params.amp_scaler = 1e15;
+        params.amp_label = 'B [fT]';
+        TFR_MEG(opm_timelocked, save_path, params);
 
 
-        if isfield(params,'tfr') && params.tfr 
-        squid_timelocked = load(fullfile(save_path, [params.sub '_squid_timelocked.mat'])).timelocked;
-        squideeg_timelocked = load(fullfile(save_path, [params.sub '_squideeg_timelocked.mat'])).timelocked;
+        opmeeg_timelocked = load(fullfile(save_path, [params.sub '_opmeeg_timelocked.mat'])).timelocked;
+        params.modality = 'opmeeg';
+        params.layout = load(fullfile(save_path, [params.sub '_opmeeg_layout.mat'])).layout;
+        params.chs = '*bz';
+        params.amp_scaler = 1e15;
+        params.amp_label = 'B [fT]';
+        TFR_MEG(opmeeg_timelocked, save_path, params);
 
-            for i_trig = 1:length(params.trigger_codes)
+        squid_timelocked = load(fullfile(save_path, [params.sub '_' params.modality '_timelocked'])).timelocked; 
+        params.modality = 'squid';
+        params.layout = 'neuromag306mag.lay';
+        params.chs = 'megmag';
+        params.amp_scaler = 1e15;
+        params.amp_label = 'B [fT]';
+        TFR_MEG(squid_timelocked, save_path, params);
 
-                params.modality = 'squid';
-                cfg = [];
-                cfg.channel    = 'megmag';
-                cfg.method     = 'mtmfft';
-                cfg.taper      = 'hanning';
-                cfg.pad = 2;
-                cfg.foi        = 35:1:45;              % the time window "slides" from -0.5 to 1.5 in 0.05 sec steps
-                squid_tfr{i_trig} = ft_freqanalysis(cfg, squid_timelocked{i_trig});    % visual stimuli
+        squideeg_timelocked = load(fullfile(save_path, [params.sub '_' params.modality '_timelocked'])).timelocked;
+        params.modality = 'squideeg';
+        params.layout = load(fullfile(save_path, [params.sub '_squideeg_layout.mat'])).layout;
+        params.chs = 'EEG*';
+        params.amp_scaler = 1e9;
+        params.amp_label = 'V [nV]';
+        TFR_MEG(squideeg_timelocked, save_path, params);
 
-                h=figure;
-                plot(squid_tfr{i_trig}.freq,squid_tfr{i_trig}.powspctrm);
-                xlabel('Freq [Hz]')
-                ylabel('Power [T^2/Hz]')
-                title(['FFT: ' params.trigger_labels{i_trig} ' (max = ' num2str(max(max(squid_tfr{i_trig}.powspctrm))) ', SNR=' num2str(max(max(squid_tfr{i_trig}.powspctrm)) /(mean(mean(squid_tfr{i_trig}.powspctrm(:,[1 end])))),'%.1f') ')' ])
-                saveas(h, fullfile(save_path, 'figs', [params.sub '_' params.modality '_FFT_trig-' params.trigger_labels{i_trig} '.jpg']))
-
-                cfg = [];
-                cfg.layout       = 'neuromag306mag.lay';
-                h=figure; ft_topoplotER(cfg, squid_tfr{i_trig});
-                saveas(h, fullfile(save_path, 'figs', [params.sub '_' params.modality '_FFTtopo_trig-' params.trigger_labels{i_trig} '.jpg']))
-    
-                params.modality = 'squideeg';
-                cfg = [];
-                cfg.channel    = 'all';
-                cfg.method     = 'mtmfft';
-                cfg.taper      = 'hanning';
-                cfg.pad = 2;
-                cfg.foi        = 35:1:45;             % the time window "slides" from -0.5 to 1.5 in 0.05 sec steps
-                squideeg_tfr{i_trig} = ft_freqanalysis(cfg, squideeg_timelocked{i_trig});    % visual stimuli
-    
-                h=figure;
-                plot(squideeg_tfr{i_trig}.freq,squideeg_tfr{i_trig}.powspctrm);
-                xlabel('Freq [Hz]')
-                ylabel('Power [V^2/Hz]')
-                title(['FFT: ' params.trigger_labels{i_trig} ' (max = ' num2str(max(max(squideeg_tfr{i_trig}.powspctrm))) ', SNR=' num2str(max(max(squideeg_tfr{i_trig}.powspctrm)) /(mean(mean(squideeg_tfr{i_trig}.powspctrm(:,[1 end])))),'%.1f') ')' ])
-                saveas(h, fullfile(save_path, 'figs', [params.sub '_' params.modality '_FFT_trig-' params.trigger_labels{i_trig} '.jpg']))
-
-                cfg = [];
-                cfg.baseline = [-0.2 -0.0];
-                cfg.layout       = megeeg_layout;
-                h=figure; ft_topoplotER(cfg, squideeg_tfr{i_trig});
-                saveas(h, fullfile(save_path, 'figs', [params.sub '_' params.modality '_FFTtopo_trig-' params.trigger_labels{i_trig} '.jpg']))
-                close all
-            end
-            save(fullfile(save_path, [params.sub '_squid_tfr']), 'squid_tfr', '-v7.3'); 
-            save(fullfile(save_path, [params.sub '_squideeg_tfr']), 'squideeg_tfr', '-v7.3');
-            clear squid_timelocked squideeg_timelocked
-        end
-
-        params = rmfield(params,{'modality', 'layout', 'chs', 'amp_scaler', 'amp_label'}); % remove fields used for picking modality    
-    
+        params = rmfield(params,{'modality', 'layout', 'chs', 'amp_scaler', 'amp_label'}); % remove fields used for picking modality
     end
 
     %% Empty room & resting state for noise covariances

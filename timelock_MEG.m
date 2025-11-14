@@ -52,7 +52,7 @@ for i_trigger = 1:length(params.trigger_codes)
     cfg.trials = trls;
     timelocked{i_trigger} = ft_timelockanalysis(cfg, data);
 
-    vars = mean(timelocked{i_trigger}.var,2);
+    vars = mean(timelocked{i_trigger}.var(:,timelocked{i_trigger}.time<=0),2);
     n_sens = length(vars);
     thresh = mean(vars)+3*std(vars);
     h = figure;
@@ -197,5 +197,7 @@ for i_peak = 1:length(params.peaks)
     peak = tmp(:,i_peak);
     save(fullfile(save_path, [params.sub '_' params.modality '_' params.peaks{i_peak}.label]), 'peak', '-v7.3'); 
 end
+
+close all
 
 end
