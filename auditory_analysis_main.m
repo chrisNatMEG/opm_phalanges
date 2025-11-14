@@ -35,8 +35,8 @@ if on_server
     overwrite.preproc = true;
     overwrite.coreg = true;
     overwrite.mri = false;
-    overwrite.dip = true;
-    overwrite.empty_room = true;
+    overwrite.dip = false;
+    overwrite.empty_room = false;
     overwrite.mne = true;
 
     overwrite.sens_group = true;
@@ -71,7 +71,7 @@ params.eeg_reref = 'all';%'EEG023';
 
 % Filter
 params.filter = [];
-params.filter.hp_freq = 1;%0.1;
+params.filter.hp_freq = 0.1;%0.1;
 params.filter.lp_freq = 50;
 params.filter.bp_freq = [];
 params.filter.notch = [50 60 100]; %[50 60 100 120 150];
@@ -157,21 +157,21 @@ subses = {'0005' '240208';
     '1209' '250219';
     '1215' '250415'};
 
-bads =  {[];
-    [];
-    [];
-    {'R403_bz', 'R408_bz'};
-    {'L505_bz'};
-    {'R403_bz', 'R408_bz', 'R409_bz'};
-    {'R403_bz', 'R408_bz', 'R409_bz'};
-    {'L209_bz', 'R209_bz', 'R403_bz', 'R408_bz'};
-    {'L209_bz', 'R408_bz'};
-    [];
-    [];
-    [];
-    [];
-    [];
-    []};
+bads =  {[]; %1
+    []; %2
+    {'R403_bz', 'R408_bz', 'R409_bz'}; %3 
+    {'L209_bz', 'R403_bz', 'R408_bz'}; %4
+    {'L209_bz', 'L505_bz', 'R403_bz', 'R408_bz', 'R409_bz'}; %5
+    {'R403_bz', 'R408_bz', 'R409_bz'}; %6
+    {'R403_bz', 'R408_bz', 'R409_bz'}; %7
+    {'L502_bz', 'R209_bz', 'R403_bz', 'R402_bz', 'R409_bz'}; %8
+    {'L209_bz', 'R408_bz'}; %9
+    {'L209_bz', 'R408_bz'}; %10
+    {'L209_bz', 'L109_bz', 'L111_bz', 'R408_bz'}; %11
+    {'L209_bz', 'R408_bz'}; %12
+    {'L209_bz', 'L109_bz', 'L111_bz', 'R408_bz'}; %13
+    {'L401_bz', 'R409_bz'}; %14
+    {'R403_bz', 'R409_bz'}}; %15
 
 if on_server
     subs_to_run = 1:size(subses,1);
@@ -572,7 +572,9 @@ for i_sub = setdiff(subs_to_run,excl_subs)
         squid_timelocked = load(fullfile(save_path, [params.sub '_squid_timelocked.mat'])).timelocked;
         
         for i_peak = 1:length(params.peaks)
-            fit_dipoles(save_path, squid_timelocked, opm_timelockedT, headmodel, mri_resliced, params.peaks{i_peak}, params);
+            peak_opm = load(fullfile(save_path, [params.sub '_opm_' params.peaks{i_peak}.label])).peak; 
+            peak_squid = load(fullfile(save_path, [params.sub '_squid_' params.peaks{i_peak}.label])).peak; 
+            fit_dipoles(save_path, squid_timelocked, opm_timelockedT, headmodel, mri_resliced, peak_squid, peak_opm, params);
             clear peak_opm peak_squid
         end
         clear squid_timelocked opm_timelockedT mri_resliced headmodel
@@ -643,6 +645,7 @@ end
 if overwrite.mne_group
     save_path = fullfile(base_save_path,params.paradigm);
     subs = setdiff(subs_to_run,excl_subs_src);
+    params.do_sourcemovie = true;
     for i_cov = 1:length(params.covs)
         params.use_cov = params.covs{i_cov}; 
         mne_results_goup(save_path, subs, params);

@@ -386,8 +386,8 @@ end
 if isfield(params,'do_sourcemovie') && params.do_sourcemovie
     % OPM
     for i_trigger = 1:n_triggers
-        v = VideoWriter(fullfile(save_path,'figs', [params.sub '_opm_' params.trigger_labels{i_trigger} '.avi']),"Indexed AVI");
-        v.FrameRate = 15;
+        v = VideoWriter(fullfile(save_path,'figs', [params.sub '_opm_' params.trigger_labels{i_trigger} '.avi']),"Uncompressed AVI");
+        v.FrameRate = 10;
         
         v.open
         tmp = opm_mne{i_trigger};
@@ -403,7 +403,6 @@ if isfield(params,'do_sourcemovie') && params.do_sourcemovie
             cfg.colorbar        = 'no';
             cfg.latency         = tmp.time(i);
             h = figure;
-            h.Position = [10 10 950 450];
             subplot(1,2,1); % right hemisphere
             cfg.figure = h;
             ft_sourceplot(cfg, tmp)
@@ -422,7 +421,7 @@ if isfield(params,'do_sourcemovie') && params.do_sourcemovie
             camlight()
             lighting gouraud
             title([' (t=' num2str(1e3*tmp.time(i),3) 'ms)'])
-        
+            set(h,'Position',[10 10 970 450]);
             writeVideo(v,getframe(h));
             close all
         end
@@ -431,8 +430,8 @@ if isfield(params,'do_sourcemovie') && params.do_sourcemovie
     
     % SQ-GRAD
     for i_trigger = 1:n_triggers
-        v = VideoWriter(fullfile(save_path,'figs', [params.sub '_sqgrad_' params.trigger_labels{i_trigger} '.avi']),"Indexed AVI");
-        v.FrameRate = 15;
+        v = VideoWriter(fullfile(save_path,'figs', [params.sub '_sqgrad_' params.trigger_labels{i_trigger} '.avi']),"Uncompressed AVI");
+        v.FrameRate = 10;
     
         v.open
         tmp = squidgrad_mne{i_trigger};
@@ -448,7 +447,6 @@ if isfield(params,'do_sourcemovie') && params.do_sourcemovie
             cfg.colorbar        = 'no';
             cfg.latency         = tmp.time(i);
             h = figure;
-            h.Position = [10 10 950 450];
             subplot(1,2,1); % right hemisphere
             cfg.figure = h;
             ft_sourceplot(cfg, tmp)
@@ -467,7 +465,7 @@ if isfield(params,'do_sourcemovie') && params.do_sourcemovie
             camlight()
             lighting gouraud
             title([' (t=' num2str(1e3*tmp.time(i),3) 'ms)'])
-        
+            set(h,'Position',[10 10 970 450]);
             writeVideo(v,getframe(h));
             close all
         end
@@ -476,8 +474,8 @@ if isfield(params,'do_sourcemovie') && params.do_sourcemovie
 
     % SQ-MAG
     for i_trigger = 1:n_triggers
-        v = VideoWriter(fullfile(save_path,'figs', [params.sub '_sqmag_' params.trigger_labels{i_trigger} '.avi']),"Indexed AVI");
-        v.FrameRate = 15;
+        v = VideoWriter(fullfile(save_path,'figs', [params.sub '_sqmag_' params.trigger_labels{i_trigger} '.avi']),"Uncompressed AVI");
+        v.FrameRate = 10;
     
         v.open
         tmp = squidmag_mne{i_trigger};
@@ -493,7 +491,6 @@ if isfield(params,'do_sourcemovie') && params.do_sourcemovie
             cfg.colorbar        = 'no';
             cfg.latency         = tmp.time(i);
             h = figure;
-            h.Position = [10 10 950 450];
             subplot(1,2,1); % right hemisphere
             cfg.figure = h;
             ft_sourceplot(cfg, tmp)
@@ -512,7 +509,7 @@ if isfield(params,'do_sourcemovie') && params.do_sourcemovie
             camlight()
             lighting gouraud
             title([' (t=' num2str(1e3*tmp.time(i),3) 'ms)'])
-        
+            set(h,'Position',[10 10 970 450]);
             writeVideo(v,getframe(h));
             close all
         end

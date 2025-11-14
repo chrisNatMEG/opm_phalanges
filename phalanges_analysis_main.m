@@ -35,9 +35,9 @@ if on_server
     overwrite.preproc = true;
     overwrite.coreg = true;
     overwrite.mri = false;
-    overwrite.dip = false;
+    overwrite.dip = true;
     overwrite.empty_room = false;
-    overwrite.mne = true;
+    overwrite.mne = false;
 
     overwrite.sens_group = true;
     overwrite.dip_group = true;
@@ -68,14 +68,14 @@ params.baseline = [-params.pre 0];
 
 % Filter
 params.filter = [];
-params.filter.hp_freq = 0.1;%0.1;
+params.filter.hp_freq = 3;%0.1;
 params.filter.lp_freq = 70;
 params.filter.bp_freq = [];
 params.filter.notch = [50 60]; %[50 60 100 120 150];
 
 % Spatiotemporal filter (OPM-MEG only)
 params.do_hfc = true;
-params.hfc_order = 2;
+params.hfc_order = 1;
 params.do_amm = false;
 params.amm_in = 12;
 params.amm_out = 1;
@@ -470,13 +470,14 @@ for i_sub = setdiff(subs_to_run,excl_subs)
         end
         
         % MNE fit
-        if i_sub == 2 
-            params.do_sourcemovie = true;
-        elseif i_sub == 4 
-            params.do_sourcemovie = true;
-        else
-            params.do_sourcemovie = false;
-        end
+%         if i_sub == 2 
+%             params.do_sourcemovie = true;
+%         elseif i_sub == 4 
+%             params.do_sourcemovie = true;
+%         else
+%             params.do_sourcemovie = false;
+%         end
+        params.do_sourcemovie = false;
         params.inv_method = 'mne';
         for i_cov = 1:length(params.covs)
             params.noise_cov = params.covs{i_cov}; 
@@ -519,6 +520,7 @@ end
 
 %% MNE group analysis
 if overwrite.mne_group
+    params.do_sourcemovie = true;
     save_path = fullfile(base_save_path,params.paradigm);
     subs = setdiff(subs_to_run,excl_subs_src);
     save_path_mri = fullfile(base_save_path,'MRI',['sub_' num2str(subs(1),'%02d')]);

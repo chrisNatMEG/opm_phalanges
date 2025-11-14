@@ -161,14 +161,15 @@ if isfield(params,'do_sourcemovie') && params.do_sourcemovie
     
     % SQ-GRAD
     for i_trigger = 1:n_triggers
-        v = VideoWriter(fullfile(base_save_path,'figs', ['mne_grnd_avg_sqgrad_' params.trigger_labels{i_trigger} '.avi']),"Motion JPEG AVI");
+        v = VideoWriter(fullfile(base_save_path,'figs', ['mne_grnd_avg_sqgrad_' params.trigger_labels{i_trigger} '.mp4']),"MPEG-4");
         v.FrameRate = 15;
     
         v.open
         tmp = squidgrad_mne{i_trigger};
         maxpow = max(max(tmp.avg.pow));
         [~,i_start] = min(abs(tmp.time-0));
-        for i = i_start:length(tmp.time)           
+        for i = i_start:length(tmp.time)
+            
             viewangles = [90 0 -90 0];
             cfg = [];
             cfg.method          = 'surface';
@@ -195,23 +196,24 @@ if isfield(params,'do_sourcemovie') && params.do_sourcemovie
             camlight()
             lighting gouraud
             title([' t=' num2str(round(1e3*tmp.time(i)),'%03d') 'ms'])
-            set(gcf,'Position',[10 10 1000 450]);
-            writeVideo(v,getframe(gcf));
-            close gcf
+            set(h,'Position',[10 10 970 450]);
+            writeVideo(v,getframe(h));
+            close all
         end
         v.close
     end
 
     % SQ-MAG
     for i_trigger = 1:n_triggers
-        v = VideoWriter(fullfile(base_save_path,'figs', ['mne_grnd_avg_sqmag_' params.trigger_labels{i_trigger} '.avi']),"Motion JPEG AVI");
+        v = VideoWriter(fullfile(base_save_path,'figs', ['mne_grnd_avg_sqmag_' params.trigger_labels{i_trigger} '.mp4']),"MPEG-4");
         v.FrameRate = 15;
     
         v.open
         tmp = squidmag_mne{i_trigger};
         maxpow = max(max(tmp.avg.pow));
         [~,i_start] = min(abs(tmp.time-0));
-        for i = i_start:length(tmp.time)           
+        for i = i_start:length(tmp.time)
+            
             viewangles = [90 0 -90 0];
             cfg = [];
             cfg.method          = 'surface';
@@ -238,9 +240,9 @@ if isfield(params,'do_sourcemovie') && params.do_sourcemovie
             camlight()
             lighting gouraud
             title([' t=' num2str(round(1e3*tmp.time(i)),'%03d') 'ms'])
-            set(gcf,'Position',[10 10 1000 450]);
-            writeVideo(v,getframe(gcf));
-            close gcf
+            set(h,'Position',[10 10 970 450]);
+            writeVideo(v,getframe(h));
+            close all
         end
         v.close
     end
