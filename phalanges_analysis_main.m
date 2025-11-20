@@ -34,13 +34,13 @@ overwrite = [];
 if on_server
     overwrite.preproc = true;
     overwrite.timelock = true;
-    overwrite.coreg = true;
+    overwrite.coreg = false;
     overwrite.mri = false;
     overwrite.dip = true;
     overwrite.empty_room = false;
     overwrite.mne = false;
 
-    overwrite.sens_group = true;
+    overwrite.sens_group = false;
     overwrite.dip_group = true;
     overwrite.mne_group = true;
 else
@@ -70,7 +70,7 @@ params.baseline = [-params.pre 0];
 
 % Filter
 params.filter = [];
-params.filter.hp_freq = 3;%0.1;
+params.filter.hp_freq = 1;%0.1;
 params.filter.lp_freq = 70;
 params.filter.bp_freq = [];
 params.filter.notch = [50 60]; %[50 60 100 120 150];
@@ -97,7 +97,7 @@ params.debug = false; % Do manual rejection
 
 % ICA ECG&EOG artifact removal 
 params.n_comp = 40;
-params.ica_cor = 0.8; % cutoff for EOG/ECG coherence
+params.ica_cor = 0.9; % cutoff for EOG/ECG coherence
 params.ica_coh = 0.95; % cutoff for EOG/ECG coherence
 
 % Timelocking
@@ -112,7 +112,7 @@ params.maxtrls = 300;
 
 % HPI coregistration
 params.hpi_freq = 33;
-params.hpi_gof = 0.9;
+params.hpi_gof = 0.98;
 
 % Source reconstruction - dipoles
 params.numdipoles = 1;
@@ -192,6 +192,18 @@ for i_sub = setdiff(subs_to_run,excl_subs)
         params.flip_sign  = true;
     else
         params.flip_sign  = false;
+    end
+
+    if or(or(i_sub==4,i_sub==5),i_sub==9)
+        params.peaks{1}.peak_latency = [0.03 0.07]; % manually restrict window
+    else
+        params.peaks{1}.peak_latency = [0.03 0.09];
+    end
+
+    if or(i_sub==4,i_sub==10)
+        params.hpi_gof = 0.95; % manually restrict window
+    else
+        params.hpi_gof = 0.98;
     end
 
     %% Paths
@@ -283,6 +295,10 @@ for i_sub = setdiff(subs_to_run,excl_subs)
         data_ica = ica_MEG(squideeg_cleaned, save_path, params, 1);
         save(fullfile(save_path, [params.sub '_' params.modality '_preproc']), 'data_ica', '-v7.3'); 
         clear squideeg_cleaned data_íca
+
+        params = rmfield(params,"layout");
+        params = rmfield(params,"modality");
+        params = rmfield(params,"chs");
     end
 
     %% Timelocking
@@ -290,8 +306,8 @@ for i_sub = setdiff(subs_to_run,excl_subs)
         disp(['Not overwriting timelocked for ' params.sub]);
     else
         % OPM average
-        opm_preproc = load(fullfile(save_path, [params.sub '_' params.modality '_preproc'])).data_ica; 
         params.modality = 'opm';
+        opm_preproc = load(fullfile(save_path, [params.sub '_' params.modality '_preproc'])).data_ica; 
         params.layout = 'fieldlinebeta2bz_helmet.mat';
         params.chs = '*bz';
         params.amp_scaler = 1e15;
@@ -299,8 +315,8 @@ for i_sub = setdiff(subs_to_run,excl_subs)
         timelock_MEG(opm_preproc, save_path, params);
 
         % OPM-EEG Average
-        opmeeg_preproc = load(fullfile(save_path, [params.sub '_' params.modality '_preproc'])).data_ica; 
         params.modality = 'opmeeg';
+        opmeeg_preproc = load(fullfile(save_path, [params.sub '_' params.modality '_preproc'])).data_ica; 
         params.layout = load(fullfile(save_path, [params.sub '_opmeeg_layout.mat'])).layout;
         params.chs = 'EEG*';
         params.amp_scaler = 1e9;
@@ -308,8 +324,8 @@ for i_sub = setdiff(subs_to_run,excl_subs)
         timelock_MEG(opmeeg_preproc, save_path, params);
 
         % SQUID-MAG timelock
-        squid_preproc = load(fullfile(save_path, [params.sub '_' params.modality '_preproc'])).data_ica; 
         params.modality = 'squid';
+        squid_preproc = load(fullfile(save_path, [params.sub '_' params.modality '_preproc'])).data_ica; 
         params.layout = 'neuromag306mag.lay';
         params.chs = 'megmag';
         params.amp_scaler = 1e15;
@@ -317,7 +333,6 @@ for i_sub = setdiff(subs_to_run,excl_subs)
         timelock_MEG(squid_preproc, save_path, params);
 
         % SQUID-GRAD timelock
-        squid_preproc = load(fullfile(save_path, [params.sub '_' params.modality '_preproc'])).data_ica; 
         params.modality = 'squidgrad';
         params.layout = 'neuromag306planar.lay';
         params.chs = 'megplanar';
@@ -326,13 +341,19 @@ for i_sub = setdiff(subs_to_run,excl_subs)
         timelock_MEG(squid_preproc, save_path, params);
 
         % SQUID-EEG timelock
-        squideeg_preproc = load(fullfile(save_path, [params.sub '_' params.modality '_preproc'])).data_ica;
         params.modality = 'squideeg';
+        squideeg_preproc = load(fullfile(save_path, [params.sub '_' params.modality '_preproc'])).data_ica;
         params.layout = load(fullfile(save_path, [params.sub '_squideeg_layout.mat'])).layout;
         params.chs = 'EEG*';
         params.amp_scaler = 1e9;
         params.amp_label = 'V [nV]';
         timelock_MEG(squideeg_preproc, save_path, params);
+
+        params = rmfield(params,"layout");
+        params = rmfield(params,"modality");
+        params = rmfield(params,"chs");
+        params = rmfield(params,"amp_scaler");
+        params = rmfield(params,"amp_label");
     end
 
     %% Empty room & resting state for noise covariances
@@ -376,6 +397,21 @@ for i_sub = setdiff(subs_to_run,excl_subs)
    
     if exist(fullfile(save_path_mri, 'opm_trans.mat'),'file') && overwrite.coreg==false
         disp(['Not overwriting OPM transform for ' params.sub]);
+        opm_trans = load(fullfile(save_path_mri, 'opm_trans.mat')).opm_trans;
+        opm_timelockedT = load(fullfile(save_path, [params.sub '_opm_timelocked.mat'])).timelocked;
+        opmeeg_timelockedT = load(fullfile(save_path, [params.sub '_opmeeg_timelocked.mat'])).timelocked;
+        squideeg_timelocked = load(fullfile(save_path, [params.sub '_squideeg_timelocked.mat'])).timelocked;
+        for i = 1:length(params.trigger_labels)
+            opm_timelockedT{i}.grad.chanpos = opm_trans.transformPointsForward(opm_timelockedT{i}.grad.chanpos);
+            opm_timelockedT{i}.grad.coilpos = opm_trans.transformPointsForward(opm_timelockedT{i}.grad.coilpos);
+            opm_timelockedT{i}.grad.chanori = (opm_trans.Rotation'*opm_timelockedT{i}.grad.chanori')';
+            opm_timelockedT{i}.grad.coilori = (opm_trans.Rotation'*opm_timelockedT{i}.grad.coilori')';
+            opmeeg_timelockedT{i}.elec.chanpos = squideeg_timelocked{i}.elec.chanpos;
+            opmeeg_timelockedT{i}.elec.elecpos = squideeg_timelocked{i}.elec.elecpos;
+        end
+        save(fullfile(save_path, [params.sub '_opm_timelockedT']), 'opm_timelockedT', '-v7.3');
+        save(fullfile(save_path, [params.sub '_opmeeg_timelockedT']), 'opmeeg_timelockedT', '-v7.3');
+        clear opm_timelockedT opmeeg_timelockedT
     else
         meg_file = fullfile(raw_path, 'meg', [params.paradigm 'MEG_proc-tsss+corr98+mc+avgHead_meg.fif']);
         if ~exist(meg_file,'file')

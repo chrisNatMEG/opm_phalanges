@@ -113,9 +113,9 @@ for i_file = 1:length(hpi_files)
             
             opm_chs = find(contains(timelocked.label,'bz'));
             [~, i_maxchan] = max(abs(timelocked.avg(opm_chs,:)));
-            [X,Y,Z] = meshgrid(-3:0.2:3, ...
-                -3:0.2:0.3, ...
-                -4:0.2:0);
+            [X,Y,Z] = meshgrid(-3:0.3:3, ...
+                -3:0.3:3, ...
+                -4:0.3:0.1);
             pos = [X(:) Y(:) Z(:)];
             %inside = vecnorm(pos,2,2)<4; % only look at points within 4 cm of peak channel
             
@@ -186,14 +186,24 @@ for i_file = 1:length(hpi_files)
         epoT.grad.coilpos = opm_trans.transformPointsForward(epo.grad.coilpos);
         epoT.grad.chanori = (opm_trans.Rotation'*epoT.grad.chanori')';
         epoT.grad.coilori = (opm_trans.Rotation'*epoT.grad.coilori')';
-        
-        %%
+
+        success = true;
+    catch
+        warning(['PCregister failed on hpi-file: ' hpi_files(i_file).name ])
+        hpi2{i}.dip_gof = 0;
+        success = false;
+    end
+    if success 
         colors = [[0.8500 0.3250 0.0980]; [0.9290 0.6940 0.1250]; [0.4940 0.1840 0.5560]; [0.4660 0.6740 0.1880]; [0.6350 0.0780 0.1840]];
         
+        coils = find(hpi2{i_file}.dip_include);
+        if size(coils,1)>size(coils,2)
+            coils = coils';
+        end
         h = figure;
         ft_plot_sens(epoT.grad,'unit','cm','DisplayName','senspos'); 
         hold on 
-        for coil = find(hpi2{i_file}.dip_include)'
+        for coil = coils
             quiver3(hpi2{i_file}.dip_pos_tf(coil,1),hpi2{i_file}.dip_pos_tf(coil,2),hpi2{i_file}.dip_pos_tf(coil,3),hpi2{i_file}.dip_ori_tf(coil,1),hpi2{i_file}.dip_ori_tf(coil,2),hpi2{i_file}.dip_ori_tf(coil,3),'*','Color',colors(coil,:),'DisplayName',['hpi' hpi_labels2{coil}((end-2):end) ' (GOF=' num2str((hpi2{i_file}.dip_gof(coil))*100,'%.2f') '%)'],'LineWidth',2);
         end
         scatter3(hpi_polhemus(:,1),hpi_polhemus(:,2),hpi_polhemus(:,3),'r','DisplayName','polhemus'); 
@@ -204,9 +214,6 @@ for i_file = 1:length(hpi_files)
         title(['HPI fits (mean dist = ' num2str(dist*10) ' mm)'])
         legend('Location','eastoutside')
         saveas(h, fullfile(save_path, ['hpi_fits-' num2str(i_file) '.jpg']))
-    catch
-        warning(['PCregister failed on hpi-file: ' hpi_files(i_file).name ])
-        hpi2{i}.dip_gof = 0;
     end
 end
 

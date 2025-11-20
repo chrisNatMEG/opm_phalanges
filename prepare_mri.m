@@ -4,7 +4,8 @@ function prepare_mri(mri_path,meg_file,save_path, redo_coreg, resolution)
 
     if redo_coreg
         %% Read data
-        mri_file = fullfile(mri_path, 'mri', 'orig','001.mgz');
+        %mri_file = fullfile(mri_path, 'mri', 'orig','001.mgz');
+        mri_file = fullfile(mri_path, 'mri', 'T1.mgz');
         mri = ft_read_mri(mri_file);
         headshape = ft_read_headshape(meg_file);
     
@@ -12,10 +13,10 @@ function prepare_mri(mri_path,meg_file,save_path, redo_coreg, resolution)
         %ft_sourceplot([], mri);
         %mri = ft_determine_coordsys(mri);
         mri.coordsys = 'ras';
-        %cfg = [];
-        %cfg.method   = 'interactive';
-        %cfg.coordsys = 'neuromag';
-        %mri = ft_volumerealign(cfg, mri);
+%         cfg = [];
+%         cfg.method   = 'interactive';
+%         cfg.coordsys = 'neuromag';
+%         mri = ft_volumerealign(cfg, mri);
     
         %% ICP align
         cfg = [];
@@ -31,11 +32,13 @@ function prepare_mri(mri_path,meg_file,save_path, redo_coreg, resolution)
         mri = ft_volumerealign(cfg, mri);
         
         %% Reslice MRI
-        %cfg = [];
-        %cfg.resolution = 1;
-        %mri_resliced = ft_volumereslice(cfg, mri_realigned_2);
-        %mri_resliced = ft_convert_units(mri_resliced, 'cm');
-        mri_resliced = ft_convert_units(mri, 'cm');
+        cfg = [];
+        cfg.resolution = 1;
+        mri_resliced = ft_volumereslice(cfg, mri);
+        mri_resliced = ft_convert_units(mri_resliced, 'cm');
+        mri = ft_convert_units(mri,'cm');
+        mri_resliced.hdr = mri.hdr;
+        %mri_resliced = ft_convert_units(mri, 'cm');
         
         save(fullfile(save_path, 'mri_resliced.mat'), 'mri_resliced'); disp('done')
     
@@ -81,28 +84,23 @@ function prepare_mri(mri_path,meg_file,save_path, redo_coreg, resolution)
         % Collect meshes into a single structure
         meshes = [mesh_brain mesh_skull mesh_scalp];
         
-        figure
-        ft_plot_mesh(mesh_brain,'EdgeAlpha',0,'FaceAlpha',1,'FaceColor','r')
-        ft_plot_mesh(mesh_skull,'EdgeAlpha',0,'FaceAlpha',0.5)
-        ft_plot_mesh(mesh_scalp,'EdgeAlpha',0,'FaceAlpha',0.5,'FaceColor',[229 194 152]/256)
+%         figure
+%         ft_plot_mesh(mesh_brain,'EdgeAlpha',0,'FaceAlpha',1,'FaceColor','r')
+%         ft_plot_mesh(mesh_skull,'EdgeAlpha',0,'FaceAlpha',0.5)
+%         ft_plot_mesh(mesh_scalp,'EdgeAlpha',0,'FaceAlpha',0.5,'FaceColor',[229 194 152]/256)
+%         hold on
+%         ft_plot_slice(mri_resliced.anatomy, 'transform', mri_resliced.transform, 'location', [0 0 0], 'orientation', [1 0 0], 'tag', 'x')    
+%         ft_plot_slice(mri_resliced.anatomy, 'transform', mri_resliced.transform, 'location', [0 0 0], 'orientation', [0 1 0], 'tag', 'y')    
+%         ft_plot_slice(mri_resliced.anatomy, 'transform', mri_resliced.transform, 'location', [0 0 0], 'orientation', [0 0 1], 'tag', 'z')    
+%         hold off;
     
         %% Headmodels
         cfg = [];
         cfg.method = 'singleshell';
         headmodel_meg = ft_prepare_headmodel(cfg, mesh_brain);
-        
-        try
-            cfg = [];
-            cfg.method = 'bemcp';
-            cfg.conductivity = [1 1/20 1] .* (1/3);  % Standard values     
-            headmodel_eeg = ft_prepare_headmodel(cfg, meshes);
-        catch 
-            headmodel_eeg = [];
-        end
     
         headmodels = [];
         headmodels.headmodel_meg = headmodel_meg;
-        headmodels.headmodel_eeg = headmodel_eeg;
     
         %% Save
         save(fullfile(save_path, 'headmodels.mat'), 'headmodels');
@@ -139,7 +137,7 @@ function prepare_mri(mri_path,meg_file,save_path, redo_coreg, resolution)
     sourcemodel.brainstructurecolor = atlas.rgba;
     clear atlas aparc_L aparc_R
 
-    T = mri_resliced.transform/mri_resliced.hdr.vox2ras;
+    T = mri.transform/mri_resliced.hdr.vox2ras;
     sourcemodel = ft_transform_geometry(T, sourcemodel);
     sourcemodel.inside = true(size(sourcemodel.pos,1),1);
 
@@ -154,6 +152,35 @@ function prepare_mri(mri_path,meg_file,save_path, redo_coreg, resolution)
     sourcemodel_inflated.brainstructure = sourcemodel.brainstructure;
     sourcemodel_inflated.brainstructurelabel = sourcemodel.brainstructurelabel;
     sourcemodel_inflated.brainstructurecolor = sourcemodel.brainstructurecolor;
+
+    h=figure;
+    h.Position = [100 100 1000 1000];
+    set(gca,'LooseInset',get(gca,'TightInset'));
+    %010
+    subplot(2,2,1)
+    hold on
+    ft_plot_slice(mri.anatomy, 'transform', mri.transform, 'location', [0 0 0], 'orientation', [0 1 0], 'tag', 'y')
+    ft_plot_mesh(sourcemodel,'EdgeAlpha',0,'FaceAlpha',0.7,'FaceColor','r')
+    hold off
+    view(0,0)
+    axis equal; axis tight; axis vis3d; axis off
+    %100
+    subplot(2,2,2)
+    hold on
+    ft_plot_slice(mri.anatomy, 'transform', mri.transform, 'location', [0 0 0], 'orientation', [1 0 0], 'tag', 'x')
+    ft_plot_mesh(sourcemodel,'EdgeAlpha',0,'FaceAlpha',0.7,'FaceColor','r')
+    hold off
+    view(90,0)
+    axis equal; axis tight; axis vis3d; axis off
+    %001
+    subplot(2,2,3)
+    hold on
+    ft_plot_slice(mri.anatomy, 'transform', mri.transform, 'location', [0 0 0], 'orientation', [0 0 1], 'tag', 'z')       
+    ft_plot_mesh(sourcemodel,'EdgeAlpha',0,'FaceAlpha',0.7,'FaceColor','r')
+    hold off
+    axis equal; axis tight; axis vis3d; axis off
+    saveas(h, fullfile(save_path, 'mri_with_sourcemodel.jpg'))
+    close all
 
     save(fullfile(save_path, 'sourcemodel'), 'sourcemodel', '-v7.3');
     save(fullfile(save_path, 'sourcemodel_inflated'), 'sourcemodel_inflated', '-v7.3');

@@ -36,10 +36,10 @@ comp           = ft_componentanalysis(cfg, data_ds);
 
 %% Plot all components
 if save_results 
-    if params.n_comp>16
-        for i = 1:floor(n_comp/16)
+    if params.n_comp>9
+        for i = 1:floor(n_comp/9)
             cfg           = [];
-            cfg.component = (((i-1)*16)+1):(i*16);       
+            cfg.component = (((i-1)*9)+1):(i*9);       
             cfg.layout    = params.layout; 
             cfg.comment   = 'no';
             h = figure;
@@ -47,9 +47,9 @@ if save_results
             saveas(h,fullfile(save_path, 'figs', [params.sub '_' params.modality '_ica_comps' num2str(i) '.jpg'])) 
         end
     
-        if mod(params.n_comp,16)~=0
+        if mod(params.n_comp,9)~=0
             cfg           = [];
-            cfg.component = ((i*16)+1):n_comp;       
+            cfg.component = ((i*9)+1):n_comp;       
             cfg.layout    = params.layout; 
             cfg.comment   = 'no';
             h = figure;
@@ -63,7 +63,7 @@ if save_results
         cfg.comment   = 'no';
         h = figure;
         ft_topoplotIC(cfg, comp);   
-        saveas(h,fullfile(save_path, 'figs', [params.sub '_' params.modality '_ica_comps.jpg'])) 
+        saveas(h,fullfile(save_path, 'figs', [params.sub '_' params.modality '_ica_comps1.jpg'])) 
     end
     close all
 end

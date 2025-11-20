@@ -134,7 +134,8 @@ if isfield(params,'do_sourcemovie') && params.do_sourcemovie
             cfg.colorbar        = 'no';
             cfg.latency         = tmp.time(i);
             h = figure;
-            subplot(1,2,1); % right hemisphere
+            set(gcf,'Position',[100 100 1000 900]);
+            subplot(2,2,1); % right hemisphere
             cfg.figure = h;
             ft_sourceplot(cfg, tmp)
             clim([0 maxpow])
@@ -143,7 +144,7 @@ if isfield(params,'do_sourcemovie') && params.do_sourcemovie
             camlight();
             lighting gouraud
             title([' t=' num2str(round(1e3*tmp.time(i)),'%03d') 'ms'])
-            subplot(1,2,2); % left hemisphere
+            subplot(2,2,2); % left hemisphere
             cfg.figure = h;
             ft_sourceplot(cfg, tmp)
             clim([0 maxpow])
@@ -152,9 +153,18 @@ if isfield(params,'do_sourcemovie') && params.do_sourcemovie
             camlight()
             lighting gouraud
             title([' t=' num2str(round(1e3*tmp.time(i)),'%03d') 'ms'])
-            set(gcf,'Position',[10 10 1000 450]);
-            writeVideo(v,getframe(gcf));
-            close gcf
+            subplot(2,2,[3 4]); % left hemisphere
+            plot(tmp.time*1e3,mean(tmp.avg.pow,1))
+            hold on
+            xlabel('t (ms)')
+            ylabel('Mean Power')
+            set(gcf,'Position',[100 100 1000 900]);
+            ylimits = ylim;
+            plot([tmp.time(i) tmp.time(i)]*1e3,ylimits,'r--')
+            hold off
+            pause(1)
+            writeVideo(v,getframe(h));
+            close all
         end
         v.close
     end
@@ -177,7 +187,8 @@ if isfield(params,'do_sourcemovie') && params.do_sourcemovie
             cfg.colorbar        = 'no';
             cfg.latency         = tmp.time(i);
             h = figure;
-            subplot(1,2,1); % right hemisphere
+            set(gcf,'Position',[100 100 1000 900]);
+            subplot(2,2,1); % right hemisphere
             cfg.figure = h;
             ft_sourceplot(cfg, tmp)
             clim([0 maxpow])
@@ -186,7 +197,7 @@ if isfield(params,'do_sourcemovie') && params.do_sourcemovie
             camlight();
             lighting gouraud
             title([' t=' num2str(round(1e3*tmp.time(i)),'%03d') 'ms'])
-            subplot(1,2,2); % left hemisphere
+            subplot(2,2,2); % left hemisphere
             cfg.figure = h;
             ft_sourceplot(cfg, tmp)
             clim([0 maxpow])
@@ -195,9 +206,18 @@ if isfield(params,'do_sourcemovie') && params.do_sourcemovie
             camlight()
             lighting gouraud
             title([' t=' num2str(round(1e3*tmp.time(i)),'%03d') 'ms'])
-            set(gcf,'Position',[10 10 1000 450]);
-            writeVideo(v,getframe(gcf));
-            close gcf
+            subplot(2,2,[3 4]); % left hemisphere
+            plot(tmp.time*1e3,mean(tmp.avg.pow,1))
+            hold on
+            xlabel('t (ms)')
+            ylabel('Mean Power')
+            set(gcf,'Position',[100 100 1000 900]);
+            ylimits = ylim;
+            plot([tmp.time(i) tmp.time(i)]*1e3,ylimits,'r--')
+            hold off
+            pause(1)
+            writeVideo(v,getframe(h));
+            close all
         end
         v.close
     end
@@ -220,7 +240,8 @@ if isfield(params,'do_sourcemovie') && params.do_sourcemovie
             cfg.colorbar        = 'no';
             cfg.latency         = tmp.time(i);
             h = figure;
-            subplot(1,2,1); % right hemisphere
+            set(gcf,'Position',[100 100 1000 900]);
+            subplot(2,2,1); % right hemisphere
             cfg.figure = h;
             ft_sourceplot(cfg, tmp)
             clim([0 maxpow])
@@ -229,7 +250,7 @@ if isfield(params,'do_sourcemovie') && params.do_sourcemovie
             camlight();
             lighting gouraud
             title([' t=' num2str(round(1e3*tmp.time(i)),'%03d') 'ms'])
-            subplot(1,2,2); % left hemisphere
+            subplot(2,2,2); % left hemisphere
             cfg.figure = h;
             ft_sourceplot(cfg, tmp)
             clim([0 maxpow])
@@ -238,9 +259,18 @@ if isfield(params,'do_sourcemovie') && params.do_sourcemovie
             camlight()
             lighting gouraud
             title([' t=' num2str(round(1e3*tmp.time(i)),'%03d') 'ms'])
-            set(gcf,'Position',[10 10 1000 450]);
-            writeVideo(v,getframe(gcf));
-            close gcf
+            subplot(2,2,[3 4]); % left hemisphere
+            plot(tmp.time*1e3,mean(tmp.avg.pow,1))
+            hold on
+            xlabel('t (ms)')
+            ylabel('Mean Power')
+            set(gcf,'Position',[100 100 1000 900]);
+            ylimits = ylim;
+            plot([tmp.time(i) tmp.time(i)]*1e3,ylimits,'r--')
+            hold off
+            pause(1)
+            writeVideo(v,getframe(h));
+            close all
         end
         v.close
     end
