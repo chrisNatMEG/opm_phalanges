@@ -36,12 +36,12 @@ if on_server
     overwrite.timelock = true;
     overwrite.coreg = false;
     overwrite.mri = false;
-    overwrite.dip = true;
+    overwrite.dip = false;
     overwrite.empty_room = false;
-    overwrite.mne = false;
+    overwrite.mne = true;
 
     overwrite.sens_group = false;
-    overwrite.dip_group = true;
+    overwrite.dip_group = false;
     overwrite.mne_group = true;
 else
     overwrite.preproc = false;
@@ -70,7 +70,7 @@ params.baseline = [-params.pre 0];
 
 % Filter
 params.filter = [];
-params.filter.hp_freq = 1;%0.1;
+params.filter.hp_freq = 0.1;
 params.filter.lp_freq = 70;
 params.filter.bp_freq = [];
 params.filter.notch = [50 60]; %[50 60 100 120 150];

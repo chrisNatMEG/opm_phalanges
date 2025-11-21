@@ -149,7 +149,7 @@ for i_peak = 1:length(params.peaks)
     h = figure('DefaultAxesFontSize',16);
     bar(1:n_triggers,mean(snr.ratio_error,1,'omitnan'));
     hold on
-    er = errorbar(1:n_triggers,mean(snr.ratio_error,1,'omitnan'), mean(snr.ratio_error,1,'omitnan')-min(snr.ratio_error,[],1,'omitnan'), mean(snr.ratio_error,1,'omitnan')-max(snr.ratio_error,[],1,'omitnan'));    
+    er = errorbar(1:n_triggers,mean(snr.ratio_error,1,'omitnan'), mean(snr.ratio_error,1,'omitnan')-min(snr.ratio_error,[],1,'omitnan'), max(snr.ratio_error,[],1,'omitnan')-mean(snr.ratio_error,1,'omitnan'));    
     er.Color = [0 0 0];                            
     er.LineStyle = 'none';  
     er.LineWidth = 1;
@@ -165,6 +165,27 @@ for i_peak = 1:length(params.peaks)
     xlabel('Trigger')
     xticklabels(params.trigger_labels)
     saveas(h, fullfile(base_save_path, 'figs', ['SNR_ratios_error' peak_label '.jpg']))
+    close all
+
+    h = figure('DefaultAxesFontSize',16);
+    bar(1:n_triggers,mean(snr.ratio_error,1,'omitnan'));
+    hold on
+    er = errorbar(1:n_triggers,mean(snr.ratio_error,1,'omitnan'), std(snr.ratio_error,0,1,'omitnan'), std(snr.ratio_error,0,1,'omitnan'));    
+    er.Color = [0 0 0];                            
+    er.LineStyle = 'none';  
+    er.LineWidth = 1;
+    er.CapSize = 30;
+    p_values = zeros(1,n_triggers);
+    for i = 1:n_triggers
+        [~, p_values(i)] = ttest(snr.ratio_error(:, i)-1);
+    end
+    %sigstar(arrayfun(@(x) [x, x], 1:n_triggers, 'UniformOutput', false), p_values);
+    hold off
+    title([params.peaks{1}.label ' SNR_{stderror} ratio (mean = ' num2str(mean(mean(snr.ratio_error,'omitnan'),'omitnan'),'%.2f') ')'])
+    ylabel('OPM/SQUID')
+    xlabel('Trigger')
+    xticklabels(params.trigger_labels)
+    saveas(h, fullfile(base_save_path, 'figs', ['SNR_ratios_error2' peak_label '.jpg']))
     close all
     
     %% Plot SNR - prestim
@@ -324,6 +345,8 @@ for i_peak = 1:length(params.peaks)
     max2 = max(data2,[],1,'omitnan');
     err1 = [mean1-min1; max1-mean1];
     err2 = [mean2-min2; max2-mean2];
+    std1 = std(data1,0,1,'omitnan');
+    std2 = std(data2,0,1,'omitnan');
     
     h = figure('DefaultAxesFontSize',16);
     bar(1:n_triggers,[mean1; mean2]','grouped');
@@ -344,6 +367,27 @@ for i_peak = 1:length(params.peaks)
     legend({'squidmag','opm'});
     xticklabels(params.trigger_labels)
     saveas(h, fullfile(base_save_path, 'figs', ['SNR_error' peak_label '.jpg']))
+    close all
+
+    h = figure('DefaultAxesFontSize',16);
+    bar(1:n_triggers,[mean1; mean2]','grouped');
+    hold on
+    for k=1:n_triggers
+        errorbar(k-0.15,mean1(k),std1(k),std1(k),'k','linestyle','none');
+        errorbar(k+0.15,mean2(k),std2(k),std2(k),'k','linestyle','none');
+    end
+    p_values = zeros(1,n_triggers);
+    for i = 1:n_triggers
+        [~, p_values(i)] = ttest(data1(:, i), data2(:, i));
+    end
+    sigstar(arrayfun(@(x) [x, x], 1:n_triggers, 'UniformOutput', false), p_values);
+    hold off
+    title('Group level SNR_{stderror}')
+    ylabel('SNR')
+    xlabel('Trigger')
+    legend({'squidmag','opm'});
+    xticklabels(params.trigger_labels)
+    saveas(h, fullfile(base_save_path, 'figs', ['SNR_error2' peak_label '.jpg']))
     close all
     
     data = {data1, data2};
