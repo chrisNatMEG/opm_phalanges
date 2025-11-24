@@ -28,10 +28,9 @@ if isfield(params,'mne_view') && isnumeric(params.mne_view) && length(params.mne
         hold off
     end
     lighting gouraud
+    camlight()
     material dull
     view(params.mne_view(1),params.mne_view(2))
-    camlight
-    pause(1)
     if length(peak.fahm)>1
         title([params.paradigm '-' params.modality ' (FAHM_R=' num2str(peak.fahm(2),3) 'cm^2; FAHM_L=' num2str(peak.fahm(1),3) 'cm^2; t=' num2str(round(peak.latency*1e3)) 'ms)'])
     else
@@ -60,8 +59,7 @@ elseif isfield(params,'mne_view') && strcmp(params.mne_view,'sides')
     material dull
     view(viewangles(1),viewangles(2))
     lighting gouraud
-    camlight
-    pause(1)
+    camlight();
     if length(peak.fahm)>1
         title([params.paradigm '-' params.modality ' (FAHM_R=' num2str(peak.fahm(2),3) 'cm^2; t=' num2str(round(peak.latency*1e3)) 'ms)'])
     else
@@ -80,8 +78,7 @@ elseif isfield(params,'mne_view') && strcmp(params.mne_view,'sides')
     material dull
     view(viewangles(3),viewangles(4))
     lighting gouraud
-    camlight
-    pause(1)
+    camlight()
     if length(peak.fahm)>1
         title([params.paradigm '-' params.modality ' (FAHM_L=' num2str(peak.fahm(1),3) 'cm^2; t=' num2str(round(peak.latency*1e3)) 'ms)'])
     else

@@ -88,7 +88,7 @@ for i_peak = 1:length(params.peaks)
             snr.prestim_opmeeg(i_sub,i_trigger) = peak_opmeeg{i_trigger}.peak_amplitude/peak_opmeeg{i_trigger}.prestim_std;
             snr.prestim_squideeg(i_sub,i_trigger) = peak_squideeg{i_trigger}.peak_amplitude/peak_squideeg{i_trigger}.prestim_std;
             snr.ratio_prestim(i_sub,i_trigger) = snr.prestim_opm(i_sub,i_trigger)/snr.prestim_squidmag(i_sub,i_trigger);            
-            if isfield(params,'trigger_freq')
+            if exists(load(fullfile(save_path, [params.sub '_opm_' params.peaks{1}.label '.mat'])))
                 snr.TFR_opm(i_sub,i_trigger) = TFR_opm{i_trigger}.SNR;
                 snr.TFR_squidmag(i_sub,i_trigger) = TFR_squid{i_trigger}.SNR;
                 snr.TFR_squidgrad(i_sub,i_trigger) = TFR_squidgrad{i_trigger}.SNR;
@@ -238,57 +238,48 @@ for i_peak = 1:length(params.peaks)
     close all
 
     %% Plot SNR - TFR
-    if isfield(params,'trigger_freq')
-        h = figure('DefaultAxesFontSize',16);
-        bar(1:n_triggers,mean(snr.ratio_TFR,1,'omitnan'));
-        hold on
-        er = errorbar(1:n_triggers,mean(snr.ratio_TFR,1,'omitnan'), mean(snr.ratio_TFR,1,'omitnan')-min(snr.ratio_TFR,[],1,'omitnan'), max(snr.ratio_TFR,[],1,'omitnan')-mean(snr.ratio_TFR,1,'omitnan'));    
-        er.Color = [0 0 0];                            
-        er.LineStyle = 'none';  
-        er.LineWidth = 1;
-        er.CapSize = 30;
-        p_values = zeros(1,n_triggers);
-        for i = 1:n_triggers
-            [~, p_values(i)] = ttest(snr.ratio_TFR(:, i)-1);
-        end
-        sigstar(arrayfun(@(x) [x, x], 1:n_triggers, 'UniformOutput', false), p_values);
-        hold off
-        title([params.peaks{1}.label ' SNR_{TFR} ratio (mean = ' num2str(mean(mean(snr.ratio_TFR,'omitnan'),'omitnan'),'%.2f') ')'])
-        ylabel('OPM/SQUID')
-        xlabel('Trigger')
-        xticklabels(params.trigger_labels)
-        saveas(h, fullfile(base_save_path, 'figs', ['SNR_ratios_TFR' peak_label '.jpg']))
-        close all
-    
-        h = figure('DefaultAxesFontSize',16);
-        bar(1:n_triggers,mean(snr.ratio_TFR,1,'omitnan'));
-        hold on
-        er = errorbar(1:n_triggers,mean(snr.ratio_TFR,1,'omitnan'), std(snr.ratio_TFR,0,1,'omitnan'), std(snr.ratio_TFR,0,1,'omitnan'));    
-        er.Color = [0 0 0];                            
-        er.LineStyle = 'none';  
-        er.LineWidth = 1;
-        er.CapSize = 30;
-        p_values = zeros(1,n_triggers);
-        for i = 1:n_triggers
-            [~, p_values(i)] = ttest(snr.ratio_TFR(:, i)-1);
-        end
-        sigstar(arrayfun(@(x) [x, x], 1:n_triggers, 'UniformOutput', false), p_values);
-        hold off
-        title([params.peaks{1}.label ' SNR_{TFR} ratio (mean = ' num2str(mean(mean(snr.ratio_TFR,'omitnan'),'omitnan'),'%.2f') ')'])
-        ylabel('OPM/SQUID')
-        xlabel('Trigger')
-        xticklabels(params.trigger_labels)
-        saveas(h, fullfile(base_save_path, 'figs', ['SNR_ratios_TFR2' peak_label '.jpg']))
-        close all
-        
-        data = {snr.TFR_squidmag, snr.TFR_opm, snr.TFR_squidgrad};
-        triggerLabels = params.trigger_labels;
-        yLabelStr = 'SNR';
-        titleStr = ['Group level ' params.peaks{1}.label ' SNR_{TFR} - SQMAG vs OPM vs SQGRAD'];
-        save_path = fullfile(base_save_path, 'figs', ['SNR_TFR_box' peak_label '.jpg']);
-        pairedBoxplots(data, triggerLabels, yLabelStr, titleStr, save_path,1);   
+    h = figure('DefaultAxesFontSize',16);
+    bar(1:n_triggers,mean(snr.ratio_TFR,1,'omitnan'));
+    hold on
+    er = errorbar(1:n_triggers,mean(snr.ratio_TFR,1,'omitnan'), mean(snr.ratio_TFR,1,'omitnan')-min(snr.ratio_TFR,[],1,'omitnan'), max(snr.ratio_TFR,[],1,'omitnan')-mean(snr.ratio_TFR,1,'omitnan'));    
+    er.Color = [0 0 0];                            
+    er.LineStyle = 'none';  
+    er.LineWidth = 1;
+    er.CapSize = 30;
+    p_values = zeros(1,n_triggers);
+    for i = 1:n_triggers
+        [~, p_values(i)] = ttest(snr.ratio_TFR(:, i)-1);
     end
+    sigstar(arrayfun(@(x) [x, x], 1:n_triggers, 'UniformOutput', false), p_values);
+    hold off
+    title([params.peaks{1}.label ' SNR_{TFR} ratio (mean = ' num2str(mean(mean(snr.ratio_TFR,'omitnan'),'omitnan'),'%.2f') ')'])
+    ylabel('OPM/SQUID')
+    xlabel('Trigger')
+    xticklabels(params.trigger_labels)
+    saveas(h, fullfile(base_save_path, 'figs', ['SNR_ratios_TFR' peak_label '.jpg']))
+    close all
 
+    h = figure('DefaultAxesFontSize',16);
+    bar(1:n_triggers,mean(snr.ratio_TFR,1,'omitnan'));
+    hold on
+    er = errorbar(1:n_triggers,mean(snr.ratio_TFR,1,'omitnan'), std(snr.ratio_TFR,0,1,'omitnan'), std(snr.ratio_TFR,0,1,'omitnan'));    
+    er.Color = [0 0 0];                            
+    er.LineStyle = 'none';  
+    er.LineWidth = 1;
+    er.CapSize = 30;
+    p_values = zeros(1,n_triggers);
+    for i = 1:n_triggers
+        [~, p_values(i)] = ttest(snr.ratio_TFR(:, i)-1);
+    end
+    sigstar(arrayfun(@(x) [x, x], 1:n_triggers, 'UniformOutput', false), p_values);
+    hold off
+    title([params.peaks{1}.label ' SNR_{TFR} ratio (mean = ' num2str(mean(mean(snr.ratio_TFR,'omitnan'),'omitnan'),'%.2f') ')'])
+    ylabel('OPM/SQUID')
+    xlabel('Trigger')
+    xticklabels(params.trigger_labels)
+    saveas(h, fullfile(base_save_path, 'figs', ['SNR_ratios_TFR2' peak_label '.jpg']))
+    close all
+    
     %% Plot peak amp
     % MEG
     data1 = 1e15*amp.squidmag;

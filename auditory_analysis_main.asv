@@ -48,9 +48,9 @@ else
     overwrite.preproc = true;
     overwrite.timelock = true;
     overwrite.TFR = true;
-    overwrite.coreg = false;
+    overwrite.coreg = true;
     overwrite.mri = false;
-    overwrite.dip = false;
+    overwrite.dip = true;
     overwrite.empty_room = false;
     overwrite.mne = true;
 
@@ -604,11 +604,11 @@ for i_sub = setdiff(subs_to_run,excl_subs)
         end
 
         %% ELORETA fit
-        %params.inv_method = 'eloreta';
-        %for i_cov = 1:length(params.covs)
-        %    params.noise_cov = params.covs{i_cov}; 
-        %    fit_eloreta(save_path, squid_timelocked, opm_timelockedT, headmodel, sourcemodel, sourcemodel_inflated, params);
-        %end
+        params.inv_method = 'eloreta';
+        for i_cov = 1:length(params.covs)
+            params.noise_cov = params.covs{i_cov}; 
+            fit_eloreta(save_path, squid_timelocked, opm_timelockedT, headmodel, sourcemodel, sourcemodel_inflated, params);
+        end
 
         %% Clear variables
         clear squid_timelocked opm_timelockedT headmodel sourcemodel sourcemodel_inflated

@@ -20,259 +20,282 @@ end
 
 for i_peak = 1:length(params.peaks)
     peak_label = ['_' params.peaks{i_peak}.label];
-    for i_hemi = 1:params.numdipoles
-        i_sub = subs(1);
+    i_sub = subs(1);
+    params.sub = ['sub_' num2str(i_sub,'%02d')];
+    ft_hastoolbox('mne', 1);
+    save_path = fullfile(base_save_path,params.sub);
+    tmp = load(fullfile(save_path,'mne_distributions.mat'));
+    squidmag_peak = load(fullfile(save_path,'squidmag_mne_peaks.mat')).peaks;
+    squidgrad_peak = load(fullfile(save_path,'squidgrad_mne_peaks.mat')).peaks;
+    opm_peak = load(fullfile(save_path,'opm_mne_peaks.mat')).peaks;
+    SNR_opm = nan(n_subs,n_triggers);
+    SNR_squidmag = nan(n_subs,n_triggers);
+    SNR_squidgrad = nan(n_subs,n_triggers);
+    for i_trigger = 1:n_triggers
+        squidmag_mne{i_trigger} = tmp.squidmag_mne{i_trigger};
+        squidgrad_mne{i_trigger} = tmp.squidgrad_mne{i_trigger};
+        opm_mne{i_trigger} = tmp.opm_mne{i_trigger};
+        squidmag_mne{i_trigger}.avg.pow = tmp.squidmag_mne{i_trigger}.avg.pow/n_subs;
+        squidgrad_mne{i_trigger}.avg.pow = tmp.squidgrad_mne{i_trigger}.avg.pow/n_subs;
+        opm_mne{i_trigger}.avg.pow = tmp.opm_mne{i_trigger}.avg.pow/n_subs;
+        squidmag_peak{i_trigger}.fahm = squidmag_peak{i_trigger}.fahm/n_subs;
+        squidgrad_peak{i_trigger}.fahm = squidgrad_peak{i_trigger}.fahm/n_subs;
+        opm_peak{i_trigger}.fahm = opm_peak{i_trigger}.fahm/n_subs;
+        squidmag_peak{i_trigger}.latency = squidmag_peak{i_trigger}.latency/n_subs;
+        squidgrad_peak{i_trigger}.latency = squidgrad_peak{i_trigger}.latency/n_subs;
+        opm_peak{i_trigger}.latency = opm_peak{i_trigger}.latency/n_subs;
+        if isfield(params,'trigger_freq')
+            SNR_opm(i_sub,i_trigger) = tmp.opm_mne{i_trigger}.SNR;
+            SNR_squidmag(i_sub,i_trigger) = tmp.squidmag_mne{i_trigger}.SNR;
+            SNR_squidgrad(i_sub,i_trigger) = tmp.squidgrad_mne{i_trigger}.SNR;
+        end
+    end
+    clear tmp
+    for i_sub = subs(2:end)
         params.sub = ['sub_' num2str(i_sub,'%02d')];
         ft_hastoolbox('mne', 1);
         save_path = fullfile(base_save_path,params.sub);
         tmp = load(fullfile(save_path,'mne_distributions.mat'));
-        squidmag_peak = load(fullfile(save_path,'squidmag_mne_peaks.mat')).peaks;
-        squidgrad_peak = load(fullfile(save_path,'squidgrad_mne_peaks.mat')).peaks;
-        opm_peak = load(fullfile(save_path,'opm_mne_peaks.mat')).peaks;
+        t_squidmag_peak = load(fullfile(save_path,'squidmag_mne_peaks.mat')).peaks;
+        t_squidgrad_peak = load(fullfile(save_path,'squidgrad_mne_peaks.mat')).peaks;
+        t_opm_peak = load(fullfile(save_path,'opm_mne_peaks.mat')).peaks;
         for i_trigger = 1:n_triggers
-            squidmag_mne{i_trigger} = tmp.squidmag_mne{i_trigger};
-            squidgrad_mne{i_trigger} = tmp.squidgrad_mne{i_trigger};
-            opm_mne{i_trigger} = tmp.opm_mne{i_trigger};
-            squidmag_mne{i_trigger}.avg.pow = tmp.squidmag_mne{i_trigger}.avg.pow/n_subs;
-            squidgrad_mne{i_trigger}.avg.pow = tmp.squidgrad_mne{i_trigger}.avg.pow/n_subs;
-            opm_mne{i_trigger}.avg.pow = tmp.opm_mne{i_trigger}.avg.pow/n_subs;
-            squidmag_peak{i_trigger}.fahm = squidmag_peak{i_trigger}.fahm/n_subs;
-            squidgrad_peak{i_trigger}.fahm = squidgrad_peak{i_trigger}.fahm/n_subs;
-            opm_peak{i_trigger}.fahm = opm_peak{i_trigger}.fahm/n_subs;
-            squidmag_peak{i_trigger}.latency = squidmag_peak{i_trigger}.latency/n_subs;
-            squidgrad_peak{i_trigger}.latency = squidgrad_peak{i_trigger}.latency/n_subs;
-            opm_peak{i_trigger}.latency = opm_peak{i_trigger}.latency/n_subs;
+            squidmag_mne{i_trigger}.avg.pow = squidmag_mne{i_trigger}.avg.pow + tmp.squidmag_mne{i_trigger}.avg.pow/n_subs;
+            squidgrad_mne{i_trigger}.avg.pow = squidgrad_mne{i_trigger}.avg.pow + tmp.squidgrad_mne{i_trigger}.avg.pow/n_subs;
+            opm_mne{i_trigger}.avg.pow = opm_mne{i_trigger}.avg.pow + tmp.opm_mne{i_trigger}.avg.pow/n_subs;
+            squidmag_peak{i_trigger}.fahm = squidmag_peak{i_trigger}.fahm + t_squidmag_peak{i_trigger}.fahm/n_subs;
+            squidgrad_peak{i_trigger}.fahm = squidgrad_peak{i_trigger}.fahm + t_squidgrad_peak{i_trigger}.fahm/n_subs;
+            opm_peak{i_trigger}.fahm = opm_peak{i_trigger}.fahm + t_opm_peak{i_trigger}.fahm/n_subs;
+            squidmag_peak{i_trigger}.latency = squidmag_peak{i_trigger}.latency + t_squidmag_peak{i_trigger}.latency/n_subs;
+            squidgrad_peak{i_trigger}.latency = squidgrad_peak{i_trigger}.latency + t_squidgrad_peak{i_trigger}.latency/n_subs;
+            opm_peak{i_trigger}.latency = opm_peak{i_trigger}.latency + t_opm_peak{i_trigger}.latency/n_subs;
+            if isfield(params,'trigger_freq')
+                SNR_opm(i_sub,i_trigger) = tmp.opm_mne{i_trigger}.SNR;
+                SNR_squidmag(i_sub,i_trigger) = tmp.squidmag_mne{i_trigger}.SNR;
+                SNR_squidgrad(i_sub,i_trigger) = tmp.squidgrad_mne{i_trigger}.SNR;
+            end
         end
         clear tmp
-        for i_sub = subs(2:end)
-            params.sub = ['sub_' num2str(i_sub,'%02d')];
-            ft_hastoolbox('mne', 1);
-            save_path = fullfile(base_save_path,params.sub);
-            tmp = load(fullfile(save_path,'mne_distributions.mat'));
-            t_squidmag_peak = load(fullfile(save_path,'squidmag_mne_peaks.mat')).peaks;
-            t_squidgrad_peak = load(fullfile(save_path,'squidgrad_mne_peaks.mat')).peaks;
-            t_opm_peak = load(fullfile(save_path,'opm_mne_peaks.mat')).peaks;
-            for i_trigger = 1:n_triggers
-                squidmag_mne{i_trigger}.avg.pow = squidmag_mne{i_trigger}.avg.pow + tmp.squidmag_mne{i_trigger}.avg.pow/n_subs;
-                squidgrad_mne{i_trigger}.avg.pow = squidgrad_mne{i_trigger}.avg.pow + tmp.squidgrad_mne{i_trigger}.avg.pow/n_subs;
-                opm_mne{i_trigger}.avg.pow = opm_mne{i_trigger}.avg.pow + tmp.opm_mne{i_trigger}.avg.pow/n_subs;
-                squidmag_peak{i_trigger}.fahm = squidmag_peak{i_trigger}.fahm + t_squidmag_peak{i_trigger}.fahm/n_subs;
-                squidgrad_peak{i_trigger}.fahm = squidgrad_peak{i_trigger}.fahm + t_squidgrad_peak{i_trigger}.fahm/n_subs;
-                opm_peak{i_trigger}.fahm = opm_peak{i_trigger}.fahm + t_opm_peak{i_trigger}.fahm/n_subs;
-                squidmag_peak{i_trigger}.latency = squidmag_peak{i_trigger}.latency + t_squidmag_peak{i_trigger}.latency/n_subs;
-                squidgrad_peak{i_trigger}.latency = squidgrad_peak{i_trigger}.latency + t_squidgrad_peak{i_trigger}.latency/n_subs;
-                opm_peak{i_trigger}.latency = opm_peak{i_trigger}.latency + t_opm_peak{i_trigger}.latency/n_subs;
-            end
-            clear tmp
-        end
-        for i_trigger = 1:n_triggers
-            opm_mne{i_trigger}.pos = sourcemodel_inflated.pos;
-            opm_mne{i_trigger}.tri = sourcemodel_inflated.tri;
-            params.modality = 'opm';
-            h =  plot_source_distribution(opm_mne{i_trigger},opm_peak{i_trigger},params,0);
-            saveas(h, fullfile(base_save_path, 'figs', ['mne_grnd_avg_infl_opm_' params.trigger_labels{i_trigger} '_' peak_label cov hemi_labels{i_hemi} '.jpg']))
-            close all
-            opm_mne{i_trigger}.pos = sourcemodel.pos;
-            opm_mne{i_trigger}.tri = sourcemodel.tri;
-            params.modality = 'opm';
-            h =  plot_source_distribution(opm_mne{i_trigger},opm_peak{i_trigger},params,0);
-            saveas(h, fullfile(base_save_path, 'figs', ['mne_grnd_avg_opm_' params.trigger_labels{i_trigger} '_' peak_label cov hemi_labels{i_hemi} '.jpg']))
-            close all
-            opm_mne{i_trigger}.pos = sourcemodel_inflated.pos;
-            opm_mne{i_trigger}.tri = sourcemodel_inflated.tri;
-
-            squidmag_mne{i_trigger}.pos = sourcemodel_inflated.pos;
-            squidmag_mne{i_trigger}.tri = sourcemodel_inflated.tri;
-            params.modality = 'sqmag';
-            h =  plot_source_distribution(squidmag_mne{i_trigger},squidmag_peak{i_trigger},params,0);
-            saveas(h, fullfile(base_save_path, 'figs', ['mne_grnd_avg_infl_squidmag_' params.trigger_labels{i_trigger} '_' peak_label cov hemi_labels{i_hemi} '.jpg']))
-            close all
-            squidmag_mne{i_trigger}.pos = sourcemodel.pos;
-            squidmag_mne{i_trigger}.tri = sourcemodel.tri;
-            params.modality = 'sqmag';
-            h =  plot_source_distribution(squidmag_mne{i_trigger},squidmag_peak{i_trigger},params,0);
-            saveas(h, fullfile(base_save_path, 'figs', ['mne_grnd_avg_squidmag_' params.trigger_labels{i_trigger} '_' peak_label cov hemi_labels{i_hemi} '.jpg']))
-            close all
-            squidmag_mne{i_trigger}.pos = sourcemodel_inflated.pos;
-            squidmag_mne{i_trigger}.tri = sourcemodel_inflated.tri;
-
-            squidgrad_mne{i_trigger}.pos = sourcemodel_inflated.pos;
-            squidgrad_mne{i_trigger}.tri = sourcemodel_inflated.tri;
-            params.modality = 'sqgrad';
-            h =  plot_source_distribution(squidgrad_mne{i_trigger},squidgrad_peak{i_trigger},params,0);
-            saveas(h, fullfile(base_save_path, 'figs', ['mne_grnd_avg_infl_squidgrad_' params.trigger_labels{i_trigger} '_' peak_label cov hemi_labels{i_hemi} '.jpg']))
-            close all
-            squidgrad_mne{i_trigger}.pos = sourcemodel.pos;
-            squidgrad_mne{i_trigger}.tri = sourcemodel.tri;
-            params.modality = 'sqgrad';
-            h =  plot_source_distribution(squidgrad_mne{i_trigger},squidgrad_peak{i_trigger},params,0);
-            saveas(h, fullfile(base_save_path, 'figs', ['mne_grnd_avg_squidgrad_' params.trigger_labels{i_trigger} '_' peak_label cov hemi_labels{i_hemi} '.jpg']))
-            close all
-            squidgrad_mne{i_trigger}.pos = sourcemodel_inflated.pos;
-            squidgrad_mne{i_trigger}.tri = sourcemodel_inflated.tri;
-        end
     end
+    for i_trigger = 1:n_triggers
+        opm_mne{i_trigger}.pos = sourcemodel_inflated.pos;
+        opm_mne{i_trigger}.tri = sourcemodel_inflated.tri;
+        params.modality = 'opm';
+        h =  plot_source_distribution(opm_mne{i_trigger},opm_peak{i_trigger},params,0);
+        saveas(h, fullfile(base_save_path, 'figs', ['mne_grnd_avg_infl_opm_' params.trigger_labels{i_trigger} peak_label cov '.jpg']))
+        close all
+        opm_mne{i_trigger}.pos = sourcemodel.pos;
+        opm_mne{i_trigger}.tri = sourcemodel.tri;
+        params.modality = 'opm';
+        h =  plot_source_distribution(opm_mne{i_trigger},opm_peak{i_trigger},params,0);
+        saveas(h, fullfile(base_save_path, 'figs', ['mne_grnd_avg_opm_' params.trigger_labels{i_trigger} peak_label cov '.jpg']))
+        close all
+        opm_mne{i_trigger}.pos = sourcemodel_inflated.pos;
+        opm_mne{i_trigger}.tri = sourcemodel_inflated.tri;
+
+        squidmag_mne{i_trigger}.pos = sourcemodel_inflated.pos;
+        squidmag_mne{i_trigger}.tri = sourcemodel_inflated.tri;
+        params.modality = 'sqmag';
+        h =  plot_source_distribution(squidmag_mne{i_trigger},squidmag_peak{i_trigger},params,0);
+        saveas(h, fullfile(base_save_path, 'figs', ['mne_grnd_avg_infl_squidmag_' params.trigger_labels{i_trigger} peak_label cov '.jpg']))
+        close all
+        squidmag_mne{i_trigger}.pos = sourcemodel.pos;
+        squidmag_mne{i_trigger}.tri = sourcemodel.tri;
+        params.modality = 'sqmag';
+        h =  plot_source_distribution(squidmag_mne{i_trigger},squidmag_peak{i_trigger},params,0);
+        saveas(h, fullfile(base_save_path, 'figs', ['mne_grnd_avg_squidmag_' params.trigger_labels{i_trigger} peak_label cov '.jpg']))
+        close all
+        squidmag_mne{i_trigger}.pos = sourcemodel_inflated.pos;
+        squidmag_mne{i_trigger}.tri = sourcemodel_inflated.tri;
+
+        squidgrad_mne{i_trigger}.pos = sourcemodel_inflated.pos;
+        squidgrad_mne{i_trigger}.tri = sourcemodel_inflated.tri;
+        params.modality = 'sqgrad';
+        h =  plot_source_distribution(squidgrad_mne{i_trigger},squidgrad_peak{i_trigger},params,0);
+        saveas(h, fullfile(base_save_path, 'figs', ['mne_grnd_avg_infl_squidgrad_' params.trigger_labels{i_trigger} peak_label cov '.jpg']))
+        close all
+        squidgrad_mne{i_trigger}.pos = sourcemodel.pos;
+        squidgrad_mne{i_trigger}.tri = sourcemodel.tri;
+        params.modality = 'sqgrad';
+        h =  plot_source_distribution(squidgrad_mne{i_trigger},squidgrad_peak{i_trigger},params,0);
+        saveas(h, fullfile(base_save_path, 'figs', ['mne_grnd_avg_squidgrad_' params.trigger_labels{i_trigger} peak_label cov '.jpg']))
+        close all
+        squidgrad_mne{i_trigger}.pos = sourcemodel_inflated.pos;
+        squidgrad_mne{i_trigger}.tri = sourcemodel_inflated.tri;
+    end
+end
+
+save(fullfile(base_save_path, ['grndAvg_mne' peak_label]),'opm_mne','squidmag_mne','squidgrad_mne',"-v7.3");
+
+%% SNR
+if isfield(params,'trigger_freq')             
+    data = {SNR_squidmag, SNR_opm, SNR_squidgrad};
+    triggerLabels = params.trigger_labels;
+    yLabelStr = 'SNR';
+    titleStr = ['Group level ' params.peaks{1}.label ' MNE FreqTag SNR - SQMAG vs OPM vs SQGRAD'];
+    save_path = fullfile(base_save_path, 'figs', ['mne_SNR_sqmag_opm_sqgrad' peak_label cov '_box.jpg']);
+    pairedBoxplots(data, triggerLabels, yLabelStr, titleStr, save_path,1);
 end
 
 %% source movies
 if isfield(params,'do_sourcemovie') && params.do_sourcemovie
     % OPM
-    for i_trigger = 1:n_triggers
-        v = VideoWriter(fullfile(base_save_path,'figs', ['mne_grnd_avg_opm_' params.trigger_labels{i_trigger} '.avi']),"Motion JPEG AVI");
-        v.FrameRate = 15;
+    try
+        for i_trigger = 1:n_triggers
+            v = VideoWriter(fullfile(base_save_path,'figs', ['mne_grnd_avg_opm_' params.trigger_labels{i_trigger} '.avi']),"Motion JPEG AVI");
+            v.FrameRate = 15;
+            
+            v.open
+            tmp = opm_mne{i_trigger};
+            maxpow = max(max(tmp.avg.pow));
+            [~,i_start] = min(abs(tmp.time-0));
+            for i = i_start:length(tmp.time)           
+                viewangles = [90 0 -90 0];
+                cfg = [];
+                cfg.method          = 'surface';
+                cfg.funparameter    = 'pow';
+                cfg.funcolormap     = 'jet';    
+                cfg.colorbar        = 'no';
+                cfg.latency         = tmp.time(i);
+                h = figure;
+                set(gcf,'Position',[100 100 1000 900]);
+                subplot(2,2,1); % right hemisphere
+                cfg.figure = h;
+                ft_sourceplot(cfg, tmp)
+                clim([0 maxpow])
+                material dull
+                view(viewangles(1),viewangles(2))
+                camlight();
+                lighting gouraud
+                title([' t=' num2str(round(1e3*tmp.time(i)),'%03d') 'ms'])
+                subplot(2,2,2); % left hemisphere
+                cfg.figure = h;
+                ft_sourceplot(cfg, tmp)
+                clim([0 maxpow])
+                material dull
+                view(viewangles(3),viewangles(4))
+                camlight()
+                lighting gouraud
+                title([' t=' num2str(round(1e3*tmp.time(i)),'%03d') 'ms'])
+                subplot(2,2,[3 4]); % left hemisphere
+                plot(tmp.time*1e3,mean(tmp.avg.pow,1))
+                hold on
+                xlabel('t (ms)')
+                ylabel('Mean Power')
+                set(gcf,'Position',[100 100 1000 900]);
+                ylimits = ylim;
+                plot([tmp.time(i) tmp.time(i)]*1e3,ylimits,'r--')
+                hold off
+                pause(1)
+                writeVideo(v,getframe(h));
+                close all
+            end
+            v.close
+            
+            % SQ-GRAD
+            v = VideoWriter(fullfile(base_save_path,'figs', ['mne_grnd_avg_sqgrad_' params.trigger_labels{i_trigger} '.avi']),"Motion JPEG AVI");
+            v.FrameRate = 15;
         
-        v.open
-        tmp = opm_mne{i_trigger};
-        maxpow = max(max(tmp.avg.pow));
-        [~,i_start] = min(abs(tmp.time-0));
-        for i = i_start:length(tmp.time)           
-            viewangles = [90 0 -90 0];
-            cfg = [];
-            cfg.method          = 'surface';
-            cfg.funparameter    = 'pow';
-            cfg.funcolormap     = 'jet';    
-            cfg.colorbar        = 'no';
-            cfg.latency         = tmp.time(i);
-            h = figure;
-            set(gcf,'Position',[100 100 1000 900]);
-            subplot(2,2,1); % right hemisphere
-            cfg.figure = h;
-            ft_sourceplot(cfg, tmp)
-            clim([0 maxpow])
-            material dull
-            view(viewangles(1),viewangles(2))
-            camlight();
-            lighting gouraud
-            title([' t=' num2str(round(1e3*tmp.time(i)),'%03d') 'ms'])
-            subplot(2,2,2); % left hemisphere
-            cfg.figure = h;
-            ft_sourceplot(cfg, tmp)
-            clim([0 maxpow])
-            material dull
-            view(viewangles(3),viewangles(4))
-            camlight()
-            lighting gouraud
-            title([' t=' num2str(round(1e3*tmp.time(i)),'%03d') 'ms'])
-            subplot(2,2,[3 4]); % left hemisphere
-            plot(tmp.time*1e3,mean(tmp.avg.pow,1))
-            hold on
-            xlabel('t (ms)')
-            ylabel('Mean Power')
-            set(gcf,'Position',[100 100 1000 900]);
-            ylimits = ylim;
-            plot([tmp.time(i) tmp.time(i)]*1e3,ylimits,'r--')
-            hold off
-            pause(1)
-            writeVideo(v,getframe(h));
-            close all
+            v.open
+            tmp = squidgrad_mne{i_trigger};
+            maxpow = max(max(tmp.avg.pow));
+            [~,i_start] = min(abs(tmp.time-0));
+            for i = i_start:length(tmp.time)           
+                viewangles = [90 0 -90 0];
+                cfg = [];
+                cfg.method          = 'surface';
+                cfg.funparameter    = 'pow';
+                cfg.funcolormap     = 'jet';    
+                cfg.colorbar        = 'no';
+                cfg.latency         = tmp.time(i);
+                h = figure;
+                set(gcf,'Position',[100 100 1000 900]);
+                subplot(2,2,1); % right hemisphere
+                cfg.figure = h;
+                ft_sourceplot(cfg, tmp)
+                clim([0 maxpow])
+                material dull
+                view(viewangles(1),viewangles(2))
+                camlight();
+                lighting gouraud
+                title([' t=' num2str(round(1e3*tmp.time(i)),'%03d') 'ms'])
+                subplot(2,2,2); % left hemisphere
+                cfg.figure = h;
+                ft_sourceplot(cfg, tmp)
+                clim([0 maxpow])
+                material dull
+                view(viewangles(3),viewangles(4))
+                camlight()
+                lighting gouraud
+                title([' t=' num2str(round(1e3*tmp.time(i)),'%03d') 'ms'])
+                subplot(2,2,[3 4]); % left hemisphere
+                plot(tmp.time*1e3,mean(tmp.avg.pow,1))
+                hold on
+                xlabel('t (ms)')
+                ylabel('Mean Power')
+                set(gcf,'Position',[100 100 1000 900]);
+                ylimits = ylim;
+                plot([tmp.time(i) tmp.time(i)]*1e3,ylimits,'r--')
+                hold off
+                pause(1)
+                writeVideo(v,getframe(h));
+                close all
+            end
+            v.close
+        
+            % SQ-MAG
+            v = VideoWriter(fullfile(base_save_path,'figs', ['mne_grnd_avg_sqmag_' params.trigger_labels{i_trigger} '.avi']),"Motion JPEG AVI");
+            v.FrameRate = 15;
+        
+            v.open
+            tmp = squidmag_mne{i_trigger};
+            maxpow = max(max(tmp.avg.pow));
+            [~,i_start] = min(abs(tmp.time-0));
+            for i = i_start:length(tmp.time)           
+                viewangles = [90 0 -90 0];
+                cfg = [];
+                cfg.method          = 'surface';
+                cfg.funparameter    = 'pow';
+                cfg.funcolormap     = 'jet';    
+                cfg.colorbar        = 'no';
+                cfg.latency         = tmp.time(i);
+                h = figure;
+                set(gcf,'Position',[100 100 1000 900]);
+                subplot(2,2,1); % right hemisphere
+                cfg.figure = h;
+                ft_sourceplot(cfg, tmp)
+                clim([0 maxpow])
+                material dull
+                view(viewangles(1),viewangles(2))
+                camlight();
+                lighting gouraud
+                title([' t=' num2str(round(1e3*tmp.time(i)),'%03d') 'ms'])
+                subplot(2,2,2); % left hemisphere
+                cfg.figure = h;
+                ft_sourceplot(cfg, tmp)
+                clim([0 maxpow])
+                material dull
+                view(viewangles(3),viewangles(4))
+                camlight()
+                lighting gouraud
+                title([' t=' num2str(round(1e3*tmp.time(i)),'%03d') 'ms'])
+                subplot(2,2,[3 4]); % left hemisphere
+                plot(tmp.time*1e3,mean(tmp.avg.pow,1))
+                hold on
+                xlabel('t (ms)')
+                ylabel('Mean Power')
+                set(gcf,'Position',[100 100 1000 900]);
+                ylimits = ylim;
+                plot([tmp.time(i) tmp.time(i)]*1e3,ylimits,'r--')
+                hold off
+                pause(1)
+                writeVideo(v,getframe(h));
+                close all
+            end
+            v.close
         end
-        v.close
-    end
-    
-    % SQ-GRAD
-    for i_trigger = 1:n_triggers
-        v = VideoWriter(fullfile(base_save_path,'figs', ['mne_grnd_avg_sqgrad_' params.trigger_labels{i_trigger} '.avi']),"Motion JPEG AVI");
-        v.FrameRate = 15;
-    
-        v.open
-        tmp = squidgrad_mne{i_trigger};
-        maxpow = max(max(tmp.avg.pow));
-        [~,i_start] = min(abs(tmp.time-0));
-        for i = i_start:length(tmp.time)           
-            viewangles = [90 0 -90 0];
-            cfg = [];
-            cfg.method          = 'surface';
-            cfg.funparameter    = 'pow';
-            cfg.funcolormap     = 'jet';    
-            cfg.colorbar        = 'no';
-            cfg.latency         = tmp.time(i);
-            h = figure;
-            set(gcf,'Position',[100 100 1000 900]);
-            subplot(2,2,1); % right hemisphere
-            cfg.figure = h;
-            ft_sourceplot(cfg, tmp)
-            clim([0 maxpow])
-            material dull
-            view(viewangles(1),viewangles(2))
-            camlight();
-            lighting gouraud
-            title([' t=' num2str(round(1e3*tmp.time(i)),'%03d') 'ms'])
-            subplot(2,2,2); % left hemisphere
-            cfg.figure = h;
-            ft_sourceplot(cfg, tmp)
-            clim([0 maxpow])
-            material dull
-            view(viewangles(3),viewangles(4))
-            camlight()
-            lighting gouraud
-            title([' t=' num2str(round(1e3*tmp.time(i)),'%03d') 'ms'])
-            subplot(2,2,[3 4]); % left hemisphere
-            plot(tmp.time*1e3,mean(tmp.avg.pow,1))
-            hold on
-            xlabel('t (ms)')
-            ylabel('Mean Power')
-            set(gcf,'Position',[100 100 1000 900]);
-            ylimits = ylim;
-            plot([tmp.time(i) tmp.time(i)]*1e3,ylimits,'r--')
-            hold off
-            pause(1)
-            writeVideo(v,getframe(h));
-            close all
-        end
-        v.close
-    end
-
-    % SQ-MAG
-    for i_trigger = 1:n_triggers
-        v = VideoWriter(fullfile(base_save_path,'figs', ['mne_grnd_avg_sqmag_' params.trigger_labels{i_trigger} '.avi']),"Motion JPEG AVI");
-        v.FrameRate = 15;
-    
-        v.open
-        tmp = squidmag_mne{i_trigger};
-        maxpow = max(max(tmp.avg.pow));
-        [~,i_start] = min(abs(tmp.time-0));
-        for i = i_start:length(tmp.time)           
-            viewangles = [90 0 -90 0];
-            cfg = [];
-            cfg.method          = 'surface';
-            cfg.funparameter    = 'pow';
-            cfg.funcolormap     = 'jet';    
-            cfg.colorbar        = 'no';
-            cfg.latency         = tmp.time(i);
-            h = figure;
-            set(gcf,'Position',[100 100 1000 900]);
-            subplot(2,2,1); % right hemisphere
-            cfg.figure = h;
-            ft_sourceplot(cfg, tmp)
-            clim([0 maxpow])
-            material dull
-            view(viewangles(1),viewangles(2))
-            camlight();
-            lighting gouraud
-            title([' t=' num2str(round(1e3*tmp.time(i)),'%03d') 'ms'])
-            subplot(2,2,2); % left hemisphere
-            cfg.figure = h;
-            ft_sourceplot(cfg, tmp)
-            clim([0 maxpow])
-            material dull
-            view(viewangles(3),viewangles(4))
-            camlight()
-            lighting gouraud
-            title([' t=' num2str(round(1e3*tmp.time(i)),'%03d') 'ms'])
-            subplot(2,2,[3 4]); % left hemisphere
-            plot(tmp.time*1e3,mean(tmp.avg.pow,1))
-            hold on
-            xlabel('t (ms)')
-            ylabel('Mean Power')
-            set(gcf,'Position',[100 100 1000 900]);
-            ylimits = ylim;
-            plot([tmp.time(i) tmp.time(i)]*1e3,ylimits,'r--')
-            hold off
-            pause(1)
-            writeVideo(v,getframe(h));
-            close all
-        end
-        v.close
+    catch
+        disp('Sourcemovie error')
     end
 end
 

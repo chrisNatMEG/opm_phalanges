@@ -266,6 +266,61 @@ for i_trigger = 1:n_triggers
         end
     end
 
+    %% SNR
+    if isfield(params,'trigger_freq')
+        % Lock-in
+        cfg = [];
+        cfg.latency = [-0.2 0];
+        data = ft_selectdata(cfg,opm_mne{i_trigger});
+        X = mean(cos(2*pi*params.trigger_freq(i_trigger)*data.time).*data.pow,2);
+        Y = mean(sin(2*pi*params.trigger_freq(i_trigger)*data.time).*data.pow,2);
+        tmp = complex(X,Y);
+        opm_mne{i_trigger}.N(:,1) = abs(tmp);    
+        cfg = [];
+        cfg.latency = [0.5 0.7];
+        data = ft_selectdata(cfg,opm_mne{i_trigger});
+        X = mean(cos(2*pi*params.trigger_freq(i_trigger)*data.time).*data.pow,2);
+        Y = mean(sin(2*pi*params.trigger_freq(i_trigger)*data.time).*data.pow,2);
+        tmp = complex(X,Y);
+        opm_mne{i_trigger}.S(:,1) = abs(tmp);
+        [~, imax] = max(opm_mne{i_trigger}.S(:,1));
+        opm_mne{i_trigger}.SNR = opm_mne{i_trigger}.S(imax)/opm_mne{i_trigger}.N(imax);
+
+        cfg = [];
+        cfg.latency = [-0.2 0];
+        data = ft_selectdata(cfg,squidgrad_mne{i_trigger});
+        X = mean(cos(2*pi*params.trigger_freq(i_trigger)*data.time).*data.pow,2);
+        Y = mean(sin(2*pi*params.trigger_freq(i_trigger)*data.time).*data.pow,2);
+        tmp = complex(X,Y);
+        squidgrad_mne{i_trigger}.N(:,1) = abs(tmp);    
+        cfg = [];
+        cfg.latency = [0.5 0.7];
+        data = ft_selectdata(cfg,squidgrad_mne{i_trigger});
+        X = mean(cos(2*pi*params.trigger_freq(i_trigger)*data.time).*data.pow,2);
+        Y = mean(sin(2*pi*params.trigger_freq(i_trigger)*data.time).*data.pow,2);
+        tmp = complex(X,Y);
+        squidgrad_mne{i_trigger}.S(:,1) = abs(tmp);
+        [~, imax] = max(squidgrad_mne{i_trigger}.S(:,1));
+        squidgrad_mne{i_trigger}.SNR = squidgrad_mne{i_trigger}.S(imax)/squidgrad_mne{i_trigger}.N(imax);
+
+        cfg = [];
+        cfg.latency = [-0.2 0];
+        data = ft_selectdata(cfg,squidmag_mne{i_trigger});
+        X = mean(cos(2*pi*params.trigger_freq(i_trigger)*data.time).*data.pow,2);
+        Y = mean(sin(2*pi*params.trigger_freq(i_trigger)*data.time).*data.pow,2);
+        tmp = complex(X,Y);
+        squidmag_mne{i_trigger}.N(:,1) = abs(tmp);    
+        cfg = [];
+        cfg.latency = [0.5 0.7];
+        data = ft_selectdata(cfg,squidmag_mne{i_trigger});
+        X = mean(cos(2*pi*params.trigger_freq(i_trigger)*data.time).*data.pow,2);
+        Y = mean(sin(2*pi*params.trigger_freq(i_trigger)*data.time).*data.pow,2);
+        tmp = complex(X,Y);
+        squidmag_mne{i_trigger}.S(:,1) = abs(tmp);
+        [~, imax] = max(squidmag_mne{i_trigger}.S(:,1));
+        squidmag_mne{i_trigger}.SNR = squidmag_mne{i_trigger}.S(imax)/squidmag_mne{i_trigger}.N(imax);
+    end
+
 end
 
 colors = [[0 0.4470 0.7410]; % blue

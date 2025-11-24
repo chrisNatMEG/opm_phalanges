@@ -1,5 +1,5 @@
 function fit_mne(save_path, squid_timelocked, opm_timelocked, headmodel, sourcemodel, sourcemodel_inflated, params)
-%UNTITLED3 Summary of this function goes here
+%fit_mne Source reconstruction of data using MNE
 %   Detailed explanation goes here
 
 if ~isfield(params,'plot_inflated')
@@ -266,6 +266,27 @@ for i_trigger = 1:n_triggers
         end
     end
 
+    %% SNR
+    % Lock-in
+    cfg = [];
+    cfg.latency = [-0.2 0];
+    data = ft_selectdata(cfg,opm_mne{i_trigger});
+    X = mean(cos(2*pi*params.trigger_freq(i_trigger)*data.time).*data.avg.pow,2);
+    Y = mean(sin(2*pi*params.trigger_freq(i_trigger)*data.time).*data.avg.pow,2);
+    tmp = complex(X,Y);
+    opm_mne{i_trigger}.N(:,1) = abs(tmp);
+
+    cfg = [];
+    cfg.latency = [0.4 0.6];
+    data = ft_selectdata(cfg,opm_mne{i_trigger});
+    X = mean(cos(2*pi*params.trigger_freq(i_trigger)*data.time).*data.avg.pow,2);
+    Y = mean(sin(2*pi*params.trigger_freq(i_trigger)*data.time).*data.avg.pow,2);
+    tmp = complex(X,Y);
+    opm_mne{i_trigger}.S(:,1) = abs(tmp);
+    [~, imax] = max(opm_mne{i_trigger}.S(:,1));
+
+    TFR{i_trigger}.SNR = TFR{i_trigger}.S(imax)/TFR{i_trigger}.N(imax);
+
 end
 
 colors = [[0 0.4470 0.7410]; % blue
@@ -383,141 +404,138 @@ if ~isempty(squidmag_peak{1,1})
     save(fullfile(save_path, ['opm_mne_peaks' cov]), 'peaks'); 
 end
 
-if isfield(params,'do_sourcemovie') && params.do_sourcemovie
-    % OPM
-    for i_trigger = 1:n_triggers
-        v = VideoWriter(fullfile(save_path,'figs', [params.sub '_opm_' params.trigger_labels{i_trigger} '.avi']),"Uncompressed AVI");
-        v.FrameRate = 15;
-        
-        v.open
-        tmp = opm_mne{i_trigger};
-        maxpow = max(max(tmp.avg.pow));
-        [~,i_start] = min(abs(tmp.time-0));
-        for i = i_start:length(tmp.time)
-            
-            viewangles = [90 0 -90 0];
-            cfg = [];
-            cfg.method          = 'surface';
-            cfg.funparameter    = 'pow';
-            cfg.funcolormap     = 'jet';    
-            cfg.colorbar        = 'no';
-            cfg.latency         = tmp.time(i);
-            h = figure;
-            h.Position = [10 10 950 450];
-            subplot(1,2,1); % right hemisphere
-            cfg.figure = h;
-            ft_sourceplot(cfg, tmp)
-            clim([0 maxpow])
-            material dull
-            view(viewangles(1),viewangles(2))
-            camlight();
-            lighting gouraud
-            title([' (t=' num2str(1e3*tmp.time(i),3) 'ms)'])
-            subplot(1,2,2); % left hemisphere
-            cfg.figure = h;
-            ft_sourceplot(cfg, tmp)
-            clim([0 maxpow])
-            material dull
-            view(viewangles(3),viewangles(4))
-            camlight()
-            lighting gouraud
-            title([' (t=' num2str(1e3*tmp.time(i),3) 'ms)'])
-        
-            writeVideo(v,getframe(h));
-            close all
-        end
-        v.close
-    end
-    
-    % SQ-GRAD
-    for i_trigger = 1:n_triggers
-        v = VideoWriter(fullfile(save_path,'figs', [params.sub '_sqgrad_' params.trigger_labels{i_trigger} '.avi']),"Uncompressed AVI");
-        v.FrameRate = 15;
-    
-        v.open
-        tmp = squidgrad_mne{i_trigger};
-        maxpow = max(max(tmp.avg.pow));
-        [~,i_start] = min(abs(tmp.time-0));
-        for i = i_start:length(tmp.time)
-            
-            viewangles = [90 0 -90 0];
-            cfg = [];
-            cfg.method          = 'surface';
-            cfg.funparameter    = 'pow';
-            cfg.funcolormap     = 'jet';    
-            cfg.colorbar        = 'no';
-            cfg.latency         = tmp.time(i);
-            h = figure;
-            h.Position = [10 10 950 450];
-            subplot(1,2,1); % right hemisphere
-            cfg.figure = h;
-            ft_sourceplot(cfg, tmp)
-            clim([0 maxpow])
-            material dull
-            view(viewangles(1),viewangles(2))
-            camlight();
-            lighting gouraud
-            title([' (t=' num2str(1e3*tmp.time(i),3) 'ms)'])
-            subplot(1,2,2); % left hemisphere
-            cfg.figure = h;
-            ft_sourceplot(cfg, tmp)
-            clim([0 maxpow])
-            material dull
-            view(viewangles(3),viewangles(4))
-            camlight()
-            lighting gouraud
-            title([' (t=' num2str(1e3*tmp.time(i),3) 'ms)'])
-        
-            writeVideo(v,getframe(h));
-            close all
-        end
-        v.close
-    end
-
-    % SQ-MAG
-    for i_trigger = 1:n_triggers
-        v = VideoWriter(['/home/chrpfe/Documents/21099_opm//Phalanges/sub02_sqmag_' params.trigger_labels{i_trigger} '.avi'],"Uncompressed AVI");
-        v.FrameRate = 15;
-    
-        v.open
-        tmp = squidmag_mne{i_trigger};
-        maxpow = max(max(tmp.avg.pow));
-        [~,i_start] = min(abs(tmp.time-0));
-        for i = i_start:length(tmp.time)
-            
-            viewangles = [90 0 -90 0];
-            cfg = [];
-            cfg.method          = 'surface';
-            cfg.funparameter    = 'pow';
-            cfg.funcolormap     = 'jet';    
-            cfg.colorbar        = 'no';
-            cfg.latency         = tmp.time(i);
-            h = figure;
-            h.Position = [10 10 950 450];
-            subplot(1,2,1); % right hemisphere
-            cfg.figure = h;
-            ft_sourceplot(cfg, tmp)
-            clim([0 maxpow])
-            material dull
-            view(viewangles(1),viewangles(2))
-            camlight();
-            lighting gouraud
-            title([' (t=' num2str(1e3*tmp.time(i),3) 'ms)'])
-            subplot(1,2,2); % left hemisphere
-            cfg.figure = h;
-            ft_sourceplot(cfg, tmp)
-            clim([0 maxpow])
-            material dull
-            view(viewangles(3),viewangles(4))
-            camlight()
-            lighting gouraud
-            title([' (t=' num2str(1e3*tmp.time(i),3) 'ms)'])
-        
-            writeVideo(v,getframe(h));
-            close all
-        end
-        v.close
-    end
-end
+% if isfield(params,'do_sourcemovie') && params.do_sourcemovie
+%     % OPM
+%     for i_trigger = 1:n_triggers
+%         v = VideoWriter(fullfile(save_path,'figs', [params.sub '_opm_' params.trigger_labels{i_trigger} '.avi']),"Uncompressed AVI");
+%         v.FrameRate = 10;
+%         
+%         v.open
+%         tmp = opm_mne{i_trigger};
+%         maxpow = max(max(tmp.avg.pow));
+%         [~,i_start] = min(abs(tmp.time-0));
+%         for i = i_start:length(tmp.time)
+%             
+%             viewangles = [90 0 -90 0];
+%             cfg = [];
+%             cfg.method          = 'surface';
+%             cfg.funparameter    = 'pow';
+%             cfg.funcolormap     = 'jet';    
+%             cfg.colorbar        = 'no';
+%             cfg.latency         = tmp.time(i);
+%             h = figure;
+%             subplot(1,2,1); % right hemisphere
+%             cfg.figure = h;
+%             ft_sourceplot(cfg, tmp)
+%             clim([0 maxpow])
+%             material dull
+%             view(viewangles(1),viewangles(2))
+%             camlight();
+%             lighting gouraud
+%             title([' (t=' num2str(1e3*tmp.time(i),3) 'ms)'])
+%             subplot(1,2,2); % left hemisphere
+%             cfg.figure = h;
+%             ft_sourceplot(cfg, tmp)
+%             clim([0 maxpow])
+%             material dull
+%             view(viewangles(3),viewangles(4))
+%             camlight()
+%             lighting gouraud
+%             title([' (t=' num2str(1e3*tmp.time(i),3) 'ms)'])
+%             set(h,'Position',[10 10 970 450]);
+%             writeVideo(v,getframe(h));
+%             close all
+%         end
+%         v.close
+%     end
+%     
+%     % SQ-GRAD
+%     for i_trigger = 1:n_triggers
+%         v = VideoWriter(fullfile(save_path,'figs', [params.sub '_sqgrad_' params.trigger_labels{i_trigger} '.avi']),"Uncompressed AVI");
+%         v.FrameRate = 10;
+%     
+%         v.open
+%         tmp = squidgrad_mne{i_trigger};
+%         maxpow = max(max(tmp.avg.pow));
+%         [~,i_start] = min(abs(tmp.time-0));
+%         for i = i_start:length(tmp.time)
+%             
+%             viewangles = [90 0 -90 0];
+%             cfg = [];
+%             cfg.method          = 'surface';
+%             cfg.funparameter    = 'pow';
+%             cfg.funcolormap     = 'jet';    
+%             cfg.colorbar        = 'no';
+%             cfg.latency         = tmp.time(i);
+%             h = figure;
+%             subplot(1,2,1); % right hemisphere
+%             cfg.figure = h;
+%             ft_sourceplot(cfg, tmp)
+%             clim([0 maxpow])
+%             material dull
+%             view(viewangles(1),viewangles(2))
+%             camlight();
+%             lighting gouraud
+%             title([' (t=' num2str(1e3*tmp.time(i),3) 'ms)'])
+%             subplot(1,2,2); % left hemisphere
+%             cfg.figure = h;
+%             ft_sourceplot(cfg, tmp)
+%             clim([0 maxpow])
+%             material dull
+%             view(viewangles(3),viewangles(4))
+%             camlight()
+%             lighting gouraud
+%             title([' (t=' num2str(1e3*tmp.time(i),3) 'ms)'])
+%             set(h,'Position',[10 10 970 450]);
+%             writeVideo(v,getframe(h));
+%             close all
+%         end
+%         v.close
+%     end
+% 
+%     % SQ-MAG
+%     for i_trigger = 1:n_triggers
+%         v = VideoWriter(fullfile(save_path,'figs', [params.sub '_sqmag_' params.trigger_labels{i_trigger} '.avi']),"Uncompressed AVI");
+%         v.FrameRate = 10;
+%     
+%         v.open
+%         tmp = squidmag_mne{i_trigger};
+%         maxpow = max(max(tmp.avg.pow));
+%         [~,i_start] = min(abs(tmp.time-0));
+%         for i = i_start:length(tmp.time)
+%             
+%             viewangles = [90 0 -90 0];
+%             cfg = [];
+%             cfg.method          = 'surface';
+%             cfg.funparameter    = 'pow';
+%             cfg.funcolormap     = 'jet';    
+%             cfg.colorbar        = 'no';
+%             cfg.latency         = tmp.time(i);
+%             h = figure;
+%             subplot(1,2,1); % right hemisphere
+%             cfg.figure = h;
+%             ft_sourceplot(cfg, tmp)
+%             clim([0 maxpow])
+%             material dull
+%             view(viewangles(1),viewangles(2))
+%             camlight();
+%             lighting gouraud
+%             title([' (t=' num2str(1e3*tmp.time(i),3) 'ms)'])
+%             subplot(1,2,2); % left hemisphere
+%             cfg.figure = h;
+%             ft_sourceplot(cfg, tmp)
+%             clim([0 maxpow])
+%             material dull
+%             view(viewangles(3),viewangles(4))
+%             camlight()
+%             lighting gouraud
+%             title([' (t=' num2str(1e3*tmp.time(i),3) 'ms)'])
+%             set(h,'Position',[10 10 970 450]);
+%             writeVideo(v,getframe(h));
+%             close all
+%         end
+%         v.close
+%     end
+% end
 
 end
