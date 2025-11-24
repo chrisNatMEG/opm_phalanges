@@ -20,6 +20,7 @@ for i_trigger = 1:n_triggers
     plot(TFR{i_trigger}.freq,TFR{i_trigger}.powspctrm);
     xlabel('Freq [Hz]')
     ylabel('Power [T^2/Hz]')
+    title(['FFT: ' params.trigger_labels{i_trigger} ' (SNR=' num2str(max(max(TFR{i_trigger}.powspctrm)) /(mean(mean(TFR{i_trigger}.powspctrm(:,[1 end])))),'%.1f') ')' ])
     saveas(h, fullfile(save_path, 'figs', [params.sub '_' params.modality '_FFT_trig-' params.trigger_labels{i_trigger} '.jpg']))
     close all
 
