@@ -143,7 +143,7 @@ if isfield(params,'do_sourcemovie') && params.do_sourcemovie
     try
         for i_trigger = 1:n_triggers
             v = VideoWriter(fullfile(base_save_path,'figs', ['mne_grnd_avg_opm_' params.trigger_labels{i_trigger} '.avi']),"Motion JPEG AVI");
-            v.FrameRate = 15;
+            v.FrameRate = 30;
             
             v.open
             tmp = opm_mne{i_trigger};
@@ -194,7 +194,7 @@ if isfield(params,'do_sourcemovie') && params.do_sourcemovie
             
             % SQ-GRAD
             v = VideoWriter(fullfile(base_save_path,'figs', ['mne_grnd_avg_sqgrad_' params.trigger_labels{i_trigger} '.avi']),"Motion JPEG AVI");
-            v.FrameRate = 15;
+            v.FrameRate = 30;
         
             v.open
             tmp = squidgrad_mne{i_trigger};
@@ -245,7 +245,7 @@ if isfield(params,'do_sourcemovie') && params.do_sourcemovie
         
             % SQ-MAG
             v = VideoWriter(fullfile(base_save_path,'figs', ['mne_grnd_avg_sqmag_' params.trigger_labels{i_trigger} '.avi']),"Motion JPEG AVI");
-            v.FrameRate = 15;
+            v.FrameRate = 30;
         
             v.open
             tmp = squidmag_mne{i_trigger};

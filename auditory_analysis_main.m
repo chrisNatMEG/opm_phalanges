@@ -41,9 +41,9 @@ if on_server
     overwrite.empty_room = false;
     overwrite.mne = true;
 
-    overwrite.sens_group = false;
+    overwrite.sens_group = true;
     overwrite.dip_group = false;
-    overwrite.mne_group = false;
+    overwrite.mne_group = true;
 else
     overwrite.preproc = true;
     overwrite.timelock = true;
@@ -173,7 +173,7 @@ bads =  {[]; %1
 if on_server
     subs_to_run = 1:size(subses,1);
 else
-    subs_to_run = 4; %1:size(subses,1)
+    subs_to_run = [2 3 4 14 15]; %1:size(subses,1)
 end
 excl_subs = [3]; % split file TODO: allow split file
 excl_subs_src = [1 excl_subs];
