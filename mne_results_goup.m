@@ -116,163 +116,167 @@ end
 
 %% source movies
 if isfield(params,'do_sourcemovie') && params.do_sourcemovie
-    % OPM
-    for i_trigger = 1:n_triggers
-        v = VideoWriter(fullfile(base_save_path,'figs', ['mne_grnd_avg_opm_' params.trigger_labels{i_trigger} '.avi']),"Motion JPEG AVI");
-        v.FrameRate = 15;
+    try
+        % OPM
+        for i_trigger = 1:n_triggers
+            v = VideoWriter(fullfile(base_save_path,'figs', ['mne_grnd_avg_opm_' params.trigger_labels{i_trigger} '.avi']),"Motion JPEG AVI");
+            v.FrameRate = 15;
+            
+            open(v)
+            tmp = opm_mne{i_trigger};
+            maxpow = max(max(tmp.avg.pow));
+            [~,i_start] = min(abs(tmp.time-0));
+            for i = i_start:length(tmp.time)           
+                viewangles = [90 0 -90 0];
+                cfg = [];
+                cfg.method          = 'surface';
+                cfg.funparameter    = 'pow';
+                cfg.funcolormap     = 'jet';    
+                cfg.colorbar        = 'no';
+                cfg.latency         = tmp.time(i);
+                h = figure;
+                set(gcf,'Position',[100 100 1000 900]);
+                subplot(2,2,1); % right hemisphere
+                cfg.figure = h;
+                ft_sourceplot(cfg, tmp)
+                clim([0 maxpow])
+                material dull
+                view(viewangles(1),viewangles(2))
+                camlight();
+                lighting gouraud
+                title([' t=' num2str(round(1e3*tmp.time(i)),'%03d') 'ms'])
+                subplot(2,2,2); % left hemisphere
+                cfg.figure = h;
+                ft_sourceplot(cfg, tmp)
+                clim([0 maxpow])
+                material dull
+                view(viewangles(3),viewangles(4))
+                camlight()
+                lighting gouraud
+                title([' t=' num2str(round(1e3*tmp.time(i)),'%03d') 'ms'])
+                subplot(2,2,[3 4]); % left hemisphere
+                plot(tmp.time*1e3,mean(tmp.avg.pow,1))
+                hold on
+                xlabel('t (ms)')
+                ylabel('Mean Power')
+                set(gcf,'Position',[100 100 1000 900]);
+                ylimits = ylim;
+                plot([tmp.time(i) tmp.time(i)]*1e3,ylimits,'r--')
+                hold off
+                pause(1)
+                writeVideo(v,getframe(h));
+                close all
+            end
+            close(v)
+        end
         
-        v.open
-        tmp = opm_mne{i_trigger};
-        maxpow = max(max(tmp.avg.pow));
-        [~,i_start] = min(abs(tmp.time-0));
-        for i = i_start:length(tmp.time)           
-            viewangles = [90 0 -90 0];
-            cfg = [];
-            cfg.method          = 'surface';
-            cfg.funparameter    = 'pow';
-            cfg.funcolormap     = 'jet';    
-            cfg.colorbar        = 'no';
-            cfg.latency         = tmp.time(i);
-            h = figure;
-            set(gcf,'Position',[100 100 1000 900]);
-            subplot(2,2,1); % right hemisphere
-            cfg.figure = h;
-            ft_sourceplot(cfg, tmp)
-            clim([0 maxpow])
-            material dull
-            view(viewangles(1),viewangles(2))
-            camlight();
-            lighting gouraud
-            title([' t=' num2str(round(1e3*tmp.time(i)),'%03d') 'ms'])
-            subplot(2,2,2); % left hemisphere
-            cfg.figure = h;
-            ft_sourceplot(cfg, tmp)
-            clim([0 maxpow])
-            material dull
-            view(viewangles(3),viewangles(4))
-            camlight()
-            lighting gouraud
-            title([' t=' num2str(round(1e3*tmp.time(i)),'%03d') 'ms'])
-            subplot(2,2,[3 4]); % left hemisphere
-            plot(tmp.time*1e3,mean(tmp.avg.pow,1))
-            hold on
-            xlabel('t (ms)')
-            ylabel('Mean Power')
-            set(gcf,'Position',[100 100 1000 900]);
-            ylimits = ylim;
-            plot([tmp.time(i) tmp.time(i)]*1e3,ylimits,'r--')
-            hold off
-            pause(1)
-            writeVideo(v,getframe(h));
-            close all
+        % SQ-GRAD
+        for i_trigger = 1:n_triggers
+            v = VideoWriter(fullfile(base_save_path,'figs', ['mne_grnd_avg_sqgrad_' params.trigger_labels{i_trigger} '.avi']),"Motion JPEG AVI");
+            v.FrameRate = 15;
+        
+            opne(v)
+            tmp = squidgrad_mne{i_trigger};
+            maxpow = max(max(tmp.avg.pow));
+            [~,i_start] = min(abs(tmp.time-0));
+            for i = i_start:length(tmp.time)           
+                viewangles = [90 0 -90 0];
+                cfg = [];
+                cfg.method          = 'surface';
+                cfg.funparameter    = 'pow';
+                cfg.funcolormap     = 'jet';    
+                cfg.colorbar        = 'no';
+                cfg.latency         = tmp.time(i);
+                h = figure;
+                set(gcf,'Position',[100 100 1000 900]);
+                subplot(2,2,1); % right hemisphere
+                cfg.figure = h;
+                ft_sourceplot(cfg, tmp)
+                clim([0 maxpow])
+                material dull
+                view(viewangles(1),viewangles(2))
+                camlight();
+                lighting gouraud
+                title([' t=' num2str(round(1e3*tmp.time(i)),'%03d') 'ms'])
+                subplot(2,2,2); % left hemisphere
+                cfg.figure = h;
+                ft_sourceplot(cfg, tmp)
+                clim([0 maxpow])
+                material dull
+                view(viewangles(3),viewangles(4))
+                camlight()
+                lighting gouraud
+                title([' t=' num2str(round(1e3*tmp.time(i)),'%03d') 'ms'])
+                subplot(2,2,[3 4]); % left hemisphere
+                plot(tmp.time*1e3,mean(tmp.avg.pow,1))
+                hold on
+                xlabel('t (ms)')
+                ylabel('Mean Power')
+                set(gcf,'Position',[100 100 1000 900]);
+                ylimits = ylim;
+                plot([tmp.time(i) tmp.time(i)]*1e3,ylimits,'r--')
+                hold off
+                pause(1)
+                writeVideo(v,getframe(h));
+                close all
+            end
+            close(v)
         end
-        v.close
-    end
     
-    % SQ-GRAD
-    for i_trigger = 1:n_triggers
-        v = VideoWriter(fullfile(base_save_path,'figs', ['mne_grnd_avg_sqgrad_' params.trigger_labels{i_trigger} '.avi']),"Motion JPEG AVI");
-        v.FrameRate = 15;
-    
-        v.open
-        tmp = squidgrad_mne{i_trigger};
-        maxpow = max(max(tmp.avg.pow));
-        [~,i_start] = min(abs(tmp.time-0));
-        for i = i_start:length(tmp.time)           
-            viewangles = [90 0 -90 0];
-            cfg = [];
-            cfg.method          = 'surface';
-            cfg.funparameter    = 'pow';
-            cfg.funcolormap     = 'jet';    
-            cfg.colorbar        = 'no';
-            cfg.latency         = tmp.time(i);
-            h = figure;
-            set(gcf,'Position',[100 100 1000 900]);
-            subplot(2,2,1); % right hemisphere
-            cfg.figure = h;
-            ft_sourceplot(cfg, tmp)
-            clim([0 maxpow])
-            material dull
-            view(viewangles(1),viewangles(2))
-            camlight();
-            lighting gouraud
-            title([' t=' num2str(round(1e3*tmp.time(i)),'%03d') 'ms'])
-            subplot(2,2,2); % left hemisphere
-            cfg.figure = h;
-            ft_sourceplot(cfg, tmp)
-            clim([0 maxpow])
-            material dull
-            view(viewangles(3),viewangles(4))
-            camlight()
-            lighting gouraud
-            title([' t=' num2str(round(1e3*tmp.time(i)),'%03d') 'ms'])
-            subplot(2,2,[3 4]); % left hemisphere
-            plot(tmp.time*1e3,mean(tmp.avg.pow,1))
-            hold on
-            xlabel('t (ms)')
-            ylabel('Mean Power')
-            set(gcf,'Position',[100 100 1000 900]);
-            ylimits = ylim;
-            plot([tmp.time(i) tmp.time(i)]*1e3,ylimits,'r--')
-            hold off
-            pause(1)
-            writeVideo(v,getframe(h));
-            close all
+        % SQ-MAG
+        for i_trigger = 1:n_triggers
+            v = VideoWriter(fullfile(base_save_path,'figs', ['mne_grnd_avg_sqmag_' params.trigger_labels{i_trigger} '.avi']),"Motion JPEG AVI");
+            v.FrameRate = 15;
+        
+            open(v)
+            tmp = squidmag_mne{i_trigger};
+            maxpow = max(max(tmp.avg.pow));
+            [~,i_start] = min(abs(tmp.time-0));
+            for i = i_start:length(tmp.time)           
+                viewangles = [90 0 -90 0];
+                cfg = [];
+                cfg.method          = 'surface';
+                cfg.funparameter    = 'pow';
+                cfg.funcolormap     = 'jet';    
+                cfg.colorbar        = 'no';
+                cfg.latency         = tmp.time(i);
+                h = figure;
+                set(gcf,'Position',[100 100 1000 900]);
+                subplot(2,2,1); % right hemisphere
+                cfg.figure = h;
+                ft_sourceplot(cfg, tmp)
+                clim([0 maxpow])
+                material dull
+                view(viewangles(1),viewangles(2))
+                camlight();
+                lighting gouraud
+                title([' t=' num2str(round(1e3*tmp.time(i)),'%03d') 'ms'])
+                subplot(2,2,2); % left hemisphere
+                cfg.figure = h;
+                ft_sourceplot(cfg, tmp)
+                clim([0 maxpow])
+                material dull
+                view(viewangles(3),viewangles(4))
+                camlight()
+                lighting gouraud
+                title([' t=' num2str(round(1e3*tmp.time(i)),'%03d') 'ms'])
+                subplot(2,2,[3 4]); % left hemisphere
+                plot(tmp.time*1e3,mean(tmp.avg.pow,1))
+                hold on
+                xlabel('t (ms)')
+                ylabel('Mean Power')
+                set(gcf,'Position',[100 100 1000 900]);
+                ylimits = ylim;
+                plot([tmp.time(i) tmp.time(i)]*1e3,ylimits,'r--')
+                hold off
+                pause(1)
+                writeVideo(v,getframe(h));
+                close all
+            end
+            close(v)
         end
-        v.close
-    end
-
-    % SQ-MAG
-    for i_trigger = 1:n_triggers
-        v = VideoWriter(fullfile(base_save_path,'figs', ['mne_grnd_avg_sqmag_' params.trigger_labels{i_trigger} '.avi']),"Motion JPEG AVI");
-        v.FrameRate = 15;
-    
-        v.open
-        tmp = squidmag_mne{i_trigger};
-        maxpow = max(max(tmp.avg.pow));
-        [~,i_start] = min(abs(tmp.time-0));
-        for i = i_start:length(tmp.time)           
-            viewangles = [90 0 -90 0];
-            cfg = [];
-            cfg.method          = 'surface';
-            cfg.funparameter    = 'pow';
-            cfg.funcolormap     = 'jet';    
-            cfg.colorbar        = 'no';
-            cfg.latency         = tmp.time(i);
-            h = figure;
-            set(gcf,'Position',[100 100 1000 900]);
-            subplot(2,2,1); % right hemisphere
-            cfg.figure = h;
-            ft_sourceplot(cfg, tmp)
-            clim([0 maxpow])
-            material dull
-            view(viewangles(1),viewangles(2))
-            camlight();
-            lighting gouraud
-            title([' t=' num2str(round(1e3*tmp.time(i)),'%03d') 'ms'])
-            subplot(2,2,2); % left hemisphere
-            cfg.figure = h;
-            ft_sourceplot(cfg, tmp)
-            clim([0 maxpow])
-            material dull
-            view(viewangles(3),viewangles(4))
-            camlight()
-            lighting gouraud
-            title([' t=' num2str(round(1e3*tmp.time(i)),'%03d') 'ms'])
-            subplot(2,2,[3 4]); % left hemisphere
-            plot(tmp.time*1e3,mean(tmp.avg.pow,1))
-            hold on
-            xlabel('t (ms)')
-            ylabel('Mean Power')
-            set(gcf,'Position',[100 100 1000 900]);
-            ylimits = ylim;
-            plot([tmp.time(i) tmp.time(i)]*1e3,ylimits,'r--')
-            hold off
-            pause(1)
-            writeVideo(v,getframe(h));
-            close all
-        end
-        v.close
+    catch
+        disp('Sourcemovies error');
     end
 end
 
