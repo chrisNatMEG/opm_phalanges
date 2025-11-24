@@ -38,11 +38,11 @@ if on_server
     overwrite.mri = false;
     overwrite.dip = false;
     overwrite.empty_room = false;
-    overwrite.mne = true;
+    overwrite.mne = false;
 
-    overwrite.sens_group = false;
+    overwrite.sens_group = true;
     overwrite.dip_group = false;
-    overwrite.mne_group = true;
+    overwrite.mne_group = false;
 else
     overwrite.preproc = false;
     overwrite.timelock = true;
@@ -70,7 +70,7 @@ params.baseline = [-params.pre 0];
 
 % Filter
 params.filter = [];
-params.filter.hp_freq = 0.1;
+params.filter.hp_freq = 1;%0.1;
 params.filter.lp_freq = 70;
 params.filter.bp_freq = [];
 params.filter.notch = [50 60]; %[50 60 100 120 150];
@@ -180,7 +180,7 @@ if on_server
 else
     subs_to_run = 2; %1:size(subses,1)
 end
-excl_subs = [1];
+excl_subs = [];
 excl_subs_src = [1 excl_subs];
 
 %% Loop over subjects
@@ -492,7 +492,7 @@ for i_sub = setdiff(subs_to_run,excl_subs)
 
     %% Dipole fits
     ft_hastoolbox('mne',1);  
-    if exist(fullfile(save_path, [params.peaks{1}.label '_dipoles.mat']),'file') && overwrite.dip==false
+    if exist(fullfile(save_path, ['squidgrad_' params.peaks{1}.label '_dipoles.mat']),'file') && overwrite.dip==false
         disp(['Not overwriting dipole source reconstruction for ' params.sub]);
     elseif exist(fullfile(save_path, [params.sub '_opm_timelockedT.mat']),'file')
         headmodel = load(fullfile(save_path_mri, 'headmodels.mat')).headmodels.headmodel_meg;
