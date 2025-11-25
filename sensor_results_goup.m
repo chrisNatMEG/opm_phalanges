@@ -618,7 +618,8 @@ for i_trigger = 1:n_triggers
     ylimits = ylim;
     ylimits = [-max(abs(ylimits)) max(abs(ylimits))]; % make the yaxis symmetric
     ylim(ylimits)
-    saveas(h, fullfile(base_save_path, 'figs', ['opm_grndAvg_butterfly_trig-' params.trigger_labels{i_trigger} '.jpg']))
+    set(gca,'fontsize', 20) 
+    saveas(h, fullfile(base_save_path, 'figs', ['opm_grndAvg_butterfly_trig-' params.trigger_labels{i_trigger} '.svg']))
     close all
     
     for i_peak = 1:length(params.peaks)
@@ -644,7 +645,8 @@ for i_trigger = 1:n_triggers
     ylabel('B [fT]')
     xlim([-params.pre params.post]*1e3);
     title(['Grand average squidgrad - phalange ' params.trigger_labels{i_trigger}])
-    saveas(h, fullfile(base_save_path, 'figs', ['squidgrad_grndAvg_butterfly_trig-' params.trigger_labels{i_trigger} '.jpg']))
+    set(gca,'fontsize', 20) 
+    saveas(h, fullfile(base_save_path, 'figs', ['squidgrad_grndAvg_butterfly_trig-' params.trigger_labels{i_trigger} '.svg']))
     close all
 
     for i_peak = 1:length(params.peaks)
@@ -671,7 +673,8 @@ for i_trigger = 1:n_triggers
     xlim([-params.pre params.post]*1e3);
     title(['Grand average squidmag - phalange ' params.trigger_labels{i_trigger}])
     ylim(ylimits)
-    saveas(h, fullfile(base_save_path, 'figs', ['squidmag_grndAvg_butterfly_trig-' params.trigger_labels{i_trigger} '.jpg']))
+    set(gca,'fontsize', 20) 
+    saveas(h, fullfile(base_save_path, 'figs', ['squidmag_grndAvg_butterfly_trig-' params.trigger_labels{i_trigger} '.svg']))
     close all
 
     for i_peak = 1:length(params.peaks)

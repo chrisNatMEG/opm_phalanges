@@ -112,7 +112,7 @@ params.trigger_codes = {1 [3 11] [5 13]}; % combined oddball-nogo and oddball-go
 params.trigger_labels = {'std' 'oddNoGo' 'oddGo'};
 params.trigger_freq = [39 43 43];
 % params.trigger_codes = {1 3 5 11 13};
-% params.trigger_labels = {'STD' 'LNG' 'LG' 'HNG' 'HG'};
+% params.trigger_labels = {'STD' 'LSNG' 'LG' 'HNG' 'HG'};
 
 % Evoked peaks to analyze
 params.peaks = {};
