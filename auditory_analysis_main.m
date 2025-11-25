@@ -45,18 +45,18 @@ if on_server
     overwrite.dip_group = false;
     overwrite.mne_group = true;
 else
-    overwrite.preproc = true;
-    overwrite.timelock = true;
-    overwrite.TFR = true;
+    overwrite.preproc = false;
+    overwrite.timelock = false;
+    overwrite.TFR = false;
     overwrite.coreg = false;
     overwrite.mri = false;
     overwrite.dip = false;
     overwrite.empty_room = false;
-    overwrite.mne = true;
+    overwrite.mne = false;
 
-    overwrite.sens_group = false;
+    overwrite.sens_group = true;
     overwrite.dip_group = false;
-    overwrite.mne_group = false;
+    overwrite.mne_group = true;
 end
 
 %% Params
@@ -103,7 +103,7 @@ params.debug = false; % Do manual rejection
 
 % ICA ECG&EOG artifact removal 
 params.n_comp = 40;
-params.ica_cor = 0.8; % cutoff for EOG/ECG coherence
+params.ica_cor = 0.9; % cutoff for EOG/ECG coherence
 params.ica_coh = 0.95; % cutoff for EOG/ECG coherence
 
 % Timelocking
@@ -119,6 +119,9 @@ params.peaks = {};
 params.peaks{1} = [];
 params.peaks{1}.label = 'M100';
 params.peaks{1}.peak_latency = [0.08 0.13];
+params.peaks{2} = [];
+params.peaks{2}.label = 'FreqTag';
+params.peaks{2}.peak_latency = [0.5 0.6];
 
 % Time-Frequency
 params.tfr = true;
@@ -173,7 +176,7 @@ bads =  {[]; %1
 if on_server
     subs_to_run = 1:size(subses,1);
 else
-    subs_to_run = [2 3 4 14 15]; %1:size(subses,1)
+    subs_to_run = [2 4 14 15]; %1:size(subses,1)
 end
 excl_subs = [3]; % split file TODO: allow split file
 excl_subs_src = [1 excl_subs];

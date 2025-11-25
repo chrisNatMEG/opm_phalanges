@@ -57,12 +57,12 @@ for i_peak = 1:length(params.peaks)
         peak_squidgrad = load(fullfile(save_path, [params.sub '_squidgrad_' params.peaks{1}.label '.mat'])).peak; 
         peak_squideeg = load(fullfile(save_path, [params.sub '_squideeg_' params.peaks{1}.label '.mat'])).peak;
 
-        if exists(load(fullfile(save_path, [params.sub '_opm_' params.peaks{1}.label '.mat'])))
-            TFR_opm = load(fullfile(save_path, [params.sub '_opm_' params.peaks{1}.label '.mat'])).peak; 
-            TFR_opmeeg = load(fullfile(save_path, [params.sub '_opmeeg_' params.peaks{1}.label '.mat'])).peak; 
-            TFR_squid = load(fullfile(save_path, [params.sub '_squid_' params.peaks{1}.label '.mat'])).peak; 
-            TFR_squidgrad = load(fullfile(save_path, [params.sub '_squidgrad_' params.peaks{1}.label '.mat'])).peak; 
-            TFR_squideeg = load(fullfile(save_path, [params.sub '_squideeg_' params.peaks{1}.label '.mat'])).peak;
+        if exist(fullfile(save_path, [params.sub '_opm_TFR.mat']),'file')
+            TFR_opm = load(fullfile(save_path, [params.sub '_opm_TFR.mat'])).TFR; 
+            TFR_opmeeg = load(fullfile(save_path, [params.sub '_opmeeg_TFR.mat'])).TFR; 
+            TFR_squid = load(fullfile(save_path, [params.sub '_squid_TFR.mat'])).TFR; 
+            TFR_squidgrad = load(fullfile(save_path, [params.sub '_squidgrad_TFR.mat'])).TFR; 
+            TFR_squideeg = load(fullfile(save_path, [params.sub '_squideeg_TFR.mat'])).TFR;
         end
     
         clear squid_timelocked opm_timelocked squideeg_timelocked opmeeg_timelocked
