@@ -135,7 +135,7 @@ for i_trigger = 1:length(params.trigger_codes)
 
         %% Plot topography
         cfg = [];
-        cfg.xlim = [peak{i_trigger,i_peak}.peak_latency-0.005 peak{i_trigger,i_peak}.peak_latency+0.005];
+        cfg.xlim = [peak{i_trigger,i_peak}.peak_latency-0.002 peak{i_trigger,i_peak}.peak_latency+0.002];
         cfg.layout = params.layout; 
         cfg.parameter = 'avg';
         cfg.channel = params.chs;
