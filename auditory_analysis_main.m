@@ -34,16 +34,16 @@ overwrite = [];
 if on_server
     overwrite.preproc = true;
     overwrite.timelock = true;
-    overwrite.TFR = true;
-    overwrite.coreg = true;
+    overwrite.TFR = false;
+    overwrite.coreg = false;
     overwrite.mri = false;
-    overwrite.dip = false;
+    overwrite.dip = true;
     overwrite.empty_room = false;
-    overwrite.mne = true;
+    overwrite.mne = false;
 
     overwrite.sens_group = true;
-    overwrite.dip_group = false;
-    overwrite.mne_group = true;
+    overwrite.dip_group = true;
+    overwrite.mne_group = false;
 else
     overwrite.preproc = false;
     overwrite.timelock = false;
@@ -66,7 +66,7 @@ params.paradigm = 'AudOdd';
 
 % Trials
 params.pre = 0.2; %0.1 sec
-params.post = 0.75+0.2; %0.5 sec
+params.post = 1.0; %0.5 sec
 params.pad = 0.2; %sec
 params.delay = 0.01; % Stimulus delay in seconds (e.g., 0.01 for eartubes or 0.041 for membranes).
 params.baseline = [-0.2 0];
@@ -76,8 +76,8 @@ params.eeg_reref = 'all';%'EEG023';
 
 % Filter
 params.filter = [];
-params.filter.hp_freq =0.1;
-params.filter.lp_freq = 50;
+params.filter.hp_freq =1;%0.1;
+params.filter.lp_freq = 30;%50;
 params.filter.bp_freq = [];
 params.filter.notch = [50 60]; %[50 60 100 120 150];
 
@@ -119,16 +119,16 @@ params.peaks = {};
 params.peaks{1} = [];
 params.peaks{1}.label = 'M100';
 params.peaks{1}.peak_latency = [0.08 0.13];
-params.peaks{2} = [];
-params.peaks{2}.label = 'FreqTag';
-params.peaks{2}.peak_latency = [0.5 0.6];
+%params.peaks{2} = [];
+%params.peaks{2}.label = 'FreqTag';
+%params.peaks{2}.peak_latency = [0.5 0.6];
 
 % Time-Frequency
 params.tfr = true;
 
 % HPI coregistration
 params.hpi_freq = 33;
-params.hpi_gof = 0.9;
+params.hpi_gof = 0.95;
 
 % Source reconstruction - dipoles
 params.numdipoles = 2;
@@ -158,20 +158,20 @@ subses = {'0005' '240208';
     '1215' '250415'};
 
 bads =  {[]; %1
-    {'R409_bz'}; %2
-    {'L503_bz', 'R403_bz', 'R408_bz', 'R409_bz'}; %3 
-    {'L109_bz', 'L604_bz', 'L205_bz', 'L209_bz', 'R403_bz', 'R408_bz'}; %4
-    {'L102_bz', 'L310_bz', 'L209_bz', 'L505_bz', 'R403_bz', 'R408_bz', 'R409_bz'}; %5
-    {'L409_bz', 'R304_bz', 'L310_bz', 'R403_bz', 'R408_bz', 'R409_bz'}; %6
-    {'L209_bz', 'R403_bz', 'R408_bz', 'R409_bz'}; %7
-    {'L209_bz', 'L502_bz', 'R209_bz', 'R403_bz', 'R402_bz', 'R502_bz', 'R409_bz'}; %8
-    {'L502_bz', 'L503_bz', 'L209_bz', 'R408_bz'}; %9
-    {'L111_bz', 'L209_bz', 'R408_bz'}; %10
-    {'L603_bz', 'L209_bz', 'L109_bz', 'L111_bz', 'R408_bz'}; %11
-    {'L604_bz', 'L209_bz', 'R408_bz'}; %12
-    {'L604_bz', 'R401_bz', 'L209_bz', 'L109_bz', 'L111_bz', 'R408_bz'}; %13
-    {'L209_bz', 'L411_bz', 'L504_bz', 'L401_bz', 'R409_bz'}; %14
-    {'L502_bz', 'R403_bz', 'R409_bz'}}; %15
+    {}; %2
+    {}; %3 
+    {}; %4
+    {}; %5
+    {}; %6
+    {}; %7
+    {}; %8
+    {}; %9
+    {}; %10
+    {}; %11
+    {}; %12
+    {}; %13
+    {}; %14
+    {}}; %15
 
 if on_server
     subs_to_run = 1:size(subses,1);

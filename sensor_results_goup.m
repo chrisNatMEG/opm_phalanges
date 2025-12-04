@@ -597,7 +597,7 @@ for i_trigger = 1:n_triggers
     ylabel('B [fT]')
     xlim([-params.pre params.post]*1e3);
     title(['OPM grand avgerage: ' params.trigger_labels{i_trigger}])
-    set(gca, 'fontsize',14)
+    set(gca, 'fontsize',16)
     saveas(h, fullfile(base_save_path, 'figs', ['opm_grndAvg_butterfly2_trig-' params.trigger_labels{i_trigger} '.jpg']))
     close all
 end
@@ -614,11 +614,11 @@ for i_trigger = 1:n_triggers
     xlabel('t [msec]')
     ylabel('B [fT]')
     xlim([-params.pre params.post]*1e3);
-    title(['Grand average opm - phalange ' params.trigger_labels{i_trigger}])
+    title(['Opm - phalange ' params.trigger_labels{i_trigger}])
     ylimits = ylim;
     ylimits = [-max(abs(ylimits)) max(abs(ylimits))]; % make the yaxis symmetric
     ylim(ylimits)
-    set(gca,'fontsize', 20) 
+    set(gca,'fontsize', 14) 
     saveas(h, fullfile(base_save_path, 'figs', ['opm_grndAvg_butterfly_trig-' params.trigger_labels{i_trigger} '.svg']))
     close all
     
@@ -644,8 +644,8 @@ for i_trigger = 1:n_triggers
     xlabel('t [msec]')
     ylabel('B [fT]')
     xlim([-params.pre params.post]*1e3);
-    title(['Grand average squidgrad - phalange ' params.trigger_labels{i_trigger}])
-    set(gca,'fontsize', 20) 
+    title(['SQGRAD - phalange ' params.trigger_labels{i_trigger}])
+    set(gca,'fontsize', 14) 
     saveas(h, fullfile(base_save_path, 'figs', ['squidgrad_grndAvg_butterfly_trig-' params.trigger_labels{i_trigger} '.svg']))
     close all
 
@@ -671,9 +671,9 @@ for i_trigger = 1:n_triggers
     xlabel('t [msec]')
     ylabel('B [fT]')
     xlim([-params.pre params.post]*1e3);
-    title(['Grand average squidmag - phalange ' params.trigger_labels{i_trigger}])
+    title(['SQMAG - phalange ' params.trigger_labels{i_trigger}])
     ylim(ylimits)
-    set(gca,'fontsize', 20) 
+    set(gca,'fontsize', 14) 
     saveas(h, fullfile(base_save_path, 'figs', ['squidmag_grndAvg_butterfly_trig-' params.trigger_labels{i_trigger} '.svg']))
     close all
 

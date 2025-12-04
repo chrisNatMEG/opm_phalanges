@@ -326,7 +326,7 @@ for i_peak = 1:length(params.peaks)
                     T{['Dip_L mom [nAm]'], params.trigger_labels{i_trigger}} = 1e9*1e-4*max(vecnorm(data.dip.mom(1,:),2,1));
                     T{['Dip_R mom [nAm]'], params.trigger_labels{i_trigger}} = 1e9*1e-4*max(vecnorm(data.dip.mom(2,:),2,1));
                     T{['ResVar_L [%]'], params.trigger_labels{i_trigger}} = data.dip.rv(1)*100;
-                    T{['ResVar_R [%]'], params.trigger_labels{i_trigger}} = data.dip.rv(2)*100;
+                    T{['ResVar_R [%]'], params.trigger_labels{i_trigger}} = data.dip.rv(1)*100;
                 end
                 
                 % Convert the MATLAB table to a DOM table

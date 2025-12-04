@@ -12,6 +12,8 @@ elseif isfield(params,'use_cov') && strcmp(params.use_cov,'empty_room')
     cov = '_covER';
 end
 
+numdipoles = params.numdipoles;
+params.numdipoles = 1;
 if params.numdipoles == 2
     hemi_labels = {'_RH', '_LH'};
 elseif params.numdipoles == 1
@@ -182,7 +184,7 @@ if isfield(params,'do_sourcemovie') && params.do_sourcemovie
                 hold on
                 xlabel('t (ms)')
                 ylabel('Mean Power')
-                set(gcf,'Position',[100 100 1000 900]);
+                set(gcf,'Position',[100 100 1100 900]);
                 ylimits = ylim;
                 plot([tmp.time(i) tmp.time(i)]*1e3,ylimits,'r--')
                 hold off
@@ -294,12 +296,19 @@ if isfield(params,'do_sourcemovie') && params.do_sourcemovie
             end
             v.close
         end
-    catch
+    catch ME
         disp('Sourcemovie error')
     end
 end
 
 %%
+params.numdipoles = numdipoles;
+if params.numdipoles == 2
+    hemi_labels = {'_RH', '_LH'};
+elseif params.numdipoles == 1
+    hemi_labels = {''};
+end
+
 for i_peak = 1:length(params.peaks)
     peak_label = ['_' params.peaks{i_peak}.label];
     for i_hemi = 1:params.numdipoles
