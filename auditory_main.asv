@@ -74,11 +74,11 @@ if on_server
     overwrite.mri = false;
     overwrite.dip = true;
     overwrite.empty_room = false;
-    overwrite.mne = false;
+    overwrite.mne = true;
 
     overwrite.sens_group = true;
     overwrite.dip_group = true;
-    overwrite.mne_group = false;
+    overwrite.mne_group = true;
 else
     overwrite.preproc = false;
     overwrite.timelock = false;
@@ -180,6 +180,21 @@ params.subs_to_run = 1:size(subses,1);
 params.excl_subs = [3]; % split file TODO: allow split file
 params.excl_subs_src = [1 params.excl_subs];
 
+paths.base_save_path = fullfile(base_save_path,params.paradigm);
 
+%% Run 1: Evoked only
+runAll(overwrite, params, subses, bads, paths)
 
+%% Run 2: FreqTag
+overwrite.preproc = true;
+overwrite.timelock = true;
+overwrite.TFR = false;
+overwrite.coreg = false;
+overwrite.mri = false;
+overwrite.dip = false;
+overwrite.empty_room = false;
+overwrite.mne = true;
 
+overwrite.sens_group = true;
+overwrite.dip_group = true;
+overwrite.mne_group = true;

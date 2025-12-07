@@ -111,7 +111,7 @@ params.eeg_reref = 'all';%'EEG023';
 
 % Filter
 params.filter = [];
-params.filter.hp_freq =0.1;%0.1;
+params.filter.hp_freq = 0.1;%0.1;
 params.filter.lp_freq = 30;%50;
 params.filter.bp_freq = [];
 params.filter.notch = [50 60]; %[50 60 100 120 150];
@@ -120,11 +120,7 @@ params.filter.notch = [50 60]; %[50 60 100 120 150];
 params.do_hfc = true;
 params.hfc_order = 1;
 params.do_amm = false;
-params.amm_in = 12;
-params.amm_out = 2;
-params.amm_thr = 1;
 params.do_ssp = false;
-params.ssp_n = 6;
 
 % Bad channel and trial detection thresholds
 params.outlier_zscore = 3; % Outliers: how many stddevs above mean
@@ -146,20 +142,12 @@ params.ds_freq = 1000; % downsample frequency (timelock)
 params.trigger_codes = {1 [3 11] [5 13]}; % combined oddball-nogo and oddball-go
 params.trigger_labels = {'std' 'oddNoGo' 'oddGo'};
 params.trigger_freq = [39 43 43];
-% params.trigger_codes = {1 3 5 11 13};
-% params.trigger_labels = {'STD' 'LSNG' 'LG' 'HNG' 'HG'};
 
 % Evoked peaks to analyze
 params.peaks = {};
 params.peaks{1} = [];
 params.peaks{1}.label = 'M100';
 params.peaks{1}.peak_latency = [0.08 0.13];
-%params.peaks{2} = [];
-%params.peaks{2}.label = 'FreqTag';
-%params.peaks{2}.peak_latency = [0.5 0.6];
-
-% Time-Frequency
-params.tfr = false;
 
 % HPI coregistration
 params.hpi_freq = 33;
@@ -180,6 +168,33 @@ params.subs_to_run = 1:size(subses,1);
 params.excl_subs = [3]; % split file TODO: allow split file
 params.excl_subs_src = [1 params.excl_subs];
 
+paths.base_save_path = fullfile(base_save_path,params.paradigm);
 
+%% Run 1: Evoked only
+try
+    runAll(overwrite, params, subses, bads, paths)
+catch
+    disp('error in run 1')
+end
 
+%% Run 2: FreqTag
+overwrite.preproc = true;
+overwrite.timelock = true;
+overwrite.TFR = true;
+overwrite.coreg = false;
+overwrite.mri = false;
+overwrite.dip = false;
+overwrite.empty_room = false;
+overwrite.mne = true;
+overwrite.sens_group = false;
+overwrite.dip_group = false;
+overwrite.mne_group = true;
 
+params.filter.lp_freq = 50;
+paths.base_save_path = fullfile(base_save_path,'AudFreqTag');
+
+try
+    runAll(overwrite, params, subses, bads, paths)
+catch
+    disp('error in run 2')
+end

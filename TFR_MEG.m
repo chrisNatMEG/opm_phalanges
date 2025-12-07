@@ -32,7 +32,7 @@ for i_trigger = 1:n_triggers
 
     cfg = [];
     cfg.layout       = params.layout;
-    cfg.xlim = [0.4 0.6];
+    cfg.xlim = [0.5 0.7];
     cfg.parameter = 'avg';  
     h=figure; ft_topoplotER(cfg, timelocked{i_trigger});
     saveas(h, fullfile(save_path, 'figs', [params.sub '_' params.modality 'timelockFreqTag-topo_trig-' params.trigger_labels{i_trigger} '.jpg']))

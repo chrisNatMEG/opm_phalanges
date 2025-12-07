@@ -1,8 +1,8 @@
 function runAll(overwrite, params, subses, bads, paths)
 
 % Create paradigm if it does not exist yet
-if ~exist(fullfile(paths.base_save_path,params.paradigm), 'dir')
-    mkdir(fullfile(paths.base_save_path,params.paradigm))
+if ~exist(fullfile(paths.base_save_path), 'dir')
+    mkdir(fullfile(paths.base_save_path))
 end
 
 save(fullfile(paths.base_save_path,params.paradigm, 'params.mat'), 'params', '-v7.3'); 
