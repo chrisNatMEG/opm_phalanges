@@ -1,189 +1,15 @@
-%% Reset all
-clear all
-close all
-restoredefaultpath
+function runAll(overwrite, params, subses, bads, paths)
 
-%% Base paths
-if contains(pwd,'/home/chrpfe')
-    % Server:
-    base_data_path = '/archive/21099_opm/';
-    base_save_path = '/home/chrpfe/Documents/21099_opm/';
-    base_matlab_path = '/home/chrpfe/Documents/MATLAB/';
-    project_scripts_path = '/home/chrpfe/Documents/MATLAB/21099_opm/phalanges';
-    on_server = true;
-else
-    % Laptop:
-    base_data_path = '/Volumes/dataarchvie/21099_opm';
-    base_save_path = '/Users/christophpfeiffer/data_local/Benchmarking/';
-    base_matlab_path = '/Users/christophpfeiffer/Dropbox/Mac/Documents/MATLAB';
-    project_scripts_path = '/Users/christophpfeiffer/opm_phalanges';
-    on_server = false;
+% Create paradigm if it does not exist yet
+if ~exist(fullfile(paths.base_save_path,params.paradigm), 'dir')
+    mkdir(fullfile(paths.base_save_path,params.paradigm))
 end
 
-%% Set up fieldtrip
-addpath(fullfile(base_matlab_path,'fieldtrip/')) % Fieldtrip path
-addpath(fullfile(base_matlab_path,'fieldtrip_private')) % Fieldtrip private functions
-addpath(project_scripts_path)
-ft_defaults
-
-global ft_default
-ft_default.showcallinfo = 'no';
-
-%% Overwrite
-overwrite = [];
-if on_server
-    overwrite.preproc = true;
-    overwrite.timelock = true;
-    overwrite.TFR = false;
-    overwrite.coreg = false;
-    overwrite.mri = false;
-    overwrite.dip = true;
-    overwrite.empty_room = false;
-    overwrite.mne = false;
-
-    overwrite.sens_group = true;
-    overwrite.dip_group = true;
-    overwrite.mne_group = false;
-else
-    overwrite.preproc = false;
-    overwrite.timelock = false;
-    overwrite.TFR = false;
-    overwrite.coreg = false;
-    overwrite.mri = false;
-    overwrite.dip = false;
-    overwrite.empty_room = false;
-    overwrite.mne = false;
-
-    overwrite.sens_group = true;
-    overwrite.dip_group = false;
-    overwrite.mne_group = true;
-end
-
-%% Params
-params = [];
-
-params.paradigm = 'AudOdd';
-
-% Trials
-params.pre = 0.2; %0.1 sec
-params.post = 1.0; %0.5 sec
-params.pad = 0.2; %sec
-params.delay = 0.01; % Stimulus delay in seconds (e.g., 0.01 for eartubes or 0.041 for membranes).
-params.baseline = [-0.2 0];
-
-% EEG
-params.eeg_reref = 'all';%'EEG023';
-
-% Filter
-params.filter = [];
-params.filter.hp_freq =1;%0.1;
-params.filter.lp_freq = 30;%50;
-params.filter.bp_freq = [];
-params.filter.notch = [50 60]; %[50 60 100 120 150];
-
-% Spatiotemporal filter (OPM-MEG only)
-params.do_hfc = true;
-params.hfc_order = 2;
-params.do_amm = false;
-params.amm_in = 12;
-params.amm_out = 2;
-params.amm_thr = 1;
-params.do_ssp = false;
-params.ssp_n = 6;
-
-% Bad channel and trial detection thresholds
-params.outlier_zscore = 3; % Outliers: how many stddevs above mean
-params.outlier_ratio = 0.5; % Outliers: ratio of frequencies over threshold above which the channel is considered an outlier
-params.corr_threshold = 0.6; % Correlation threshold for badchannei detection based on neighbor correlation
-params.z_threshold = 20; % Zmax threshold for badchannel and trial detection based on jumps
-params.opm_range_threshold = 20e-12; % Range for OPM badtrial detection
-params.squidmag_range_threshold = 10e-12; % Range for SQUID-MAG badtrial detection
-params.squidgrad_range_threshold = 4000e-13; % Range for SQUID-GRAD badtrial detection
-params.debug = false; % Do manual rejection
-
-% ICA ECG&EOG artifact removal 
-params.n_comp = 40;
-params.ica_cor = 0.9; % cutoff for EOG/ECG coherence
-params.ica_coh = 0.95; % cutoff for EOG/ECG coherence
-
-% Timelocking
-params.ds_freq = 1000; % downsample frequency (timelock)
-params.trigger_codes = {1 [3 11] [5 13]}; % combined oddball-nogo and oddball-go
-params.trigger_labels = {'std' 'oddNoGo' 'oddGo'};
-params.trigger_freq = [39 43 43];
-% params.trigger_codes = {1 3 5 11 13};
-% params.trigger_labels = {'STD' 'LSNG' 'LG' 'HNG' 'HG'};
-
-% Evoked peaks to analyze
-params.peaks = {};
-params.peaks{1} = [];
-params.peaks{1}.label = 'M100';
-params.peaks{1}.peak_latency = [0.08 0.13];
-%params.peaks{2} = [];
-%params.peaks{2}.label = 'FreqTag';
-%params.peaks{2}.peak_latency = [0.5 0.6];
-
-% Time-Frequency
-params.tfr = true;
-
-% HPI coregistration
-params.hpi_freq = 33;
-params.hpi_gof = 0.95;
-
-% Source reconstruction - dipoles
-params.numdipoles = 2;
-
-% Source reconstruction - distributed
-params.source_fixedori = true; 
-params.covs = {' '}; % noise cov to use; default=prestim, alt: 'resting_state', 'all', 'empty_room' , prestim = ' '
-params.mne_view = 'sides';
-params.plot_inflated = true;
-params.target_region = {'superiortemporal', 'transversetemporal'};
-
-%% Subjects + dates
-subses = {'0005' '240208';
-    '0905' '240229';
-    '0916' '240320';
-    '0953' '241104';
-    '1096' '241022';
-    '1153' '240321';
-    '1167' '240425';
-    '1186' '240925';
-    '1190' '241023';
-    '1191' '241024';
-    '1193' '241029';
-    '1194' '241029';
-    '1195' '241030';
-    '1209' '250219';
-    '1215' '250415'};
-
-bads =  {{'L604_bz'}; %1
-    {}; %2
-    {}; %3 
-    {'L109_bz', 'L209_bz'}; %4
-    {'L102_bz'}; %5
-    {'L310_bz'}; %6
-    {}; %7
-    {}; %8
-    {'L205_bz', 'L209_bz'}; %9
-    {'L111_bz', 'L209_bz'}; %10
-    {'L209_bz'}; %11
-    {'L209_bz'}; %12
-    {'L109_bz', 'L111_bz', 'L209_bz'}; %13
-    {'L209_bz'}; %14
-    {'L209_bz'}}; %15
-
-if on_server
-    subs_to_run = 1:size(subses,1);
-else
-    subs_to_run = [2 4 14 15]; %1:size(subses,1)
-end
-excl_subs = [3]; % split file TODO: allow split file
-excl_subs_src = [1 excl_subs];
-
-%% Loop over subjects
-ssp_done = false(size(subs_to_run,2),1);
-for i_sub = setdiff(subs_to_run,excl_subs)
+save(fullfile(paths.base_save_path,params.paradigm, 'params.mat'), 'params', '-v7.3'); 
+        
+% Loop over subjects
+ssp_done = false(size(params.subs_to_run,2),1);
+for i_sub = setdiff(params.subs_to_run,params.excl_subs)
     params.sub = ['sub_' num2str(i_sub,'%02d')];
     params.manual_bads = bads{i_sub}';
     if i_sub <=3 % Flip amplitudes in old recordings
@@ -193,15 +19,12 @@ for i_sub = setdiff(subs_to_run,excl_subs)
     end
 
     %% Paths
-    raw_path = fullfile(base_data_path,'MEG',['NatMEG_' subses{i_sub,1}], subses{i_sub,2});
-    save_path = fullfile(base_save_path,params.paradigm,params.sub);
-    save_path_mri = fullfile(base_save_path,'MRI',params.sub);
+    raw_path = fullfile(paths.base_data_path,'MEG',['NatMEG_' subses{i_sub,1}], subses{i_sub,2});
+    save_path = fullfile(paths.base_save_path,params.paradigm,params.sub);
+    save_path_mri = fullfile(paths.base_save_path,'MRI',params.sub);
     hpi_path = fullfile(raw_path, 'osmeg'); %hpi_file = fullfile(raw_path, 'osmeg', 'HPIpre_raw.fif');
     
     % Create folders if they do not exist yet
-    if ~exist(fullfile(base_save_path,params.paradigm), 'dir')
-        mkdir(fullfile(base_save_path,params.paradigm))
-    end
     if ~exist(save_path, 'dir')
        mkdir(save_path)
     end
@@ -551,10 +374,10 @@ for i_sub = setdiff(subs_to_run,excl_subs)
 
         elseif isempty(opm_trans)
             warning(['HPI fit did not succeed for ' params.sub '.'])
-            excl_subs_src = [excl_subs_src i_sub];
+            params.excl_subs_src = [params.excl_subs_src i_sub];
         else
             warning(['Headmodel/sourcemodel missing for ' params.sub '.'])
-            excl_subs_src = [excl_subs_src i_sub];
+            params.excl_subs_src = [params.excl_subs_src i_sub];
         end
     end
 
@@ -620,37 +443,37 @@ end
 close all
 
 %% Save results in report
-for i_sub = setdiff(subs_to_run,excl_subs)
+for i_sub = setdiff(params.subs_to_run,params.excl_subs)
     params.sub = ['sub_' num2str(i_sub,'%02d')];
-    save_path = fullfile(base_save_path,params.paradigm,params.sub);
+    save_path = fullfile(paths.base_save_path,params.paradigm,params.sub);
     create_sub_reports(save_path, i_sub, params);
 end
 
 
 %% Sensor level group analysis
 if overwrite.sens_group
-    save_path = fullfile(base_save_path,params.paradigm);
+    save_path = fullfile(paths.base_save_path,params.paradigm);
     if ~exist(fullfile(save_path,'figs'), 'dir')
            mkdir(fullfile(save_path,'figs'))
     end
-    subs = setdiff(subs_to_run,excl_subs);
+    subs = setdiff(params.subs_to_run,params.excl_subs);
     sensor_results_goup(save_path,subs, params)
     close all
 end
 
 %% Dipole group analysis
 if overwrite.dip_group
-    save_path = fullfile(base_save_path,params.paradigm);
-    subs = setdiff(subs_to_run,excl_subs_src);
+    save_path = fullfile(paths.base_save_path,params.paradigm);
+    subs = setdiff(params.subs_to_run,params.excl_subs_src);
     dipole_results_goup(save_path,subs, params)
 end
 
 %% MNE group analysis
 if overwrite.mne_group
     params.do_sourcemovie = true;
-    save_path = fullfile(base_save_path,params.paradigm);
-    subs = setdiff(subs_to_run,excl_subs_src);
-    save_path_mri = fullfile(base_save_path,'MRI',['sub_' num2str(subs(1),'%02d')]);
+    save_path = fullfile(paths.base_save_path,params.paradigm);
+    subs = setdiff(params.subs_to_run,params.excl_subs_src);
+    save_path_mri = fullfile(paths.base_save_path,'MRI',['sub_' num2str(subs(1),'%02d')]);
     sourcemodel = load(fullfile(save_path_mri, 'sourcemodel')).sourcemodel;
     sourcemodel_inflated = load(fullfile(save_path_mri, 'sourcemodel_inflated')).sourcemodel_inflated;
     for i_cov = 1:length(params.covs)
@@ -661,8 +484,8 @@ end
 
 %% Group level report
 if overwrite.mne_group
-    save_path = fullfile(base_save_path,params.paradigm);
-    subs = setdiff(subs_to_run,excl_subs_src);
+    save_path = fullfile(paths.base_save_path,params.paradigm);
+    subs = setdiff(params.subs_to_run,params.excl_subs_src);
     for i_peak = 1:length(params.peaks)
         create_group_report(save_path, subs, params, i_peak)
     end
@@ -670,7 +493,5 @@ end
 
 %%
 close all
-clear all
-% if on_server
-%     exit
-% end
+
+end
